@@ -1,0 +1,66 @@
+# Builds and publishes the daily surf brief to GitHub Pages.
+#
+# Two windows, each scheduled at both possible UTC offsets so the local time
+# holds across DST (the extra run is harmless -- it just rebuilds):
+#   - ~4:45am Pacific ("day of"):      11:45 UTC (PDT) and 12:45 UTC (PST)
+#   - ~8:00pm Pacific ("night before"): 03:00 UTC (PDT) and 04:00 UTC (PST)
+# An evening run builds TOMORROW's brief; a morning run builds today's.
+#
+# Failure behaviour is deliberate: if Open-Meteo or NOAA is down after retries,
+# the run fails loudly (GitHub emails on workflow failure) and yesterday's page
+# stays up -- its generated-at line in the header is the staleness signal.
+
+name: publish-brief
+
+on:
+  schedule:
+    - cron: "45 11 * * *"
+    - cron: "45 12 * * *"
+    - cron: "0 3 * * *"
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run invariant tests
+        run: python3 test_brief.py
+
+      - name: Fetch, score, render
+        run: |
+          HOUR=$(TZ=America/Los_Angeles date +%H)
+          if [ "$HOUR" -ge 12 ]; then
+            TARGET=$(TZ=America/Los_Angeles date -d tomorrow +%F)
+          else
+            TARGET=$(TZ=America/Los_Angeles date +%F)
+          fi
+          echo "building brief for $TARGET (local hour $HOUR)"
+          python3 surf_forecast.py --date "$TARGET" --json brief.json \
+            || { echo "first attempt failed, retrying in 60s"; sleep 60; \
+                 python3 surf_forecast.py --date "$TARGET" --json brief.json; }
+          mkdir -p site
+          python3 render.py brief.json site/index.html
+
+      - name: Guard against leaked nulls
+        run: |
+          if grep -q "None" site/index.html; then
+            echo "::error::'None' leaked into the rendered page"; exit 1
+          fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - uses: actions/deploy-pages@v4

@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+
+# generated output — regenerate with surf_forecast.py / render.py
+brief.json
+brief.html
+*.local.json
+*.local.html
