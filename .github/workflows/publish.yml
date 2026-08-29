@@ -32,6 +32,10 @@ permissions:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    env:
+      # The runner is UTC; the brief's generated-at stamp is the staleness
+      # signal and must read in local time.
+      TZ: America/Los_Angeles
     steps:
       - uses: actions/checkout@v4
 
