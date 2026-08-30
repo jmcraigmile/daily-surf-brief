@@ -977,6 +977,8 @@
     },
     {
       "name": "Oceanside Pier",
+      "hidden": true,
+      "hidden_note": "Hidden 2026-08-30: 49 min is too far for a daily call (Jake). Research and scoring rules kept -- flip hidden to false to restore, e.g. for a North County day or a trip stopover.",
       "region": "North",
       "lat": 33.1935,
       "lon": -117.386,

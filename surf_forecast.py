@@ -685,6 +685,14 @@ def verdict_label(score):
 
 # ---------------------------------------------------------------- assembly
 
+def active_breaks(cfg):
+    """Breaks the brief scores and shows. An entry with "hidden": true keeps
+    its research and scoring rules in breaks.json but is skipped entirely --
+    the flag is the knob for spots that are written up but not in the daily
+    rotation (Oceanside Pier: too far to drive, per its hidden_note)."""
+    return [b for b in cfg["breaks"] if not b.get("hidden")]
+
+
 def build(day=None):
     day = day or date.today().strftime("%Y-%m-%d")
     with open(os.path.join(HERE, "breaks.json")) as f:
@@ -756,7 +764,7 @@ def build(day=None):
         is_weekend = datetime.strptime(day, "%Y-%m-%d").weekday() >= 5
 
         scored = []
-        for brk in cfg["breaks"]:
+        for brk in active_breaks(cfg):
             north = brk["lat"] > 32.78
             cond = {
                 # Total wave height drives size -- it is what tracks the buoy.

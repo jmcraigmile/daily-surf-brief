@@ -47,6 +47,23 @@ def cond(**kw):
 
 # ---------------------------------------------------------------- breaks.json
 
+def test_hidden_breaks():
+    """"hidden": true keeps a break's data but drops it from the brief.
+
+    Pins the mechanism, not any particular spot's status -- flipping a flag
+    in breaks.json must never break CI. Every hidden entry needs a
+    hidden_note saying why and when, and hiding must never empty the brief.
+    """
+    active = sf.active_breaks(CFG)
+    hidden = [b for b in BREAKS if b.get("hidden")]
+    check(len(active) + len(hidden) == len(BREAKS), "active/hidden split leaks")
+    check(len(active) >= 5, "hiding breaks emptied the brief")
+    for b in hidden:
+        check(bool(b.get("hidden_note")), f"{b['name']}: hidden without a hidden_note")
+        check(b["name"] not in {a["name"] for a in active},
+              f"{b['name']}: hidden but still active")
+
+
 def test_ladders():
     for b in BREAKS:
         lad = b["board_ladder"]
