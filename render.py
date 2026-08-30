@@ -730,17 +730,21 @@ def render(data):
 TABS_JS = """<script>
 (function () {
   // Dawn/Dusk tabs, phones only. Progressive enhancement: without JS the two
-  // windows stack exactly as before. Auto-select: on TODAY'S page an afternoon
-  // read opens Dusk; a night-before page (dated tomorrow) always opens Dawn,
-  // because that is the session being planned.
+  // windows stack exactly as before. Auto-select (Jake's rule, 2026-08-30):
+  // Dusk between noon and sunset (evening glass is the next session), Dawn
+  // otherwise -- so a morning read and an after-sunset read (planning
+  // tomorrow's dawn patrol) both open on Dawn.
   var wins = [].slice.call(document.querySelectorAll(".windows .win"));
   if (wins.length < 2) return;
   var bar = document.getElementById("wtabs");
   var tabs = [].slice.call(bar.querySelectorAll("button"));
   var mq = window.matchMedia("(max-width:859px)");
   var n = new Date();
-  var iso = n.getFullYear() + "-" + ("0" + (n.getMonth() + 1)).slice(-2) + "-" + ("0" + n.getDate()).slice(-2);
-  var idx = (document.body.getAttribute("data-date") === iso && n.getHours() >= 12) ? 1 : 0;
+  var nowM = n.getHours() * 60 + n.getMinutes();
+  var ssAttr = document.body.getAttribute("data-sunset") || "19:00";
+  var ssParts = ssAttr.split(":");
+  var sunsetM = (+ssParts[0]) * 60 + (+ssParts[1]);
+  var idx = (nowM >= 720 && nowM < sunsetM) ? 1 : 0;
   function show(i) {
     idx = i;
     wins.forEach(function (w, j) { w.classList.toggle("active", j === i); });

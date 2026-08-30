@@ -967,6 +967,10 @@ def test_landing_nav_and_tabs():
     check(">Dawn<" in html and ">Dusk<" in html, "tab labels missing")
     check('data-date="2026-08-29"' in html, "body data-date missing")
     check("matchMedia" in html, "tab script missing")
+    # Auto-select rule: Dusk between noon and sunset, Dawn otherwise -- the
+    # script must read the real sunset from the body, not hardcode an hour.
+    check('data-sunset' in html.split("wtabs")[-1] and "720" in html,
+          "tab auto-select doesn't use noon-to-sunset rule")
     check("brk-verdict" not in html.split("</style>")[1], "verdict prose still on landing cards")
     check('href="breaks.html#' in html, "break cards don't link to breaks page")
     check("quiver.html#fish" in html, "board call doesn't link to quiver")
