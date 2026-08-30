@@ -390,6 +390,46 @@ def test_drive_flag_threshold():
               f"{b['name']}: missing or bad drive_miles")
 
 
+def test_manifest_and_icons():
+    """Web-app manifest + home-screen icons. Two bugs this pins (both shipped
+    2026-08-30): relative manifest URLs resolve against the MANIFEST's
+    location (/assets/), so start_url './' 404'd the installed app and icon
+    src 'assets/...' double-pathed -- everything must be root-absolute. And
+    the icon PNGs were structurally valid but had corrupt image data, so the
+    home-screen icon rendered broken -- zlib-decompress the pixel stream and
+    check the exact decoded length, not just the header."""
+    import zlib
+    import struct
+    man = json.load(open(os.path.join(HERE, "assets", "manifest.webmanifest")))
+    check(man["start_url"] == "/", f"manifest start_url must be '/', got {man['start_url']!r}")
+    check(man.get("scope") == "/", "manifest scope must be '/'")
+    for ic in man["icons"]:
+        check(ic["src"].startswith("/assets/"),
+              f"manifest icon src must be root-absolute: {ic['src']!r}")
+
+    channels = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}
+    for fname, want in (("icon-180.png", 180), ("icon-512.png", 512)):
+        d = open(os.path.join(HERE, "assets", fname), "rb").read()
+        check(d[:8] == b"\x89PNG\r\n\x1a\n", f"{fname}: not a PNG")
+        w, h = struct.unpack(">II", d[16:24])
+        bit_depth, color_type = d[24], d[25]
+        check(w == want and h == want, f"{fname}: {w}x{h}, expected {want}")
+        idat, pos = b"", 8
+        while pos < len(d):
+            (length,), ctype = struct.unpack(">I", d[pos:pos + 4]), d[pos + 4:pos + 8]
+            if ctype == b"IDAT":
+                idat += d[pos + 8:pos + 8 + length]
+            pos += 12 + length
+        try:
+            raw = zlib.decompress(idat)
+        except zlib.error as e:
+            check(False, f"{fname}: corrupt image data ({e})")
+            continue
+        expect = h * (1 + w * channels[color_type] * bit_depth // 8)
+        check(len(raw) == expect,
+              f"{fname}: decoded {len(raw)} bytes, expected {expect} -- truncated image data")
+
+
 def test_no_street_address_in_the_repo():
     """05-Daily is a PUBLIC GitHub repo. Drive times are referenced to a
     neighbourhood, never to Jake's address -- publishing it would be a real
