@@ -1,0 +1,95 @@
+{
+  "_comment": "The quiver, curated for the public quiver page from 02-Gear/Owned-and-Wishlist.md (2026-08-30). Volumes are ESTIMATES on an unvalidated anchor per the gear audit -- the Rosa's 34.29L matches Christenson's published stock figure, not a measurement of this board. Names here must match breaks.json ladders and test_brief.py's OWNED_BOARDS.",
+  "boards": [
+    {
+      "name": "5'4 Mini-Simmons",
+      "shaper": "Jeff McCallum",
+      "dims": "5'4 × ? × ?",
+      "volume": "TBD",
+      "fins": "Glassed-on quad -- no tuning, and a fin ding is a real repair",
+      "range": "Ankle to shoulder-high on a clean face",
+      "role": "The planing hull. Speed-first -- its limits are takeoff steepness and surface texture, not wave height. Draw long lines and trim high; it doesn't do vertical and doesn't want to. Genuinely bad on a steep late drop and on wind-textured faces.",
+      "slug": "mini-simmons"
+    },
+    {
+      "name": "5'8 Fish",
+      "shaper": "Self-shaped",
+      "dims": "5'8 × 21¼ × 2⁷⁄₁₆",
+      "volume": "~34–36L est",
+      "fins": "Captain Fin McCallum single-tab twin keels",
+      "range": "Knee to chest, down-the-line speed",
+      "role": "Thick, full foil -- carries more than the Rosa despite four fewer inches. The catch-everything small-day board, and the one that duck-dives through a short-period conveyor belt.",
+      "slug": "fish"
+    },
+    {
+      "name": "6'0 Surfer Rosa",
+      "shaper": "Chris Christenson",
+      "dims": "6'0 × 20 × 2⅝",
+      "volume": "34.29L (listed stock figure -- unverified for this board)",
+      "fins": "Futures thruster only -- F8 Legacy Large",
+      "range": "Chest to head with push",
+      "role": "The performance thruster. Steep takeoffs, fast walls, vertical surfing -- the assigned Scripps and Mission board. Runs small; minimum viable float, nothing spare.",
+      "slug": "surfer-rosa"
+    },
+    {
+      "name": "6'5 Egg",
+      "shaper": "Bob Mitsven",
+      "dims": "6'5 × 21½ × 2⅝",
+      "volume": "~40–43L est",
+      "fins": "True Ames TA Twin, optional 2.5\" trailer",
+      "range": "Chest to head, glide + paddle power",
+      "role": "The float king. The most forgiving board in the rack -- shadowed small days, paddle-heavy lineups, any day you want waves handed to you.",
+      "slug": "egg"
+    },
+    {
+      "name": "7'6 Magic",
+      "shaper": "Bob Mitsven",
+      "dims": "7'6 × 21½ × 2¹⁄₁₆",
+      "volume": "~37–39L est",
+      "fins": "True Ames Skip Frye 6.5\" and 7.5\" single, optional side bites",
+      "range": "Chest to overhead trim -- points and long walls",
+      "role": "Trim and glide. Thin for its length, so it's not a paddle machine and it is NOT a step-up -- 'not the tool when the canyon is doubling a 16-second swell.' PB Point is nearly its job description.",
+      "slug": "magic"
+    },
+    {
+      "name": "9'4 Pink Panther",
+      "shaper": "Chase Jacoway",
+      "dims": "9'4 × ? × ?",
+      "volume": "TBD",
+      "fins": "True Ames Greenough 4-A, 9.75\" single",
+      "range": "Small clean days, noseriding",
+      "role": "The log. Small point walls and soft peelers -- Cardiff at waist-high, small Swami's, the Shores when you'd rather walk than pump.",
+      "slug": "pink-panther"
+    },
+    {
+      "name": "11'0 Chris Craft",
+      "shaper": "Chris Christenson",
+      "dims": "11'0 × ? × ?",
+      "volume": "TBD",
+      "fins": "FCS II Christenson PG 9\" single",
+      "range": "Tiny, weak surf",
+      "role": "The glider. It doesn't need waves, just water -- flat-spell mornings at the Shores and Cardiff are what you own it for.",
+      "slug": "chris-craft"
+    },
+    {
+      "name": "7'0 CI Waterhog",
+      "shaper": "Channel Islands",
+      "dims": "7'0 × ? × ?",
+      "volume": "TBD",
+      "fins": "Futures Tokoro thruster",
+      "range": "Small, soft, crowded, or junk",
+      "role": "Soft top with a glassed bottom, so it still has real glide. Zero-consequence days, guests, shorebreak, OB Pier as often as not.",
+      "slug": "waterhog"
+    },
+    {
+      "name": "9'0 Ron Jon",
+      "shaper": "Ron Jon (early 2000s shop board)",
+      "dims": "9'0 × 23½ × 3¼",
+      "volume": "~76–82L est",
+      "fins": "2+1 -- FCS II Flow (marked 9.0) + plastic side bites",
+      "range": "Beater / loaner / guest board",
+      "role": "No anxiety attached. The board that gets lent, dinged, and left on racks without a second thought.",
+      "slug": "ron-jon"
+    }
+  ]
+}

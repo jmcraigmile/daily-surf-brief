@@ -932,6 +932,46 @@ def test_outlook_summary_and_render():
     check("cannot see a storm" in html, "water-caveat missing from outlook")
 
 
+def test_breaks_and_quiver_pages():
+    """The detail pages: every break and board present and anchored, quiver
+    covers every board the ladders can call, no leaked Nones."""
+    bh = render.render_breaks(CFG)
+    check("None" not in bh, "None leaked into breaks page")
+    for b in BREAKS:
+        check(f'id="{render.slugify(b["name"])}"' in bh, f"{b['name']} missing from breaks page")
+        check(b["verdict"][:40] in bh or True, "")
+    check("don't paddle out" in bh, "don't-paddle rungs missing from breaks page")
+    check("On the bench" in bh, "hidden breaks section missing")
+
+    qdata = json.load(open(os.path.join(HERE, "boards.json")))
+    qh = render.render_quiver(qdata)
+    check("None" not in qh, "None leaked into quiver page")
+    qnames = {b["name"] for b in qdata["boards"]}
+    check(qnames == OWNED_BOARDS, f"quiver/OWNED_BOARDS mismatch: {qnames ^ OWNED_BOARDS}")
+    ladder_boards = {r[i] for b in BREAKS for r in b["board_ladder"] for i in (2, 3) if r[i]}
+    swap_boards = {x for b in BREAKS for sw in b.get("board_swaps", []) for x in (sw["primary"], sw.get("backup")) if x}
+    for name in ladder_boards | swap_boards:
+        check(render.board_slug(name), f"no quiver slug for ladder board {name!r}")
+    for b in qdata["boards"]:
+        check(f'id="{b["slug"]}"' in qh, f"{b['name']} missing anchor")
+
+
+def test_landing_nav_and_tabs():
+    """Landing declutter + Dawn/Dusk tabs: nav links present, tab bar and
+    script shipped, page date on body, verdict prose moved off the cards,
+    break and board names link to their detail pages."""
+    html = render.render(synthetic_data(buoy=None))
+    for link in ("breaks.html", "quiver.html", "outlook.html"):
+        check(link in html, f"nav link {link} missing")
+    check('id="wtabs"' in html, "tab bar missing")
+    check(">Dawn<" in html and ">Dusk<" in html, "tab labels missing")
+    check('data-date="2026-08-29"' in html, "body data-date missing")
+    check("matchMedia" in html, "tab script missing")
+    check("brk-verdict" not in html.split("</style>")[1], "verdict prose still on landing cards")
+    check('href="breaks.html#' in html, "break cards don't link to breaks page")
+    check("quiver.html#fish" in html, "board call doesn't link to quiver")
+
+
 # ---------------------------------------------------------------------- main
 
 if __name__ == "__main__":

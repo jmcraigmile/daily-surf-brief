@@ -10,6 +10,45 @@ from datetime import datetime
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
+def slugify(name):
+    return "".join(c if c.isalnum() else "-" for c in name.lower()).strip("-").replace("--", "-")
+
+
+_BOARD_SLUGS = None
+
+
+def board_slug(name):
+    """Board name -> quiver.html anchor, from boards.json. Missing file or
+    unknown name degrades to no link, never a broken one."""
+    global _BOARD_SLUGS
+    if _BOARD_SLUGS is None:
+        try:
+            with open(os.path.join(HERE, "boards.json")) as f:
+                _BOARD_SLUGS = {b["name"]: b["slug"] for b in json.load(f)["boards"]}
+        except (OSError, KeyError, ValueError):
+            _BOARD_SLUGS = {}
+    return _BOARD_SLUGS.get(name)
+
+
+def page_head(title, desc):
+    return f"""<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#eaf0ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a2030" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="greenflash">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="manifest" href="assets/manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,300..900;1,300..900&family=Fragment+Mono:ital@0;1&display=swap">
+<meta name="description" content="{desc}">
+<title>{title}</title>
+<style>{CSS}</style>"""
+
+
 def _logo_svg():
     """Inline the wordmark so its letters take currentColor per theme; the
     rising-sun 'flash' layer stays brand green inside the asset itself."""
@@ -187,6 +226,32 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .suit-v{color:var(--flash);font-weight:700;white-space:nowrap}
 .outlink{margin-top:6px;font-size:13px}
 .outlink a,.olback a{display:inline-block;padding:10px 0}
+.nav{margin-top:4px;font-size:13px;display:flex;gap:22px}
+.nav a{color:var(--flash);text-decoration:none;font-weight:650;display:inline-block;padding:10px 0}
+.nav a:hover{text-decoration:underline}
+.wtabs{display:none;gap:8px;margin:0 0 14px}
+body.tabbed .wtabs{display:flex}
+.wtabs button{flex:1;font-family:var(--font-data);font-size:13px;letter-spacing:var(--tracking-label);
+  text-transform:uppercase;padding:12px;border-radius:var(--radius-badge);border:1px solid var(--line);
+  background:var(--panel);color:var(--ink-2);cursor:pointer}
+.wtabs button.on{border-color:var(--flash);color:var(--flash);background:var(--go-tint)}
+body.tabbed .windows .win{display:none}
+body.tabbed .windows .win.active{display:block}
+.brk-name a{color:inherit;text-decoration:none}
+.brk-name a:hover{color:var(--flash)}
+.board-v a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--go-border)}
+.bk{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-card);padding:16px;margin-top:14px;scroll-margin-top:16px}
+.bk h2{margin:0;font-size:19px;letter-spacing:-.012em}
+.bk .meta1{font-family:var(--font-data);font-size:12px;color:var(--ink-3);margin-top:5px}
+.bk .prose{margin:10px 0 0;font-size:14px;color:var(--ink-2);line-height:1.55}
+.bk .drows{margin-top:12px;border-top:1px solid var(--line)}
+.bk .dr{display:flex;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-family:var(--font-data);font-size:12.5px;line-height:1.5}
+.bk .dr b{flex:0 0 84px;color:var(--ink-3);font-weight:400;text-transform:uppercase;letter-spacing:var(--tracking-label);font-size:10.5px;padding-top:2px}
+.bk .dr span{color:var(--ink-2)}
+.bk .flag{margin-top:12px}
+.laddernote{font-size:11.5px;color:var(--ink-3);font-family:var(--font-prose);padding:2px 6px 8px;line-height:1.45}
+.benchhd{margin-top:26px;font-family:var(--font-data);font-size:11px;letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--ink-3)}
+.pagenote{margin-top:16px;font-size:12.5px;color:var(--ink-3);line-height:1.55}
 .outlink a,.olback a{color:var(--accent);text-decoration:none;font-weight:650}
 .outlink a:hover,.olback a:hover{text-decoration:underline}
 .olrows{display:flex;flex-direction:column;gap:10px;margin-top:20px}
@@ -298,7 +363,10 @@ def render_break(b, rank):
             sub += " <span class='far'>worth the drive?</span>"
 
     if b["board_primary"]:
-        bv = f"<div class='board-v'>{esc(b['board_primary'])}</div>"
+        bslug = board_slug(b["board_primary"])
+        bname = (f"<a href='quiver.html#{bslug}'>{esc(b['board_primary'])}</a>"
+                 if bslug else esc(b["board_primary"]))
+        bv = f"<div class='board-v'>{bname}</div>"
         bb = (f"<div class='board-b'>Backup: <b>{esc(b['board_backup'])}</b></div>"
               if b["board_backup"] else
               "<div class='board-b'>No backup &mdash; nothing else in the quiver fits</div>")
@@ -338,10 +406,9 @@ def render_break(b, rank):
     if wq.get("blocked"):
         cls += " isblocked"
     return f"""<div class="{cls}">
-  <div class="brk-hd"><span class="brk-name">{esc(b['name'])}</span>
+  <div class="brk-hd"><span class="brk-name"><a href="breaks.html#{slugify(b['name'])}">{esc(b['name'])}</a></span>
     <span class="pill {b['cls']}">{esc(b['label'])}</span></div>
   <div class="brk-sub">{sub}</div>
-  <div class="brk-verdict">{esc(b['verdict'])}</div>
   {wqhtml}{board}{notes}{flag}
 </div>"""
 
@@ -501,7 +568,7 @@ def render(data):
 <title>greenflash.surf</title>
 <style>{CSS}</style>
 </head>
-<body>
+<body data-date="{esc(data['date'])}">
 <div class="wrap">
 <header class="top">
   <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
@@ -510,8 +577,13 @@ def render(data):
   <h1>{d.strftime('%A, %B %-d')}</h1>
   <p class="dayline">{day_verdict(data)}</p>
   {suit_line(data)}
-  <div class="outlink"><a href="outlook.html">5-day outlook &rarr;</a></div>
+  <nav class="nav"><a href="outlook.html">Outlook</a><a href="breaks.html">Breaks</a><a href="quiver.html">Quiver</a></nav>
 </header>
+
+<div class="wtabs" id="wtabs">
+  <button type="button" aria-selected="false">Dawn</button>
+  <button type="button" aria-selected="false">Dusk</button>
+</div>
 
 <div class="windows">
 {''.join(render_window(w) for w in data['windows'])}
@@ -538,8 +610,36 @@ def render(data):
   the model. Check <a href="https://www.sdbeachinfo.com/">sdbeachinfo.com</a> before OB.
 </footer>
 </div>
+{TABS_JS}
 </body>
 </html>"""
+
+
+TABS_JS = """<script>
+(function () {
+  // Dawn/Dusk tabs, phones only. Progressive enhancement: without JS the two
+  // windows stack exactly as before. Auto-select: on TODAY'S page an afternoon
+  // read opens Dusk; a night-before page (dated tomorrow) always opens Dawn,
+  // because that is the session being planned.
+  var wins = [].slice.call(document.querySelectorAll(".windows .win"));
+  if (wins.length < 2) return;
+  var bar = document.getElementById("wtabs");
+  var tabs = [].slice.call(bar.querySelectorAll("button"));
+  var mq = window.matchMedia("(max-width:859px)");
+  var n = new Date();
+  var iso = n.getFullYear() + "-" + ("0" + (n.getMonth() + 1)).slice(-2) + "-" + ("0" + n.getDate()).slice(-2);
+  var idx = (document.body.getAttribute("data-date") === iso && n.getHours() >= 12) ? 1 : 0;
+  function show(i) {
+    idx = i;
+    wins.forEach(function (w, j) { w.classList.toggle("active", j === i); });
+    tabs.forEach(function (t, j) { t.classList.toggle("on", j === i); t.setAttribute("aria-selected", String(j === i)); });
+  }
+  function apply() { document.body.classList.toggle("tabbed", mq.matches); show(idx); }
+  tabs.forEach(function (t, i) { t.addEventListener("click", function () { show(i); }); });
+  if (mq.addEventListener) mq.addEventListener("change", apply); else mq.addListener(apply);
+  apply();
+})();
+</script>"""
 
 
 def _outlook_row(day):
@@ -606,15 +706,134 @@ hasn't happened yet. Trust the shape, not the decimals; check back as the day ge
 </html>"""
 
 
+
+
+# ---------------------------------------------------------------- breaks page
+
+def _break_card(brk):
+    w = brk.get("water") or {}
+    stars = "★" * brk["crowd"] + "☆" * (5 - brk["crowd"])
+    windows = " / ".join(f"{lo}–{hi}°" for lo, hi in brk["swell_windows"])
+    ideal = brk.get("ideal_dir")
+    pl, ph = brk.get("period_ideal", [8, 18])
+    lo, hi = brk["size_ideal"]
+    ladder_rows = ""
+    for rlo, rhi, primary, backup, note in brk["board_ladder"]:
+        face = f"{rlo:g}–{rhi:g}ft" if rhi < 99 else f"{rlo:g}ft+"
+        if primary is None:
+            call = "<b style='color:var(--danger)'>don't paddle out</b>"
+        else:
+            pslug = board_slug(primary)
+            call = (f"<a href='quiver.html#{pslug}'>{esc(primary)}</a>" if pslug else esc(primary))
+            if backup:
+                call += f" <span style='color:var(--ink-3)'>/ {esc(backup)}</span>"
+        ladder_rows += (f"<tr><td class='sc' style='text-align:left;width:70px'>{face}</td>"
+                        f"<td>{call}</td></tr>"
+                        f"<tr><td></td><td class='laddernote'>{esc(note)}</td></tr>")
+    drive = f"{brk.get('drive_minutes', '--')} min · {brk.get('drive_miles', '--')} mi"
+    hazards = f"<div class='flag'>{esc(brk['hazards'])}</div>" if brk.get("hazards") else ""
+    return f"""<article class="bk" id="{slugify(brk['name'])}">
+  <h2>{esc(brk['name'])}</h2>
+  <div class="meta1">{esc(brk.get('region', ''))} · {drive} · crowd {stars} · {esc(brk['skill'])}</div>
+  <p class="prose">{esc(brk['verdict'])}</p>
+  <div class="drows">
+    <div class="dr"><b>Swell</b><span>{windows}{f" · ideal {ideal}°" if ideal is not None else ""}</span></div>
+    <div class="dr"><b>Size</b><span>{lo:g}–{hi:g}ft face ideal · works {brk['size_min']:g}–{brk['size_max']:g}ft</span></div>
+    <div class="dr"><b>Period</b><span>{pl:g}–{ph:g}s</span></div>
+    <div class="dr"><b>Tide</b><span>{esc('/'.join(brk['tide_pref']))} · {esc(brk['tide_note'])}</span></div>
+    <div class="dr"><b>Water</b><span>{esc(w.get('note', 'no notes'))}</span></div>
+  </div>
+  {hazards}
+  <div class="ladder"><div class="board-k" style="margin-top:12px">Board ladder</div>
+    <div class="tw"><table><tbody>{ladder_rows}</tbody></table></div></div>
+</article>"""
+
+
+def render_breaks(cfg):
+    active = [b for b in cfg["breaks"] if not b.get("hidden")]
+    bench = [b for b in cfg["breaks"] if b.get("hidden")]
+    cards = "".join(_break_card(b) for b in active)
+    benchhtml = ""
+    if bench:
+        benchhtml = ("<div class='benchhd'>On the bench (hidden from the daily brief)</div>"
+                     + "".join(_break_card(b) for b in bench))
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+{page_head("greenflash · breaks", "The San Diego breaks the daily brief scores, in full detail.")}
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="olback"><a href="./">&larr; today's brief</a></div>
+  <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
+  <div class="eyebrow" style="margin-top:8px">the breaks</div>
+  <h1>The spots</h1>
+  <nav class="nav"><a href="outlook.html">Outlook</a><a href="quiver.html">Quiver</a></nav>
+</header>
+{cards}
+{benchhtml}
+<div class="pagenote">Degree windows are derived from the compass directions in the research
+notes, not from a degree-publishing source — treat them as approximations. Water risk here is
+each spot's chronic profile; the daily brief layers live rain and river on top. sdbeachinfo.com
+/ 619-338-2073 is the authoritative water check, every time at the river mouths.</div>
+</div>
+</body>
+</html>"""
+
+
+# ---------------------------------------------------------------- quiver page
+
+def _board_card(b):
+    return f"""<article class="bk" id="{esc(b['slug'])}">
+  <h2>{esc(b['name'])}</h2>
+  <div class="meta1">{esc(b['shaper'])} · {esc(b['dims'])} · {esc(b['volume'])}</div>
+  <p class="prose">{esc(b['role'])}</p>
+  <div class="drows">
+    <div class="dr"><b>Fins</b><span>{esc(b['fins'])}</span></div>
+    <div class="dr"><b>Range</b><span>{esc(b['range'])}</span></div>
+  </div>
+</article>"""
+
+
+def render_quiver(data):
+    cards = "".join(_board_card(b) for b in data["boards"])
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+{page_head("greenflash · quiver", "The nine boards the daily brief picks from.")}
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="olback"><a href="./">&larr; today's brief</a></div>
+  <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
+  <div class="eyebrow" style="margin-top:8px">the quiver</div>
+  <h1>The boards</h1>
+  <nav class="nav"><a href="outlook.html">Outlook</a><a href="breaks.html">Breaks</a></nav>
+</header>
+{cards}
+<div class="pagenote">Volumes are estimates from a bounding-box formula on an unvalidated
+anchor — the one “measured” figure matched the shaper's published stock number, so treat
+every litre here as approximate until the boards are actually measured.</div>
+</div>
+</body>
+</html>"""
+
+
 if __name__ == "__main__":
     argv = sys.argv[1:]
-    outlook = "--outlook" in argv
-    if outlook:
-        argv.remove("--outlook")
+    mode = "daily"
+    for flag, name in (("--outlook", "outlook"), ("--breaks", "breaks"), ("--quiver", "quiver")):
+        if flag in argv:
+            mode = name
+            argv.remove(flag)
     src = argv[0] if len(argv) > 0 else "/tmp/surf.json"
     dst = argv[1] if len(argv) > 1 else "/tmp/surf.html"
     with open(src) as f:
         data = json.load(f)
+    out = {"daily": render, "outlook": render_outlook,
+           "breaks": render_breaks, "quiver": render_quiver}[mode](data)
     with open(dst, "w") as f:
-        f.write(render_outlook(data) if outlook else render(data))
+        f.write(out)
     print(f"wrote {dst}")
