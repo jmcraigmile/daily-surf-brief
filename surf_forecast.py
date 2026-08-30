@@ -35,7 +35,7 @@ WIND_POINTS = {"north": (32.86, -117.255), "south": (32.73, -117.253)}
 TIDE_STATION = "9410230"  # La Jolla (Scripps Pier)
 BUOY = "46258"            # Mission Bay, CA
 
-MORNING = (7.0, 8.5)      # 7:00 - 8:30am
+MORNING_END = 9.0         # dawn patrol runs sunrise -> 9:00am (Jake, 2026-08-30)
 # Breaks further than this get a "worth the drive?" marker on the card. Scoring
 # is deliberately NOT affected -- rank on quality, show the distance, let Jake
 # judge (his call, 2026-08-30). Nothing in the current thirteen trips it; the
@@ -907,12 +907,14 @@ def build(day=None):
     sunset_iso = weather["north"]["daily"]["sunset"][0]
     sunrise_iso = weather["north"]["daily"]["sunrise"][0]
     sunset_dt = datetime.strptime(sunset_iso, "%Y-%m-%dT%H:%M")
+    sunrise_dt = datetime.strptime(sunrise_iso, "%Y-%m-%dT%H:%M")
     ev_end = sunset_dt.hour + sunset_dt.minute / 60.0
     ev_start = ev_end - EVENING_LEAD_HOURS
+    mo_start = sunrise_dt.hour + sunrise_dt.minute / 60.0
 
     windows = [
-        {"key": "morning", "label": "Dawn patrol", "range": MORNING,
-         "time_txt": "7:00 - 8:30am"},
+        {"key": "morning", "label": "Dawn patrol", "range": (mo_start, MORNING_END),
+         "time_txt": f"sunrise {fmt_hour(mo_start)} to {fmt_hour(MORNING_END)}"},
         {"key": "evening", "label": "Evening glass", "range": (ev_start, ev_end),
          "time_txt": f"{fmt_hour(ev_start)} to sunset {fmt_hour(ev_end)}"},
     ]
