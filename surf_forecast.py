@@ -43,6 +43,29 @@ MORNING = (7.0, 8.5)      # 7:00 - 8:30am
 DRIVE_FLAG_MINUTES = 45
 EVENING_LEAD_HOURS = 1.0  # window = sunset-1h -> sunset
 
+# Jake's five-step wetsuit ladder (2026-08-30), keyed on measured water temp at
+# the La Jolla / Scripps Pier station. Breakpoints follow standard published
+# wetsuit temperature charts and are TUNABLE COMFORT DEFAULTS, not design
+# facts -- adjust from experience. SD water bottoms out around 57F, so 4/3 is
+# the deliberate floor of the ladder.
+WETSUIT_LADDER = [
+    (72.0, "Trunks + Rashguard"),
+    (68.0, "Trunks + Wetsuit Top"),
+    (64.0, "Spring Suit"),
+    (58.0, "3/2"),
+    (None, "4/3"),
+]
+
+
+def wetsuit_call(temp_f):
+    """Water temp (F) -> suit from the ladder. None -> no call, honestly."""
+    if temp_f is None:
+        return None
+    for floor, suit in WETSUIT_LADDER:
+        if floor is None or temp_f >= floor:
+            return suit
+    return WETSUIT_LADDER[-1][1]
+
 
 def fetch(url, timeout=25):
     req = urllib.request.Request(url, headers={"User-Agent": "sd-surf-brief/1.0"})
@@ -102,6 +125,30 @@ def get_tides(day):
     hilo = fetch_json(base + urllib.parse.urlencode({**common, "interval": "hilo"}))
     curve = fetch_json(base + urllib.parse.urlencode({**common, "interval": "h"}))
     return hilo.get("predictions", []), curve.get("predictions", [])
+
+
+def get_water_temp():
+    """Latest measured water temp (F) at the La Jolla / Scripps Pier station.
+
+    Same NOAA CO-OPS station as the tides -- a measurement, not a model.
+    Degrades gracefully like the buoy and the river: {"ok": false} on any
+    failure, and the renderer shows a dash instead of a suit call.
+    """
+    url = ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?"
+           + urllib.parse.urlencode({
+               "product": "water_temperature", "date": "latest",
+               "station": TIDE_STATION, "units": "english",
+               "time_zone": "lst_ldt", "format": "json",
+               "application": "sd-surf-brief",
+           }))
+    try:
+        rows = fetch_json(url).get("data") or []
+        if not rows:
+            return {"ok": False, "error": "no data"}
+        temp = float(rows[-1]["v"])
+        return {"ok": True, "temp_f": round(temp, 1), "when": rows[-1]["t"]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 
 def get_buoy():
@@ -702,6 +749,7 @@ def build(day=None):
     weather = get_weather(day)
     hilo, curve = get_tides(day)
     buoy = get_buoy()
+    wtemp = get_water_temp()
     rain = water.get_rain()
     river = water.get_river()
 
@@ -843,6 +891,8 @@ def build(day=None):
         "generated": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "sunrise": sunrise_iso[11:], "sunset": sunset_iso[11:],
         "tides": tides_today, "buoy": buoy, "windows": results,
+        "water_temp": wtemp,
+        "wetsuit": wetsuit_call(wtemp.get("temp_f") if wtemp.get("ok") else None),
         "rain": rain, "river": river,
         "water_day": water.day_summary(rain, river, results),
     }

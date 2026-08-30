@@ -671,6 +671,37 @@ def test_render_buoy_partial_data():
     check("None" not in html, "buoy None leaked into rendered page")
 
 
+def test_wetsuit_ladder():
+    """Jake's five-step suit ladder, keyed on measured water temp (F).
+    Breakpoints are tunable comfort defaults; this pins the mapping."""
+    cases = [
+        (78.0, "Trunks + Rashguard"), (72.0, "Trunks + Rashguard"),
+        (71.9, "Trunks + Wetsuit Top"), (68.0, "Trunks + Wetsuit Top"),
+        (67.9, "Spring Suit"), (64.0, "Spring Suit"),
+        (63.9, "3/2"), (58.0, "3/2"),
+        (57.9, "4/3"), (50.0, "4/3"),
+        (None, None),
+    ]
+    for temp, want in cases:
+        got = sf.wetsuit_call(temp)
+        check(got == want, f"wetsuit_call({temp}) = {got!r}, want {want!r}")
+
+
+def test_render_suit_line():
+    """Header shows temp + suit when measured, and an honest no-call when not."""
+    d = synthetic_data(buoy=None)
+    d["water_temp"] = {"ok": True, "temp_f": 66.2, "when": "2026-08-30 05:00"}
+    d["wetsuit"] = sf.wetsuit_call(66.2)
+    html = render.render(d)
+    check("66.2" in html and "Spring Suit" in html, "suit line missing temp or call")
+    d2 = synthetic_data(buoy=None)
+    d2["water_temp"] = {"ok": False, "error": "x"}
+    d2["wetsuit"] = None
+    html2 = render.render(d2)
+    check("temp unavailable" in html2, "missing-temp fallback not shown")
+    check("None" not in html2, "None leaked from missing water temp")
+
+
 # ---------------------------------------------------------------------- main
 
 if __name__ == "__main__":

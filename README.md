@@ -382,6 +382,8 @@ date, generated, sunrise, sunset          str
 tides[]                                   {time, height, type: "High"|"Low"}
 buoy                                      {time, swell_ft, swell_period, swell_dir_txt,
                                            windwave_ft, windwave_period, mean_dir} | null
+water_temp                                {ok, temp_f, when} | {ok: false, error}
+wetsuit                                   str from WETSUIT_LADDER | null (no reading, no call)
 rain                                      {ok, total_96h, event_inches, last_rain,
                                            hours_since, tier, tier_hours}
 river                                     {ok, cfs, when, state, label}

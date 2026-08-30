@@ -110,6 +110,10 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .brk-sub{font-size:12.5px;color:var(--ink-3);margin-top:3px;font-variant-numeric:tabular-nums}
 .brk-sub .far{color:var(--marg);background:var(--marg-bg);border-radius:5px;padding:1px 6px;font-weight:650}
 .brk-verdict{font-size:13px;color:var(--ink-2);margin-top:6px;line-height:1.45}
+.suitline{margin-top:10px;font-size:14px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.suitline b{color:var(--ink);font-weight:680}
+.suit-k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650;margin-right:2px}
+.suit-v{color:var(--accent);font-weight:700}
 
 .board{margin-top:11px;padding:10px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)}
 .board-k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
@@ -352,6 +356,19 @@ def render_water(data):
 </div>"""
 
 
+def suit_line(data):
+    """Water temp + wetsuit call in the header. Measured at the Scripps Pier
+    station; no reading means no call, shown honestly, never a guessed suit."""
+    wt = data.get("water_temp") or {}
+    if not wt.get("ok"):
+        return ("<div class='suitline'><span class='suit-k'>Water</span> "
+                "temp unavailable this run &mdash; suit call is yours</div>")
+    suit = data.get("wetsuit") or "--"
+    return (f"<div class='suitline'><span class='suit-k'>Water</span> "
+            f"<b>{wt['temp_f']}&deg;F</b> at Scripps Pier &middot; "
+            f"<span class='suit-v'>{esc(suit)}</span></div>")
+
+
 def render(data):
     d = datetime.strptime(data["date"], "%Y-%m-%d")
     tides = "".join(
@@ -389,6 +406,7 @@ def render(data):
     <span class="gen">generated {esc(data['generated'])}</span></div>
   <h1>{d.strftime('%A, %B %-d')}</h1>
   <p class="dayline">{day_verdict(data)}</p>
+  {suit_line(data)}
 </header>
 
 <div class="windows">
