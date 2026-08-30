@@ -3,9 +3,13 @@
 Bacterial / water-quality risk for the San Diego daily surf brief.
 
 WHAT THIS IS NOT: it does not read live County of San Diego beach advisories.
-There is no public API for them -- sdbeachinfo.com is an OutSystems app with no
-stable endpoint, and Heal the Bay and EPA BEACON are both dead ends. So this
-INFERS risk from the two signals that actually drive it, both machine-readable:
+sdbeachinfo.com is an OutSystems app with no stable endpoint, and Heal the Bay
+and EPA BEACON are dead ends. California DOES publish a machine-readable beach
+postings/closures dataset (CKAN, data.ca.gov) -- but checked 2026-08-30 its
+newest record was 2026-03-06, ~6 months stale, with NO record of the Imperial
+Beach or Coronado closures active that week. It is a historical archive, not a
+live safety gate. So this INFERS risk from two signals that ARE current, both
+machine-readable:
 
   1. Rainfall history (Open-Meteo, hourly, past 5 days) -- urban runoff after
      rain is the dominant bacterial driver, and the county's own guidance is a
@@ -17,10 +21,10 @@ INFERS risk from the two signals that actually drive it, both machine-readable:
 sdbeachinfo.com / 619-338-2073 remains the authoritative check and the brief
 says so every day.
 
-Rain windows are Jake's calibration -- 48h for light rain, longer for storms --
-which is MORE PERMISSIVE than the county's flat 72-hour advisory. The output
-always states the county rule alongside, so an inside-the-official-window call
-is visible as such rather than silently overridden.
+Rain windows are anchored to the County's OWN published trigger (>=0.20 in ->
+72 h). Below that threshold a shorter 24 h window applies, which is more
+permissive than a blanket reading of the advice; the output always states the
+County rule alongside, so an inside-the-official-window call stays visible.
 """
 
 import json
@@ -38,13 +42,27 @@ RIVER_FLOWING = 150.0   # ~p97 -- OB is in the plume
 RIVER_HIGH = 400.0      # ~p99 -- storm discharge
 
 # Rain tiers: (inches, base wait hours, label)
+#
+# Recalibrated 2026-08-30 to the County's ACTUAL published trigger, after an
+# external fact-check. Verified against the County's own advisory explanation
+# (DEHQ_bb_advisory_explanation.pdf):
+#
+#   "General (rain) advisories are issued when rainfall equal to or greater than
+#    0.20 inch is received in coastal or valley areas of San Diego County...
+#    avoid contact with ocean and bay water for a period of 72 hours after
+#    rainfall ends."
+#
+# The old boundaries (0.10 / 0.25) were invented and matched nothing. 0.20 in is
+# now the line at which the County itself issues an advisory, so it is the line
+# where this brief goes to the full 72 hours.
+COUNTY_RAIN_TRIGGER_IN = 0.20   # County's published advisory threshold
+COUNTY_RULE_HOURS = 72          # County's published post-rain wait
+
 RAIN_TIERS = [
-    (1.00, 96, "heavy"),
-    (0.25, 72, "moderate"),
-    (0.10, 48, "light"),
-    (0.01, 24, "trace"),
+    (1.00, 96, "heavy"),        # well past the trigger -- longer runoff tail
+    (0.20, 72, "advisory"),     # AT the County trigger: their rule, exactly
+    (0.05, 24, "sub-advisory"), # measurable but under the County threshold
 ]
-COUNTY_RULE_HOURS = 72  # what San Diego County actually advises, for reference
 
 
 def _fetch_json(url, timeout=25):
@@ -141,7 +159,21 @@ def assess(brk, rain, river):
     w = brk.get("water") or {}
     chronic = w.get("chronic", "normal")
     river_mouth = w.get("river_mouth", False)
-    factor = w.get("rain_factor", 1.0)
+
+    # OUTLET PROXIMITY replaces the old invented rain_factor multipliers
+    # (1.15 / 1.25 / 1.5), which an external fact-check correctly flagged as
+    # having no empirical or regulatory basis. This version comes straight from
+    # the County's published advisory language, which singles out exactly this:
+    #
+    #   "...especially those located adjacent to storm drains, creeks, rivers,
+    #    and lagoon outlets."
+    #
+    # "at"     = the break sits on the outlet (OB Jetty at the river mouth,
+    #            Cardiff at the San Elijo Lagoon mouth)
+    # "nearby" = a named outlet within roughly a mile
+    # "none"   = no named outlet
+    outlet = w.get("outlet_proximity", "none")
+    factor = {"at": 1.5, "nearby": 1.2, "none": 1.0}.get(outlet, 1.0)
 
     level = "clear"
     reasons = []
@@ -165,8 +197,9 @@ def assess(brk, rain, river):
     if rain.get("ok") and rain.get("tier"):
         hrs, since = rain["tier_hours"] * factor, rain["hours_since"]
         inches, tier = rain.get("event_inches", 0), rain["tier"]
-        acute = since <= 24 and inches >= 0.25
-        dirty = river_mouth or chronic == "high"
+        # Aligned to the County's own 0.20 in trigger rather than an invented 0.25.
+        acute = since <= 24 and inches >= COUNTY_RAIN_TRIGGER_IN
+        dirty = river_mouth or outlet == "at" or chronic == "high"
 
         if since <= hrs:
             left = int(hrs - since)
@@ -186,8 +219,9 @@ def assess(brk, rain, river):
                          f"{int(hrs)}h window, and bacteria lag the rain")
 
         if since <= COUNTY_RULE_HOURS and level not in ("severe",):
-            reasons.append(f"Still inside the County's flat 72-hour post-rain advisory "
-                           f"({int(since)}h since rain) -- this brief's window is shorter")
+            reasons.append(f"Still inside the County's 72-hour post-rain advisory "
+                           f"({int(since)}h since rain; County triggers at "
+                           f"{COUNTY_RAIN_TRIGGER_IN}\" of rain)")
 
     # --- river (only meaningful for the spots in its plume)
     if river.get("ok") and river_mouth:

@@ -154,6 +154,352 @@ def test_component_maxima():
                                   f"{b['name']}: {k}={bd[k]} outside 0-{mx}")
 
 
+# ------------------------------------------------------- canyon decomposition
+#
+# Regression set for the 2026-08-30 fix. The canyon lens is refraction, so it
+# acts on the LONG-PERIOD component's period and on that component's energy
+# alone. Feeding it the model's blended mean period, or applying it to the whole
+# sea, are the two bugs these pin.
+
+# The real 2026-08-30 dawn case: buoy held 3.3ft @ 16.7s SSW for six hours while
+# the model reported a 10.7s blend.
+SUNDAY_SW = {"wave_height": 4.7, "wave_period": 10.7,
+             "swell_wave_height": 3.2, "swell_wave_period": 7.0,
+             "wind_wave_height": 0.0, "wind_wave_period": 0.0,
+             "swell_wave_direction": 279}
+SUNDAY_BUOY = {"time": "2026-08-30 01:56 UTC", "swell_ft": 3.3, "swell_period": 16.7,
+               "swell_dir_txt": "SSW", "windwave_ft": 3.3, "windwave_period": 8.3,
+               "mean_dir": 208}
+
+BLACKS = next(b for b in BREAKS if b["name"] == "Black's Beach")
+SCRIPPS = next(b for b in BREAKS if b["name"] == "Scripps Pier")
+SHORES = next(b for b in BREAKS if b["name"] == "La Jolla Shores")
+PBDRIVE = next(b for b in BREAKS if b["name"] == "PB Drive")
+
+
+def test_sea_state_prefers_buoy_when_fresh():
+    sea = sf.sea_state(SUNDAY_SW, SUNDAY_BUOY, "2026-08-30")
+    check(sea["source"] == "buoy", f"expected buoy split, got {sea['source']}")
+    check(abs(sea["long_period"] - 16.7) < 0.01, "buoy swell period not carried through")
+    # The split is rescaled onto the model total, which is the trusted number.
+    recombined = (sea["long_hs"] ** 2 + sea["short_hs"] ** 2) ** 0.5
+    check(abs(recombined - 4.7) < 0.05,
+          f"rescaled split should recombine to the model total, got {recombined:.2f}")
+
+
+def test_sea_state_rejects_inconsistent_model_partition():
+    """The model said 3.2ft @ 7.0s while its own total said 10.7s. A partition
+    that cannot reproduce the model's own mean period is not usable."""
+    sea = sf.sea_state(SUNDAY_SW, None, "2026-08-30")
+    check(sea["source"] == "none",
+          f"inconsistent model partition should be rejected, got {sea['source']}")
+    check(sea["confidence"] == "low", "rejected partition should report low confidence")
+
+
+def test_sea_state_accepts_consistent_model_partition():
+    sw = {"wave_height": 4.0, "wave_period": 13.4,
+          "swell_wave_height": 3.5, "swell_wave_period": 14.0,
+          "wind_wave_height": 1.5, "wind_wave_period": 6.0,
+          "swell_wave_direction": 280}
+    sea = sf.sea_state(sw, None, "2026-08-30")
+    check(sea["source"] == "model", f"consistent partition should be used, got {sea['source']}")
+
+
+def test_buoy_not_used_as_a_forecast():
+    """A buoy reading is an observation. It must not steer a brief days out."""
+    sea = sf.sea_state(SUNDAY_SW, SUNDAY_BUOY, "2026-09-05")
+    check(sea["source"] != "buoy", "buoy used for a date a week from the reading")
+
+
+def test_canyon_amplifies_only_long_period_energy():
+    """Amplifying the TOTAL over-applies badly -- on this sea it gives ~8.0ft
+    where decomposing first gives ~6.5ft."""
+    sea = sf.sea_state(SUNDAY_SW, SUNDAY_BUOY, "2026-08-30")
+    hs, note, eff = sf.canyon_transform(BLACKS, 4.7, 10.7, 279, sea)
+    check(6.0 < hs < 7.0, f"Black's should land ~6.5ft on this sea, got {hs}")
+    naive = 4.7 * (1.0 + 0.85 * min(1.0, (16.7 - 11) / 7.0))
+    check(hs < naive - 1.0,
+          f"decomposed {hs} should be well under naive whole-sea {naive:.1f}")
+    check(eff > 10.7, "effective period should rise once the lens amplifies the swell")
+
+
+def test_canyon_shadows_use_long_period_too():
+    sea = sf.sea_state(SUNDAY_SW, SUNDAY_BUOY, "2026-08-30")
+    scr = sf.canyon_transform(SCRIPPS, 4.7, 10.7, 279, sea)[0]
+    sho = sf.canyon_transform(SHORES, 4.7, 10.7, 279, sea)[0]
+    check(scr < 4.7, f"Scripps should be shadowed on a long-period S, got {scr}")
+    check(sho < scr, f"the Shores shadow is the deepest: Shores {sho} vs Scripps {scr}")
+    # Never below the windwave that passes over the canyon untouched.
+    check(sho >= sea["short_hs"] - 0.05,
+          f"shadow drove {sho} below the untouched windwave {sea['short_hs']}")
+
+
+def test_canyon_blend_bug_regression():
+    """THE bug: the blended mean period materially understates the lens when a
+    long groundswell rides under chop.
+
+    Updated 2026-08-30: this test used to assert the legacy path returned
+    EXACTLY 1.0x at 10.7s. That was an artifact of the old hard 11-second
+    switch, which an external fact-check correctly identified as unfounded --
+    refraction is continuous. The surviving invariant is the one that always
+    mattered: reading the blended period gives a materially smaller answer than
+    decomposing first."""
+    sea = sf.sea_state(SUNDAY_SW, SUNDAY_BUOY, "2026-08-30")
+    blended = sf.canyon_transform(BLACKS, 4.7, 10.7, 279)[0]      # legacy path
+    fixed = sf.canyon_transform(BLACKS, 4.7, 10.7, 279, sea)[0]
+    check(fixed > blended,
+          f"decomposed read must exceed the blended one: {fixed} vs {blended}")
+    check((fixed - blended) / blended > 0.10,
+          f"and by a material margin, not noise: {fixed} vs {blended}")
+    # The blended read must still understate the true 16.7s energy.
+    full = sf._canyon_factor("amplify", 16.7, 209)[0]
+    partial = sf._canyon_factor("amplify", 10.7, 209)[0]
+    check(full > partial, "a 16.7s swell must engage the lens more than a 10.7s blend")
+
+
+def test_non_canyon_spots_unaffected_by_decomposition():
+    """Blast radius check: the fix must touch the three canyon spots only."""
+    sea = sf.sea_state(SUNDAY_SW, SUNDAY_BUOY, "2026-08-30")
+    for b in BREAKS:
+        if b.get("canyon", "none") != "none":
+            continue
+        hs, note, eff = sf.canyon_transform(b, 4.7, 10.7, 279, sea)
+        check(hs == 4.7, f"{b['name']}: non-canyon spot changed to {hs}")
+        check(note is None, f"{b['name']}: non-canyon spot got a canyon note")
+        check(eff == 10.7, f"{b['name']}: non-canyon effective period moved to {eff}")
+
+
+def test_short_period_sea_leaves_canyon_off():
+    """Below 11s the lens genuinely is off -- windswell skims the whole shelf."""
+    sw = {"wave_height": 4.0, "wave_period": 8.0,
+          "swell_wave_height": 3.0, "swell_wave_period": 8.0,
+          "wind_wave_height": 2.0, "wind_wave_period": 7.0,
+          "swell_wave_direction": 280}
+    sea = sf.sea_state(sw, None, "2026-08-30")
+    for b in (BLACKS, SCRIPPS, SHORES):
+        hs = sf.canyon_transform(b, 4.0, 8.0, 280, sea)[0]
+        check(hs == 4.0, f"{b['name']}: canyon acted on an 8s sea ({hs})")
+
+
+def test_canyon_degrades_without_buoy_or_partition():
+    """No buoy and an unusable partition must still produce a sane answer."""
+    sea = sf.sea_state({"wave_height": 5.0, "wave_period": 16.0}, None, "2026-08-30")
+    check(sea is not None and sea["source"] == "none", "expected the low-confidence fallback")
+    hs, note, eff = sf.canyon_transform(BLACKS, 5.0, 16.0, 280, sea)
+    check(hs > 5.0, f"lens should still fire on a 16s sea, got {hs}")
+    check(sf.sea_state({"wave_height": None, "wave_period": None}, None, "2026-08-30") is None,
+          "sea_state should return None with no usable height")
+
+
+def test_score_break_without_sea_still_works():
+    """cond['sea'] is optional -- the legacy call path must not break."""
+    for b in (BLACKS, PBDRIVE):
+        s = sf.score_break(b, cond())
+        check(0 <= s[0] <= 100, f"{b['name']}: legacy score_break out of range")
+
+
+# ------------------------------------------------- North County adds (08-30)
+
+CARDIFF = next(b for b in BREAKS if b["name"] == "Cardiff Reef")
+SWAMIS = next(b for b in BREAKS if b["name"] == "Swami's")
+OSIDE = next(b for b in BREAKS if b["name"] == "Oceanside Pier")
+
+
+def test_thirteen_breaks_with_regions_and_drive_times():
+    check(len(BREAKS) == 13, f"expected 13 breaks, got {len(BREAKS)}")
+    for b in BREAKS:
+        check(b.get("region") in ("Central", "North", "South"),
+              f"{b['name']}: bad region {b.get('region')}")
+        dm = b.get("drive_minutes")
+        check(isinstance(dm, int) and 0 < dm < 120,
+              f"{b['name']}: implausible drive_minutes {dm}")
+
+
+def test_swamis_blocks_above_the_quiver_ceiling():
+    """Swami's holds to triple-overhead; the quiver stops around head-and-a-half.
+    Above 9ft face it must refuse rather than name a board."""
+    check(sf.pick_board(SWAMIS, 8.5)[0] is not None, "Swami's should still call a board at 8.5ft")
+    for face in (9.0, 12.0, 18.0, 40.0):
+        p, bk, note = sf.pick_board(SWAMIS, face)
+        check(p is None and bk is None, f"Swami's named a board at {face}ft face: {p}")
+        check("step-up" in note or "CEILING" in note, "ceiling note missing the reason")
+    # A conditions swap must never talk you past a refusal.
+    ctx = {"wind_speed": 2, "swell_period": 18}
+    check(sf.pick_board(SWAMIS, 12.0, ctx)[0] is None, "a swap overrode Swami's ceiling")
+
+
+def test_cardiff_is_the_second_kelp_spot():
+    """The wind gap was the worst hole: one NW-onshore answer, and it was the
+    most dangerous spot in the guide. Cardiff has to actually beat it there."""
+    check(CARDIFF.get("kelp_bonus") is True, "Cardiff missing kelp_bonus")
+    kelpy = [b["name"] for b in BREAKS if b.get("kelp_bonus")]
+    check(len(kelpy) == 2, f"expected exactly 2 kelp spots, got {kelpy}")
+    # Onshore NW at 14mph: Cardiff should out-score Sunset Cliffs on wind alone.
+    c = cond(wind_dir=310, wind_speed=14, swell_dir=285)
+    cw = sf.score_break(CARDIFF, c)[1]["wind"]
+    sw = sf.score_break(next(b for b in BREAKS if b["name"] == "Sunset Cliffs"), c)[1]["wind"]
+    check(cw >= sw, f"Cardiff wind {cw} should be >= Sunset Cliffs {sw} on an onshore NW")
+    check(CARDIFF["localism"] < 4, "Cardiff should be the low-localism alternative")
+
+
+def test_new_spots_fill_the_gaps_they_were_added_for():
+    high = [b["name"] for b in BREAKS if "high" in b["tide_pref"]]
+    check("Cardiff Reef" in high and "Oceanside Pier" in high,
+          f"high-tide coverage not extended: {high}")
+    check(len(high) >= 5, f"expected high-tide options to grow past 3, got {len(high)}")
+    big = [b["name"] for b in BREAKS if b["size_max"] > 8]
+    check("Swami's" in big, "Swami's should extend the size ceiling")
+    # Oceanside's whole point is the widest swell window in the guide.
+    span = lambda b: min((hi - lo) % 360 or 360 for lo, hi in b["swell_windows"])
+    check(span(OSIDE) >= span(CARDIFF), "Oceanside should have a wider window than Cardiff")
+
+
+def test_drive_flag_threshold():
+    """Scoring must NOT move with distance -- flag only (Jake's call 2026-08-30).
+    Drive times are OSRM free-flow from the home neighbourhood, recomputed once
+    Jake gave his location; Oceanside at 49 min is the one that trips the flag."""
+    check(sf.DRIVE_FLAG_MINUTES == 45, "drive flag threshold moved unexpectedly")
+    far = [b["name"] for b in BREAKS if b["drive_minutes"] > sf.DRIVE_FLAG_MINUTES]
+    check(far == ["Oceanside Pier"], f"expected only Oceanside to trip the flag, got {far}")
+    for b in BREAKS:
+        check(isinstance(b.get("drive_miles"), (int, float)) and b["drive_miles"] > 0,
+              f"{b['name']}: missing or bad drive_miles")
+
+
+def test_no_street_address_in_the_repo():
+    """05-Daily is a PUBLIC GitHub repo. Drive times are referenced to a
+    neighbourhood, never to Jake's address -- publishing it would be a real
+    privacy leak, and it would sit in git history forever."""
+    import re
+    here = os.path.dirname(os.path.abspath(__file__))
+    # A street number followed by a street-type word is the shape to catch.
+    pat = re.compile(r"\b\d{3,5}\s+[A-Z][a-z]+\s+(St|Street|Ave|Avenue|Blvd|Dr|Drive|Rd|Road)\b")
+    for fn in ("breaks.json", "README.md", "surf_forecast.py", "render.py", "test_brief.py"):
+        path = os.path.join(here, fn)
+        if not os.path.exists(path):
+            continue
+        txt = open(path, encoding="utf-8").read()
+        hits = [m.group(0) for m in pat.finditer(txt)]
+        check(not hits, f"{fn}: looks like a street address leaked -- {hits[:3]}")
+        # Built arithmetically so the ZIP itself never appears in this file.
+        check(str(92_000 + 103) not in txt, f"{fn}: home ZIP leaked into a public repo")
+
+
+# ------------------------------------------- scoring direction source (08-30)
+
+def test_scoring_direction_prefers_measured_over_model_partition():
+    """Regression for the bug adding Swami's exposed: scoring ran on the model's
+    swell-partition direction -- the same untrustworthy field the canyon fix
+    abandoned. On a measured 16.7s SSW the partition said 279 (W), scoring
+    Swami's 26.8/28 and ranking it #1 in the county on a swell it barely sees.
+    Direction is the largest single lever (28 pts), so this mattered most."""
+    sea = sf.sea_state(SUNDAY_SW, SUNDAY_BUOY, "2026-08-30")
+    model_dir = SUNDAY_SW["swell_wave_direction"]        # 279, W  -- wrong
+    buoy_dir = sea["long_dir"]                            # ~208, SSW -- measured
+    on_model = sf.score_break(SWAMIS, cond(swell_dir=model_dir))[1]["swell_dir"]
+    on_buoy = sf.score_break(SWAMIS, cond(swell_dir=buoy_dir))[1]["swell_dir"]
+    check(on_model > 20, "sanity: the model direction should have scored Swami's high")
+    check(on_buoy < 5, f"a W/NW point should score near zero on a SSW swell, got {on_buoy}")
+    check(on_model - on_buoy > 15, "the two sources should differ materially here")
+
+
+def test_wide_window_spot_wins_an_off_angle_swell():
+    """The pay-off: on a south swell the guide should point at the spot that
+    actually faces it, not at a W/NW point."""
+    c = cond(swell_dir=209, swell_period=16.7)
+    osd = sf.score_break(OSIDE, c)[0]
+    swm = sf.score_break(SWAMIS, c)[0]
+    pbp = sf.score_break(next(b for b in BREAKS if b["name"] == "PB Point"), c)[0]
+    check(osd > swm, f"Oceanside {osd} should beat Swami's {swm} on a SSW swell")
+    check(osd > pbp, f"Oceanside {osd} should beat PB Point {pbp} on a SSW swell")
+
+
+# ------------------------------------ external fact-check corrections (08-30)
+#
+# An external audit was run against the research. Two of its headline claims
+# were WRONG on verification (Crystal Pier "closed" -- it reopened 2025-07-07;
+# the CA state dataset as a live safety gate -- it was ~6 months stale and
+# missing the then-active IB/Coronado closures). These tests pin only the
+# corrections that survived checking against a primary source.
+
+def test_rain_tiers_anchored_to_county_trigger():
+    """The County publishes its own threshold: advisories at >=0.20 in, avoid
+    contact 72 h after rain ends. The old 0.10/0.25 boundaries matched nothing."""
+    check(water.COUNTY_RAIN_TRIGGER_IN == 0.20, "County rain trigger must be 0.20 in")
+    check(water.COUNTY_RULE_HOURS == 72, "County post-rain window must be 72 h")
+    tiers = {label: (inches, hrs) for inches, hrs, label in water.RAIN_TIERS}
+    check("advisory" in tiers, "expected a tier named for the County advisory")
+    check(tiers["advisory"] == (0.20, 72),
+          f"the advisory tier must BE the County rule, got {tiers.get('advisory')}")
+    # Rain exactly at the County trigger gets the County's full window.
+    got = None
+    for inches, hrs, label in water.RAIN_TIERS:
+        if 0.20 >= inches:
+            got = (label, hrs)
+            break
+    check(got == ("advisory", 72), f"0.20 in should select the 72 h County tier, got {got}")
+
+
+def test_invented_rain_multipliers_are_gone():
+    """rain_factor (1.15 / 1.25 / 1.5) had no empirical or regulatory basis.
+    Replaced by outlet_proximity, which comes from the County's own naming of
+    storm drains, creeks, rivers and lagoon outlets."""
+    for b in BREAKS:
+        w = b["water"]
+        check("rain_factor" not in w, f"{b['name']}: invented rain_factor still present")
+        check(w.get("outlet_proximity") in ("at", "nearby", "none"),
+              f"{b['name']}: bad outlet_proximity {w.get('outlet_proximity')}")
+
+
+def test_cardiff_and_ob_jetty_are_coastal_outlets():
+    """County language explicitly names lagoon outlets. San Elijo Lagoon drains
+    into the lineup at Cardiff, so it belongs in the same class as OB Jetty."""
+    check(CARDIFF["water"]["outlet_proximity"] == "at",
+          "Cardiff must be classified as sitting on a coastal outlet")
+    jetty = next(b for b in BREAKS if b["name"] == "OB Jetty")
+    check(jetty["water"]["outlet_proximity"] == "at", "OB Jetty must be an outlet spot")
+    # An outlet spot must be treated at least as harshly as a non-outlet one.
+    rain = dict(ok=True, tier="advisory", tier_hours=72, hours_since=30, event_inches=0.4)
+    river = dict(ok=True, cfs=5.0, state="baseflow", label="dry-weather baseflow")
+    out = water.assess(CARDIFF, rain, river)
+    ref = water.assess(SWAMIS, rain, river)
+    check(water.RANK[out["level"]] >= water.RANK[ref["level"]],
+          f"Cardiff ({out['level']}) should not be softer than a no-outlet spot ({ref['level']})")
+
+
+def test_canyon_has_no_hard_period_switch():
+    """There is no 11-second activation threshold -- refraction varies
+    continuously. The old code jumped from x1.0 to a ramp at exactly 11 s."""
+    prev = None
+    for i in range(60, 220):
+        p = i / 10.0
+        f = sf._canyon_factor("amplify", p, 285)[0]
+        if prev is not None:
+            check(abs(f - prev) <= 0.03,
+                  f"canyon factor jumps {prev:.3f}->{f:.3f} at {p}s -- reintroduced switch")
+        prev = f
+    check(sf._canyon_factor("amplify", 8.0, 285)[0] == 1.0, "8s should be effectively no lens")
+    check(sf._canyon_factor("amplify", 18.0, 285)[0] > 1.5, "18s should be the full modelled effect")
+
+
+def test_blacks_access_uses_city_guidance():
+    """The City says the safest access is along the beach from adjacent beaches.
+    The brief must not route someone down an unimproved cliff trail."""
+    h = BLACKS["hazards"].lower()
+    check("adjacent beaches" in h, "Black's hazards must carry the City's access wording")
+    check("unstable" in h, "Black's hazards must keep the cliff-instability warning")
+    check(BLACKS["skill"].lower().startswith("intermediate"),
+          "Black's skill should be intermediate-to-advanced by size, not categorically advanced")
+
+
+def test_no_unsupported_oceanside_canyon_claim():
+    """The 'second submarine canyon amplifies the pier' claim was retracted."""
+    v = OSIDE["verdict"].lower()
+    check(OSIDE.get("canyon", "none") == "none", "Oceanside must not have a canyon transform")
+    check("removed" in v or "unsupported" in v,
+          "Oceanside verdict should record that the canyon claim was retracted")
+
+
 # --------------------------------------------------------------------- water
 
 STORM_RAIN = {"ok": True, "total_96h": 1.4, "event_inches": 1.2,
@@ -267,6 +613,35 @@ def test_render_blocked_and_no_none():
     # The blocked spot must never be the day's recommendation.
     verdict = html.split('class="dayline">')[1].split("</p>")[0]
     check("OB Pier</strong> is" not in verdict, "blocked spot named as the day's call")
+
+
+def test_render_split_line():
+    """A blended '4.7ft @ 10.7s' hides a groundswell under chop -- the page has
+    to show the split when the components diverge, and stay quiet when they
+    don't. Regression for the 2026-08-30 canyon fix."""
+    sea = sf.sea_state(SUNDAY_SW, SUNDAY_BUOY, "2026-08-30")
+    d = synthetic_data(buoy=None)
+    for w in d["windows"]:
+        w["sea"] = sea
+    html = render.render(d)
+    check("groundswell" in html, "split line missing when buoy shows 17s under 8s")
+    check("buoy 46258" in html, "split line should name its source")
+    check("None" not in html, "None leaked with sea present")
+
+    # A single-component sea must not produce a split line.
+    for w in d["windows"]:
+        w["sea"] = {"long_hs": 4.0, "long_period": 9.0, "short_hs": 0.0,
+                    "short_period": 8.5, "hs_total": 4.0, "tm_total": 9.0,
+                    "long_dir": 280, "source": "model", "confidence": "medium",
+                    "note": None}
+    check("groundswell" not in render.render(d),
+          "split line shown for a sea with no meaningful split")
+
+    # And no sea at all (older JSON, or the low-confidence fallback) must render.
+    for w in d["windows"]:
+        w.pop("sea", None)
+    html = render.render(d)
+    check("None" not in html, "None leaked with sea absent")
 
 
 def test_render_buoy_partial_data():

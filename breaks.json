@@ -41,8 +41,8 @@
       "canyon": "amplify",
       "crowd": 4,
       "localism": 3,
-      "skill": "Advanced only",
-      "hazards": "Two significant rips, no swim zones. Active bluff collapse -- stay off the cliff walls. 72hr post-rain rule. Gliderport trail posted Do Not Use; take the paved La Jolla Farms Rd on foot.",
+      "skill": "Intermediate to advanced, depending on size",
+      "hazards": "CITY GUIDANCE: 'Access to Black's Beach is very difficult due to the high cliffs and unimproved and unmaintained trails. The SAFEST ACCESS IS FROM ADJACENT BEACHES TO THE NORTH AND SOUTH, but this access may be obstructed by high tides or surf. The cliffs are unstable and slides can occur without warning.' Check the tide before committing to a beach walk. Two significant rips, no designated swim zones. 72hr post-rain rule.",
       "verdict": "Best beachbreak in the county. The canyon doubles long-period swell here while draining Scripps and the Shores.",
       "board_ladder": [
         [
@@ -79,9 +79,11 @@
       "water": {
         "chronic": "normal",
         "note": "Standard county post-rain rule applies. No chronic source nearby.",
-        "rain_factor": 1.0,
-        "river_mouth": false
-      }
+        "river_mouth": false,
+        "outlet_proximity": "none"
+      },
+      "drive_minutes": 22,
+      "drive_miles": 14.1
     },
     {
       "name": "Scripps Pier",
@@ -122,7 +124,7 @@
       "crowd": 3,
       "localism": 2,
       "skill": "Beginner-intermediate",
-      "hazards": "Often affected by drain outfall directly at the beach. 72hr post-storm rule. Pier is UCSD property, closed to public.",
+      "hazards": "Permitted outfalls in the area, including SIO's monitored filtered-seawater discharge and stormwater south of the pier -- treat as runoff-adjacent after rain rather than a chronically polluting drain. 72hr post-storm rule. Pier is UCSD property, closed to the public.",
       "verdict": "Size-starved far more often than maxed -- 79% too small in January. The canyon shadow at work.",
       "board_ladder": [
         [
@@ -149,7 +151,10 @@
       ],
       "board_swaps": [
         {
-          "face": [2.5, 5.0],
+          "face": [
+            2.5,
+            5.0
+          ],
           "max_wind": 8,
           "min_period": 9,
           "primary": "5'4 Mini-Simmons",
@@ -159,11 +164,14 @@
       ],
       "quality_cap": 86,
       "water": {
-        "chronic": "elevated",
-        "note": "'Often affected by drain outfall directly at the beach.' Lifeguards warn off water contact for 72h after a storm.",
-        "rain_factor": 1.15,
-        "river_mouth": false
-      }
+        "chronic": "normal",
+        "note": "Runoff-adjacent: permitted outfalls nearby, stormwater south of the pier. County post-rain rule applies with the outlet caveat. Earlier wording ('polluting drain directly at the beach') was an overstatement, corrected 2026-08-30.",
+        "river_mouth": false,
+        "outlet_proximity": "nearby",
+        "outlet": "permitted outfalls near the pier"
+      },
+      "drive_minutes": 19,
+      "drive_miles": 11.7
     },
     {
       "name": "La Jolla Shores",
@@ -233,7 +241,10 @@
       ],
       "board_swaps": [
         {
-          "face": [2.5, 5.5],
+          "face": [
+            2.5,
+            5.5
+          ],
           "max_wind": 8,
           "min_period": 9,
           "primary": "5'4 Mini-Simmons",
@@ -245,9 +256,11 @@
       "water": {
         "chronic": "normal",
         "note": "Standard county post-rain rule applies.",
-        "rain_factor": 1.0,
-        "river_mouth": false
-      }
+        "river_mouth": false,
+        "outlet_proximity": "none"
+      },
+      "drive_minutes": 17,
+      "drive_miles": 11.1
     },
     {
       "name": "PB Point",
@@ -312,9 +325,11 @@
       "water": {
         "chronic": "normal",
         "note": "Standard county post-rain rule applies.",
-        "rain_factor": 1.0,
-        "river_mouth": false
-      }
+        "river_mouth": false,
+        "outlet_proximity": "none"
+      },
+      "drive_minutes": 19,
+      "drive_miles": 9.9
     },
     {
       "name": "Crystal Pier",
@@ -384,9 +399,11 @@
       "water": {
         "chronic": "normal",
         "note": "Standard county post-rain rule applies.",
-        "rain_factor": 1.0,
-        "river_mouth": false
-      }
+        "river_mouth": false,
+        "outlet_proximity": "none"
+      },
+      "drive_minutes": 16,
+      "drive_miles": 8.8
     },
     {
       "name": "PB Drive",
@@ -455,7 +472,10 @@
       ],
       "board_swaps": [
         {
-          "face": [2.5, 5.0],
+          "face": [
+            2.5,
+            5.0
+          ],
           "max_wind": 8,
           "min_period": 10,
           "primary": "5'4 Mini-Simmons",
@@ -467,9 +487,11 @@
       "water": {
         "chronic": "normal",
         "note": "Standard county post-rain rule applies.",
-        "rain_factor": 1.0,
-        "river_mouth": false
-      }
+        "river_mouth": false,
+        "outlet_proximity": "none"
+      },
+      "drive_minutes": 15,
+      "drive_miles": 7.9
     },
     {
       "name": "Mission Beach",
@@ -531,7 +553,10 @@
       ],
       "board_swaps": [
         {
-          "face": [2.5, 4.5],
+          "face": [
+            2.5,
+            4.5
+          ],
           "max_wind": 8,
           "min_period": 9,
           "primary": "5'4 Mini-Simmons",
@@ -543,9 +568,12 @@
       "water": {
         "chronic": "elevated",
         "note": "Mission Bay's Rose and Tecolote Creeks exceed state recreation standards at least half the time EVEN IN DRY WEATHER. Stay clear of the south jetty and the bay side.",
-        "rain_factor": 1.25,
-        "river_mouth": false
-      }
+        "river_mouth": false,
+        "outlet_proximity": "nearby",
+        "outlet": "Rose and Tecolote Creeks into Mission Bay"
+      },
+      "drive_minutes": 13,
+      "drive_miles": 6.5
     },
     {
       "name": "OB Pier",
@@ -606,7 +634,10 @@
       ],
       "board_swaps": [
         {
-          "face": [2.5, 4.5],
+          "face": [
+            2.5,
+            4.5
+          ],
           "max_wind": 8,
           "min_period": 9,
           "primary": "5'4 Mini-Simmons",
@@ -618,9 +649,12 @@
       "water": {
         "chronic": "elevated",
         "note": "'Fair -- not great most days and TOXIC IF THE SAN DIEGO RIVER IS FLOWING.'",
-        "rain_factor": 1.5,
-        "river_mouth": true
-      }
+        "river_mouth": true,
+        "outlet_proximity": "nearby",
+        "outlet": "San Diego River mouth just north"
+      },
+      "drive_minutes": 12,
+      "drive_miles": 6.4
     },
     {
       "name": "OB Jetty",
@@ -684,9 +718,12 @@
       "water": {
         "chronic": "high",
         "note": "WORST WATER QUALITY OF THE TEN. Breaks directly in front of Dog Beach at the river outlet. A County advisory ran from April 2, 2026 -- a spring, NON-STORM advisory. The river falls out here year-round. Check sdbeachinfo.com or 619-338-2073 every single time.",
-        "rain_factor": 1.5,
-        "river_mouth": true
-      }
+        "river_mouth": true,
+        "outlet_proximity": "at",
+        "outlet": "San Diego River mouth"
+      },
+      "drive_minutes": 13,
+      "drive_miles": 6.2
     },
     {
       "name": "Sunset Cliffs",
@@ -766,10 +803,264 @@
       "water": {
         "chronic": "good",
         "note": "Best water quality of the ten -- away from the river mouth. 'Typically ok but gets dicey after a rain.'",
-        "rain_factor": 1.0,
-        "river_mouth": false
-      }
+        "river_mouth": false,
+        "outlet_proximity": "none"
+      },
+      "drive_minutes": 16,
+      "drive_miles": 7.3
+    },
+    {
+      "name": "Cardiff Reef",
+      "region": "North",
+      "lat": 33.0175,
+      "lon": -117.281,
+      "swell_windows": [
+        [
+          200,
+          320
+        ]
+      ],
+      "ideal_dir": 285,
+      "dir_note": "W to WNW best; usable SW-W-NW",
+      "size_ideal": [
+        2.5,
+        6.0
+      ],
+      "size_min": 1.5,
+      "size_max": 8,
+      "tide_pref": [
+        "low",
+        "mid",
+        "high"
+      ],
+      "tide_weight": 0.3,
+      "tide_note": "Good at all stages -- low-to-mid gives the better sections",
+      "wind_offshore": [
+        22,
+        112
+      ],
+      "wind_tolerance": 8,
+      "kelp_bonus": true,
+      "period_pref": "moderate",
+      "period_ideal": [
+        10,
+        18
+      ],
+      "canyon": "none",
+      "crowd": 3,
+      "localism": 1,
+      "skill": "All levels",
+      "hazards": "Rocks. Otherwise the most forgiving reef in the guide -- no cliff exit, no rope descent, no urchin field.",
+      "verdict": "The second kelp spot, and the reason it goes in first: a large kelp bed plus wind-protecting cliffs smooth the chop when the rest of the county has gone crumbly. Rated very consistent. On a blown-out afternoon this is the call, not Sunset Cliffs.",
+      "board_ladder": [
+        [
+          0,
+          2,
+          "11'0 Chris Craft",
+          "9'4 Pink Panther",
+          "Slow, mushy, flat-bottomed reef -- genuinely somewhere for the glider to go"
+        ],
+        [
+          2,
+          3.5,
+          "9'4 Pink Panther",
+          "7'6 Magic",
+          "Long reef walls, no push. Log water"
+        ],
+        [
+          3.5,
+          5.5,
+          "7'6 Magic",
+          "6'5 Egg",
+          "The Magic's brief exactly -- trim and glide down a long mushy wall. Frye 7.5\" for hold"
+        ],
+        [
+          5.5,
+          99,
+          "6'0 Surfer Rosa",
+          "6'5 Egg",
+          "Bigger winter swell at low tide, when the south peak finally gets punchy"
+        ]
+      ],
+      "quality_cap": 88,
+      "drive_minutes": 31,
+      "water": {
+        "chronic": "normal",
+        "note": "San Elijo Lagoon drains into the surf zone here. The County advisory explicitly names LAGOON OUTLETS as needing extra caution, so this is now a supported coastal-outlet classification, not an inference. Avoid after heavy rain.",
+        "river_mouth": false,
+        "outlet_proximity": "at",
+        "outlet": "San Elijo Lagoon mouth"
+      },
+      "drive_miles": 22.5
+    },
+    {
+      "name": "Swami's",
+      "region": "North",
+      "lat": 33.0345,
+      "lon": -117.2925,
+      "swell_windows": [
+        [
+          255,
+          320
+        ]
+      ],
+      "ideal_dir": 285,
+      "dir_note": "W ideal, W/NW the money direction. Right point/reef over rock ledge",
+      "size_ideal": [
+        3.0,
+        9.0
+      ],
+      "size_min": 2,
+      "size_max": 18,
+      "tide_pref": [
+        "low",
+        "mid"
+      ],
+      "tide_weight": 1.0,
+      "tide_note": "Low to mid. Not a high-tide fix",
+      "wind_offshore": [
+        22,
+        112
+      ],
+      "wind_tolerance": 6,
+      "period_pref": "long",
+      "period_ideal": [
+        12,
+        20
+      ],
+      "canyon": "none",
+      "crowd": 4,
+      "localism": 2,
+      "skill": "Intermediate at size; advanced once overhead",
+      "hazards": "Rocks. Long stairway from the bluff-top lot. Lineup runs on informal rotation etiquette and dropping in is the cardinal sin -- tight-knit, but no documented aggression record.",
+      "verdict": "Highest-rated spot in the county research (4/5, 52% clean in January) and the only real answer to the guide's size hole. Holds to triple-overhead -- long after the quiver stops.",
+      "board_ladder": [
+        [
+          0,
+          2.5,
+          "9'4 Pink Panther",
+          "11'0 Chris Craft",
+          "One of the best longboard rights between San Diego and LA"
+        ],
+        [
+          2.5,
+          4.5,
+          "7'6 Magic",
+          "6'5 Egg",
+          "The point wall rewards trim"
+        ],
+        [
+          4.5,
+          9,
+          "6'0 Surfer Rosa",
+          "7'6 Magic",
+          "The Rosa's window, and the range where Swami's genuinely extends your ceiling past Central SD"
+        ],
+        [
+          9,
+          99,
+          null,
+          null,
+          "CEILING -- above roughly head-and-a-half this is step-up / gun territory (sources say 8'0-9'0 for double-overhead and up). A 34.29L 6'0 is not that board. The block sits higher than Black's because a point takeoff is more forgiving than a Black's late drop, not because the quiver improved. Second spot after Black's and the Cliffs arguing for the Dredgernaut."
+        ]
+      ],
+      "gap_above": 9,
+      "quality_cap": 92,
+      "drive_minutes": 35,
+      "water": {
+        "chronic": "normal",
+        "note": "Standard county post-rain rule applies. No chronic source nearby.",
+        "river_mouth": false,
+        "outlet_proximity": "none"
+      },
+      "drive_miles": 24.4
+    },
+    {
+      "name": "Oceanside Pier",
+      "region": "North",
+      "lat": 33.1935,
+      "lon": -117.386,
+      "swell_windows": [
+        [
+          175,
+          345
+        ]
+      ],
+      "ideal_dir": 250,
+      "dir_note": "Picks up swell from essentially every direction -- widest window in the guide. WSW groundswell ideal; NW wraps into the bay to feed rights",
+      "size_ideal": [
+        2.5,
+        7.0
+      ],
+      "size_min": 1.5,
+      "size_max": 10,
+      "tide_pref": [
+        "low",
+        "mid",
+        "high"
+      ],
+      "tide_weight": 0.3,
+      "tide_note": "Surfable at all stages of the tide",
+      "wind_offshore": [
+        22,
+        112
+      ],
+      "wind_tolerance": 10,
+      "wind_note": "Handles wind from any direction better than any Central beachbreak; NE offshore still cleans it up best. Blows out midday like everywhere else.",
+      "period_pref": "any",
+      "period_ideal": [
+        8,
+        18
+      ],
+      "canyon": "none",
+      "crowd": 2,
+      "localism": 2,
+      "skill": "All levels on the north side",
+      "hazards": "NORTH SIDE ONLY. The south side is documented as a much more aggressive crowd -- locals 'not afraid to regulate their spot' -- and is shallower, hollower and heavier. Paid parking at the pier is very limited; street park and walk. Wisconsin St entry has occasional big rocks.",
+      "verdict": "Very consistent, all tides, holds overhead, and November is its best clean month -- off-cycle from the January-dominant rest of the county. NOTE: an earlier claim that a submarine canyon amplifies swell into the pier was REMOVED 2026-08-30 as unsupported; Oceanside Canyon sits much farther offshore and there is no evidence of a Black's-class nearshore lens here.",
+      "board_ladder": [
+        [
+          0,
+          2.5,
+          "5'8 Fish",
+          "5'4 Mini-Simmons",
+          "Rideable from 2ft"
+        ],
+        [
+          2.5,
+          4.5,
+          "5'8 Fish",
+          "6'0 Surfer Rosa",
+          "Sand-bottom peaks, no consequence -- the fish catches more"
+        ],
+        [
+          4.5,
+          7,
+          "6'0 Surfer Rosa",
+          "7'6 Magic",
+          "Once it has push"
+        ],
+        [
+          7,
+          99,
+          "7'6 Magic",
+          "6'0 Surfer Rosa",
+          "The bigger sandbar peaks. Sand bottom and a forgiving takeoff, which is why this doesn't block the way Black's does -- but it is past what the quiver is built for"
+        ]
+      ],
+      "quality_cap": 88,
+      "drive_minutes": 49,
+      "water": {
+        "chronic": "normal",
+        "note": "San Luis Rey River mouth is roughly a mile north at the harbour. INFERENCE, not a documented advisory -- modestly extended post-rain window on that basis.",
+        "river_mouth": false,
+        "outlet_proximity": "nearby",
+        "outlet": "San Luis Rey River mouth ~1 mi north"
+      },
+      "drive_miles": 37.4
     }
   ],
-  "_water_note": "Water-risk profiles derived from the hazard sections of Central-SD.md and South-County.md. The brief CANNOT read live County of San Diego advisories -- there is no public API. It infers risk from rainfall history and San Diego River discharge (USGS 11023000). sdbeachinfo.com / 619-338-2073 remains the authoritative check."
+  "_water_note": "Water-risk profiles derived from the hazard sections of 01-San-Diego-Breaks/. The brief CANNOT read live County advisories. California publishes a machine-readable postings/closures dataset, but checked 2026-08-30 it was ~6 months stale and missing the then-active Imperial Beach and Coronado closures -- historical archive only, never a live gate. sdbeachinfo.com / 619-338-2073 remains authoritative. outlet_proximity (at|nearby|none) replaced invented rain_factor multipliers 2026-08-30, grounded in the County's own naming of storm drains, creeks, rivers and lagoon outlets.",
+  "_drive_note": "drive_minutes / drive_miles are OSRM free-flow driving times from Jake's home neighbourhood (Mission Hills). Deliberately neighbourhood-level, not an address: THIS REPO IS PUBLIC. Free-flow is a fair approximation for the dawn window; the evening window sees real traffic, so treat the North County numbers as a floor. Breaks over DRIVE_FLAG_MINUTES (45) get a 'worth the drive?' marker -- scoring is NOT affected, per Jake's call 2026-08-30. Recomputed 2026-08-30 when Jake gave his location; the earlier numbers assumed Pacific Beach and were wrong for the PB and OB spots especially.",
+  "_north_county_note": "Cardiff Reef, Swami's and Oceanside Pier added 2026-08-30 to close measured gaps (wind, high tide, size, crowd) rather than by reputation -- see 01-San-Diego-Breaks/North-County.md. Imperial Beach, the Tijuana Sloughs, Coronado and Windansea are deliberate exclusions, documented in the same file."
 }

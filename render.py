@@ -65,6 +65,8 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .cond .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
 .cond .v{font-size:16px;font-weight:680;margin-top:3px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .cond .s{font-size:12px;color:var(--ink-3);margin-top:1px}
+.cond .split{margin-top:5px;padding-top:5px;border-top:1px dotted var(--line-2);font-size:11.5px;line-height:1.4}
+.cond .split b{color:var(--ink-2);font-weight:650}
 
 .picks{padding:14px 14px 6px;display:flex;flex-direction:column;gap:11px}
 .brk{border:1px solid var(--line);border-radius:11px;padding:13px 14px;background:var(--panel)}
@@ -106,6 +108,7 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .wqline.severe{color:var(--bad);background:var(--bad-bg);font-weight:600}
 .brk.isblocked{opacity:.72;border-style:dashed}
 .brk-sub{font-size:12.5px;color:var(--ink-3);margin-top:3px;font-variant-numeric:tabular-nums}
+.brk-sub .far{color:var(--marg);background:var(--marg-bg);border-radius:5px;padding:1px 6px;font-weight:650}
 
 .board{margin-top:11px;padding:10px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)}
 .board-k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
@@ -190,6 +193,11 @@ def render_break(b, rank):
     stars = "★" * b["crowd"] + "☆" * (5 - b["crowd"])
     face = "size n/a" if b["face_ft"] is None else f"~{b['face_ft']}ft face"
     sub = f"{face} &middot; crowd {stars} &middot; {esc(b['skill'])}"
+    dm = b.get("drive_minutes")
+    if dm:
+        sub += f" &middot; {dm} min"
+        if b.get("far"):
+            sub += " <span class='far'>worth the drive?</span>"
 
     if b["board_primary"]:
         bv = f"<div class='board-v'>{esc(b['board_primary'])}</div>"
@@ -239,6 +247,24 @@ def render_break(b, rank):
 </div>"""
 
 
+def split_line(w):
+    """Show the swell/windwave split when a mean period would mislead.
+
+    A single blended figure ("4.7ft @ 10.7s") hides a long-period groundswell
+    riding under local chop -- which is exactly the sea the canyon reacts to.
+    Only shown when the components are far enough apart to matter.
+    """
+    s = w.get("sea")
+    if not s or s.get("source") == "none":
+        return ""
+    lp, sp = s.get("long_period"), s.get("short_period")
+    if not lp or not sp or abs(lp - sp) < 4:
+        return ""
+    src = "buoy 46258" if s["source"] == "buoy" else "model"
+    return (f"<div class='s split'><b>{s['long_hs']:.1f}ft @ {lp:.0f}s</b> groundswell "
+            f"under <b>{s['short_hs']:.1f}ft @ {sp:.0f}s</b> chop &middot; {src}</div>")
+
+
 def render_window(w):
     # A blocked spot must never be buried in the collapsed table -- it's the most
     # safety-critical thing on the page. Surfable picks first, then blocks in
@@ -254,6 +280,7 @@ def render_window(w):
     rows = "".join(
         f"<tr><td class='n'>{esc(b['name'])}</td><td>{esc(b['label'])}</td>"
         f"<td>{esc(b['board_primary'] or '--')}</td>"
+        f"<td class='sc'>{b.get('drive_minutes') or '--'}</td>"
         f"<td class='sc'>{b['score']}</td></tr>"
         for b in rest
     )
@@ -270,7 +297,8 @@ def render_window(w):
   <div class="cond">
     <div><div class="k">Swell</div>
       <div class="v">{num(w['swell_hs'], 'ft')} @ {num(w['swell_period'], 's')}</div>
-      <div class="s">from {esc(w['total_dir_txt'])} &middot; ~{num(w['face_est'], 'ft')} face</div></div>
+      <div class="s">from {esc(w['total_dir_txt'])} &middot; ~{num(w['face_est'], 'ft')} face</div>
+      {split_line(w)}</div>
     <div><div class="k">Tide</div><div class="v">{num(w['tide_h'], 'ft')}</div>
       <div class="s">{esc(w['tide_state'])}, {esc(w['tide_dir'])}</div></div>
     <div><div class="k">Wind</div><div class="v">{wind}</div>
@@ -278,7 +306,7 @@ def render_window(w):
   </div>
   <div class="picks">{picks}</div>
   <details class="rest"><summary>The other {len(rest)} breaks</summary>
-    <div class="tw"><table><thead><tr><th>Break</th><th>Call</th><th>Board</th><th class="sc">Score</th></tr></thead>
+    <div class="tw"><table><thead><tr><th>Break</th><th>Call</th><th>Board</th><th class="sc">Min</th><th class="sc">Score</th></tr></thead>
     <tbody>{rows}</tbody></table></div>
   </details>
 </section>"""

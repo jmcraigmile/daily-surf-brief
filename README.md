@@ -1,6 +1,6 @@
 # Daily Surf Brief
 
-Scores the ten written-up San Diego breaks against live swell, tide, wind and
+Scores thirteen written-up San Diego breaks against live swell, tide, wind and
 bacterial risk, twice a day, and names a board from Jake's actual quiver.
 
 **Two windows:** dawn patrol 7:00–8:30am, and the hour before sunset (recalculated
@@ -40,7 +40,7 @@ python3 water.py                                                # water signals 
 
 | File | Role |
 |---|---|
-| `surf_forecast.py` | Fetches conditions, scores all ten breaks for both windows, picks boards. Writes JSON. |
+| `surf_forecast.py` | Fetches conditions, scores all thirteen breaks for both windows, picks boards. Writes JSON. |
 | `water.py` | Bacterial risk per break from rainfall + river discharge. Imported by `surf_forecast.py`; also runnable standalone. |
 | `render.py` | JSON → self-contained HTML. No network, no assets, no external CSS. |
 | `breaks.json` | **The knob.** All per-break scoring rules and board ladders. Edit this, not the Python. |
@@ -52,8 +52,8 @@ python3 water.py                                                # water signals 
 **Ground truth lives outside this folder.** `breaks.json` is a machine-readable
 derivative of:
 
-- `../01-San-Diego-Breaks/Central-SD.md` and `South-County.md` — swell windows,
-  tides, wind, crowds, hazards, water quality
+- `../01-San-Diego-Breaks/Central-SD.md`, `South-County.md` and `North-County.md` —
+  swell windows, tides, wind, crowds, hazards, water quality
 - `../02-Gear/Owned-and-Wishlist.md` — the nine boards and their wave ranges
 - `../CLAUDE.md` — the quiver's one-line summary and the "nothing built for
   overhead" constraint that drives the gap flag
@@ -160,6 +160,65 @@ wind wave. Don't "fix" this by switching to `swell_wave_height`.
 **Face height is an estimate**, `Hs × (0.80 + 0.045 × (period − 9))`, clamped
 0.80–1.45. Longer period shoals higher. It is not a measurement and the page says so.
 
+### Scoring direction comes from the measured swell, not the model partition
+
+**Added 2026-08-30, alongside the North County spots.** Direction is the largest
+single scoring lever (28 of 100), and it was running on Open-Meteo's
+swell-partition direction — the same field the canyon fix had already abandoned as
+untrustworthy.
+
+Adding Swami's exposed it. On a measured 16.7s SSW groundswell the partition
+reported **279° (W)**, which scored Swami's **26.8/28 and ranked it first in the
+county** — a W/NW-only point, on a south swell it barely sees. The buoy's measured
+**209° (SSW)** scores it **0.0**. A 27-point swing on the top lever, and the brief
+would have sent him 32 minutes north to a spot that wasn't breaking.
+
+Scoring now uses `dom_dir`: the **long-period component's** direction when there is
+a real long-period component (energy share ≥40% and period ≥10s), falling back to
+the **total-sea** direction — a trusted field — rather than the partition. The
+window output carries `dom_dir`, `dom_dir_txt` and `dir_source` so the choice is
+visible.
+
+Known limitation, unchanged: beyond ~17.5° outside a window the direction score is
+0, so a 20°-off and a 90°-off swell are indistinguishable. Pre-existing, and it
+matters more now that the input is correct.
+
+### The canyon runs on the long-period component
+
+**Added 2026-08-30.** Total height and period still come from the model. What
+`sea_state()` sources carefully is the **split** between long-period groundswell
+and short-period chop, because the canyon lens needs it. Background and the
+physics are in `../01-San-Diego-Breaks/Conditions-and-Forecasting.md`.
+
+The bug it fixes: the lens was fed the model's *blended* mean period. On
+2026-08-30 the buoy held 3.3ft @ 16.7s SSW for six hours while the model reported
+a 10.7s blend, so the lens read "barely in play" on exactly the south groundswell
+`Central-SD.md` says the canyon wraps into Black's through summer. Two errors at
+once — wrong period, applied to the wrong energy.
+
+**Partition sources, in priority order:**
+
+| Source | When | Confidence |
+|---|---|---|
+| **buoy** | NDBC 46258 measures the split directly. Used only if it's self-consistent with the model total (within 35%) **and** the target day is within one day of the reading. | high |
+| **model** | Open-Meteo's own partition, **only if** it reproduces the model's own mean period (within 2s). It frequently doesn't. | medium |
+| **none** | No usable split. Falls back to old whole-sea behaviour, and the brief says the read is approximate. | low |
+
+**A buoy is an observation, not a forecast** — it's ignored for dates more than a
+day out. That's why the evening CI run (which builds tomorrow) can use it and a
+`--date` five days out cannot.
+
+**The lens acts on the groundswell only**, then recombines in quadrature
+(`√(H_long'² + H_short²)`) — wave energy adds, heights don't. Amplifying the whole
+sea over-applies badly: 8.0ft vs the correct ~6.5ft on that morning's data.
+
+Effective period is re-weighted by the new energy mix afterward, so an amplified
+groundswell also shoals higher. **Blast radius is the three canyon spots only** —
+`test_non_canyon_spots_unaffected_by_decomposition` pins that.
+
+The page shows the split in the Swell cell whenever the two components are ≥4s
+apart, so a misleading mean period is visible rather than silent.
+
 ---
 
 ## Scoring
@@ -217,18 +276,57 @@ in the swell partition and ~0 in wind wave here — see *Two calibrations that l
 aren't* above. Wind-wave height is not a usable texture proxy in this pipeline; adding it
 to a swap would look like an improvement and silently disable the gate.
 
-A `null` primary means **don't paddle out** — Black's above 7ft face, Sunset Cliffs
-above 10ft. That's not an oversight: the folder says plainly the 7'6 Magic is "not
-the tool when the canyon is doubling a 16-second swell," and the quiver has "nothing
-built for overhead." Any face ≥8ft anywhere raises the quiver-gap flag.
+A `null` primary means **don't paddle out** — Black's above 7ft face, **Swami's above
+9ft**, Sunset Cliffs above 10ft. That's not an oversight: the folder says plainly the
+7'6 Magic is "not the tool when the canyon is doubling a 16-second swell," and the
+quiver has "nothing built for overhead." Any face ≥8ft anywhere raises the quiver-gap
+flag. Swami's ceiling sits higher than Black's because a point takeoff is more
+forgiving than a Black's late drop, not because the quiver improved.
+
+### Region, drive time, and the thirteen
+
+**Cardiff Reef, Swami's and Oceanside Pier were added 2026-08-30** to close measured
+coverage gaps — NW-onshore wind, high tide, and size — rather than by reputation. The
+rationale, the spots deliberately rejected as redundant, and the hard exclusions
+(**Imperial Beach, the Tijuana Sloughs and Coronado on standing sewage closures;
+Windansea on documented extreme localism**) are all in
+[`../01-San-Diego-Breaks/North-County.md`](../01-San-Diego-Breaks/North-County.md).
+
+Each break carries `region`, `drive_minutes` and `drive_miles` — **OSRM free-flow
+driving times from Jake's home neighbourhood (Mission Hills)**, recomputed 2026-08-30
+when he gave his location. The earlier numbers assumed Pacific Beach and were wrong,
+badly so for the PB and OB spots.
+
+🔒 **This repo is public. The reference point is deliberately neighbourhood-level —
+never a street address or ZIP.** `test_no_street_address_in_the_repo` enforces that:
+a leak here would sit in git history permanently. House-level precision changes no
+drive time worth having.
+
+Free-flow is fair for the dawn window; the evening window meets real traffic, so treat
+the North County numbers as a floor. Anything over `DRIVE_FLAG_MINUTES` (45) gets a
+"worth the drive?" marker — currently **Oceanside Pier at 49 min**, the only one that
+trips it. **Scoring is deliberately unaffected**: rank on quality, show the distance,
+let the reader judge.
 
 ---
 
 ## Water quality / bacterial warning
 
-**The brief cannot see official County advisories.** There is no public API —
-sdbeachinfo.com is an OutSystems app with no stable endpoint, and Heal the Bay and
-EPA BEACON are both dead ends (checked 2026-08-27). **A posted advisory or a sewage
+**The brief cannot see official County advisories.** sdbeachinfo.com is an OutSystems
+app with no stable endpoint, and Heal the Bay and EPA BEACON are dead ends (checked
+2026-08-27).
+
+⚠️ **Corrected 2026-08-30.** An earlier version of this file said flatly "there is no
+public API." That was too absolute: **California does publish a machine-readable beach
+postings/closures dataset** (CKAN on `data.ca.gov`, 35,748 records, fully queryable).
+But it is **not a live safety gate** — queried 2026-08-30, its newest record anywhere
+was **2026-03-06**, roughly six months stale, and it contained **no record of the
+Imperial Beach or Coronado closures active that week**. The Water Board publishes it
+monthly. Wiring it in as a safety check would report "no advisories" for a beach under
+an active sewage closure, which is worse than saying nothing. Use it for historical
+base rates if ever needed; never as current status.
+
+**A posted advisory or a sewage
 spill will not appear in this brief.** [sdbeachinfo.com](https://www.sdbeachinfo.com/)
 or **619-338-2073** is the authoritative check, and at OB Jetty the folder's
 instruction is to check it *every single time*.
@@ -236,11 +334,23 @@ instruction is to check it *every single time*.
 What it does instead is infer risk from the two signals that actually drive it:
 rainfall history and live San Diego River discharge.
 
-**Rain windows** are sized by how much fell: trace (<0.10") 24h · light 48h ·
-moderate (0.25–1.0") 72h · heavy (≥1.0") 96h. River-mouth and chronic spots multiply
-that (OB ×1.5, Mission ×1.25, Scripps ×1.15). **This is more permissive than the
-County's flat 72-hour rule**, so the brief always says when you're still inside the
-official window.
+**Rain windows are anchored to the County's own published trigger** (corrected
+2026-08-30, verified against `DEHQ_bb_advisory_explanation.pdf`):
+
+> *"General (rain) advisories are issued when rainfall equal to or greater than
+> **0.20 inch** is received... avoid contact with ocean and bay water for a period of
+> **72 hours** after rainfall ends."*
+
+So: **≥0.20″ → 72h** (the County's rule, exactly) · ≥1.0″ → 96h (longer runoff tail) ·
+0.05–0.20″ → 24h (measurable but under the County's threshold). The previous 0.10/0.25
+boundaries were invented and matched nothing.
+
+**`outlet_proximity` replaced the invented `rain_factor` multipliers.** The old
+×1.15/×1.25/×1.5 had no empirical or regulatory basis — a fair hit from the fact-check.
+The replacement comes straight from the County's own wording, which singles out
+*"storm drains, creeks, rivers, and lagoon outlets"*: `at` (on the outlet — OB Jetty at
+the river mouth, Cardiff at the San Elijo Lagoon mouth) · `nearby` (named outlet within
+~a mile) · `none`.
 
 **River thresholds**, calibrated against 12 months at gauge 11023000 (p50 3.7 /
 p90 31 / p98 205 / storm peak 1740 cfs): <8 baseflow · 8–30 elevated · 30–150
@@ -323,6 +433,14 @@ The checklist, for reference:
 - **Simulate a storm** — pass a fake `rain`/`river` dict to `water.assess()` and
   confirm OB blocks, the day verdict names it, and nothing blocked appears as the
   day's recommendation.
+- **The canyon reads the long-period component**, never the blended mean period,
+  and amplifies only that component's energy. Non-canyon spots must be untouched
+  by the decomposition.
+- **Scoring direction uses `dom_dir`**, never the raw model swell partition.
+- **Every board name is one of the nine owned** — `test_brief.py` hardcodes that
+  list because `02-Gear/` is outside this repo. Quiver changes need both updated.
+- **Swami's refuses above 9ft face** and Black's above 7ft; a `board_swaps` entry
+  must never override a refusal.
 
 An audit on 2026-08-27 caught and fixed: the evening window averaging only the
 post-sunset hour (float/int hour comparison), a non-monotonic direction score where
@@ -330,8 +448,12 @@ a swell just outside a window beat one just inside, a `tide_weight` clamp that m
 values >1.0 dead, PB Point's window excluding due W, and nine unguarded numeric slots
 that printed `None`. A second audit on 2026-08-29 caught a tenth: the buoy line
 interpolated NDBC's `MM`-as-`None` fields raw (now guarded, with a regression test),
-plus a missing viewport meta that made the page render at 980px on phones. Don't
-reintroduce any of them.
+plus a missing viewport meta that made the page render at 980px on phones. A third,
+2026-08-30, caught the canyon lens running on the model's blended mean period and
+applying itself to the whole sea instead of the groundswell component -- see "The
+canyon runs on the long-period component" above — and, in the same pass, scoring
+direction running on that same bad partition field, which ranked a W/NW point first
+on a south swell. Don't reintroduce any of them.
 
 ---
 

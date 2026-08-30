@@ -17,6 +17,7 @@ Usage: python3 surf_forecast.py [--date YYYY-MM-DD] [--json out.json]
 """
 
 import json
+import math
 import sys
 import urllib.request
 import urllib.parse
@@ -35,6 +36,11 @@ TIDE_STATION = "9410230"  # La Jolla (Scripps Pier)
 BUOY = "46258"            # Mission Bay, CA
 
 MORNING = (7.0, 8.5)      # 7:00 - 8:30am
+# Breaks further than this get a "worth the drive?" marker on the card. Scoring
+# is deliberately NOT affected -- rank on quality, show the distance, let Jake
+# judge (his call, 2026-08-30). Nothing in the current thirteen trips it; the
+# mechanism is here for San Onofre and Church (~60 min) if they get added.
+DRIVE_FLAG_MINUTES = 45
 EVENING_LEAD_HOURS = 1.0  # window = sunset-1h -> sunset
 
 
@@ -261,43 +267,205 @@ def tide_state(h):
 
 # ---------------------------------------------------------------- scoring
 
-def canyon_transform(brk, hs, period, sdir):
-    """Apply the La Jolla canyon lens from Central-SD.md.
+def sea_state(sw, buoy=None, target_date=None):
+    """Split the sea into a long-period component and a short-period one.
 
-    Black's amplifies on long-period; Scripps and the Shores are drained on the
-    same swells. The lens only exists for groundswell -- short-period windswell
-    skims the whole shelf and the three break much more alike.
+    WHY THIS EXISTS (2026-08-30 fix). The canyon lens is refraction, so it acts
+    on WAVELENGTH -- the period of the swell actually doing the refracting. The
+    old code fed it the model's blended mean period, which averages a long
+    groundswell together with local windchop. On 2026-08-30 the buoy held
+    3.3ft @ 16.7s SSW for six hours straight while the model reported a 10.7s
+    blend, so the lens read "barely in play" on a textbook south groundswell --
+    exactly the swell Central-SD.md says the canyon wraps into Black's through
+    summer. Two errors in one: the wrong period, applied to the wrong energy.
+
+    The lens must act ONLY on the long-period energy. An 8-second windwave
+    "feels bottom at 28 m and skims the whole shelf" (Central-SD.md), so the
+    canyon does nothing to it. Amplifying the total over-applies badly: on that
+    same morning, amplifying the total gave 8.0ft Hs where decomposing first
+    gives 6.5ft.
+
+    TOTAL height and period still come from the model -- both are calibrated and
+    trusted (see "Two calibrations that look wrong but aren't" in README.md).
+    Only the PARTITION is sourced here, in priority order:
+
+      1. buoy   -- NDBC 46258 measures the split directly. Used only when it is
+                   self-consistent with the model total and the target day is
+                   within a day of the reading. High confidence.
+      2. model  -- Open-Meteo's own partition, but ONLY if it reproduces the
+                   model's own mean period. It frequently does not: at
+                   2026-08-30T07:00 it reported 3.2ft @ 7.0s from 279deg while
+                   its own total said 10.7s, then swung back to 13.2s/202deg
+                   twelve hours later. A swell does not vanish and return.
+      3. none   -- no split available. Falls back to old behaviour (whole sea
+                   treated as one component at the blended period). Low
+                   confidence, and the brief says so.
+
+    Returns a dict, or None if there is nothing to work with.
     """
-    mode = brk.get("canyon", "none")
-    if mode == "none" or hs is None or period is None:
-        return hs, None
-    if period < 11:
-        return hs, "Short period -- the canyon is barely in play; the three canyon spots break alike today"
+    hs, tm = sw.get("wave_height"), sw.get("wave_period")
+    if hs is None or tm is None:
+        return None
 
-    strength = min(1.0, (period - 11) / 7.0)  # 0 at 11s, full by 18s
+    def energy_mean_period(h1, t1, h2, t2):
+        e1, e2 = (h1 or 0) ** 2, (h2 or 0) ** 2
+        if e1 + e2 <= 0:
+            return None
+        return (e1 * (t1 or 0) + e2 * (t2 or 0)) / (e1 + e2)
 
+    # --- 1. buoy
+    if buoy and target_date:
+        bh, bp = buoy.get("swell_ft"), buoy.get("swell_period")
+        wh, wp = buoy.get("windwave_ft"), buoy.get("windwave_period")
+        fresh = False
+        try:
+            btime = datetime.strptime(buoy["time"][:16], "%Y-%m-%d %H:%M")
+            tgt = datetime.strptime(target_date, "%Y-%m-%d")
+            # A buoy reading is an observation, not a forecast. Trust it for
+            # today and tomorrow only; beyond that it says nothing.
+            fresh = -1 <= (tgt - btime).days <= 1
+        except Exception:
+            fresh = False
+        if fresh and None not in (bh, bp, wh, wp) and (bh or wh):
+            btotal = math.sqrt(bh ** 2 + wh ** 2)
+            # Self-consistency: does the buoy's own total match the model's?
+            if btotal > 0 and abs(btotal - hs) / max(hs, 0.1) <= 0.35:
+                scale = hs / btotal          # rescale the split onto the model total
+                return {
+                    "long_hs": round(bh * scale, 2), "long_period": bp,
+                    "long_dir": buoy.get("mean_dir"),
+                    "short_hs": round(wh * scale, 2), "short_period": wp,
+                    "hs_total": hs, "tm_total": tm,
+                    "source": "buoy", "confidence": "high",
+                    "note": (f"Split from buoy 46258: {bh}ft @ {bp}s swell over "
+                             f"{wh}ft @ {wp}s windwave"),
+                }
+
+    # --- 2. model partition, only if internally consistent
+    ph, pp = sw.get("swell_wave_height"), sw.get("swell_wave_period")
+    wwh, wwp = sw.get("wind_wave_height"), sw.get("wind_wave_period")
+    if None not in (ph, pp) and (ph or 0) > 0:
+        pred = energy_mean_period(ph, pp, wwh or 0, wwp or 0)
+        if pred is not None and abs(pred - tm) <= 2.0:
+            ptotal = math.sqrt(ph ** 2 + (wwh or 0) ** 2)
+            scale = hs / ptotal if ptotal > 0 else 1.0
+            return {
+                "long_hs": round(ph * scale, 2), "long_period": pp,
+                "long_dir": sw.get("swell_wave_direction"),
+                "short_hs": round((wwh or 0) * scale, 2), "short_period": wwp or 8.0,
+                "hs_total": hs, "tm_total": tm,
+                "source": "model", "confidence": "medium",
+                "note": None,
+            }
+
+    # --- 3. nothing trustworthy
+    return {
+        "long_hs": hs, "long_period": tm, "long_dir": sw.get("swell_wave_direction"),
+        "short_hs": 0.0, "short_period": None,
+        "hs_total": hs, "tm_total": tm,
+        "source": "none", "confidence": "low",
+        "note": "No trustworthy swell/windwave split -- canyon read is approximate",
+    }
+
+
+def _canyon_factor(mode, period, sdir):
+    """Multiplier the canyon applies to the LONG-PERIOD component only.
+
+    Softened 2026-08-30 after an external fact-check. There is no hard 11-second
+    activation threshold -- refraction over the canyon varies CONTINUOUSLY with
+    period, direction and bathymetry, and the literature says gradients get
+    larger beyond roughly 12 s rather than switching on at a number. The old code
+    returned exactly 1.0 below 11 s and then ramped, which read as an on/off
+    switch it has no basis to be.
+
+    Now: a continuous ramp from 8 s (where a short windswell genuinely skims the
+    shelf and the lens does almost nothing) to 18 s (full modelled effect), with
+    no discontinuity anywhere.
+
+    The magnitudes below remain MODELLED ESTIMATES from the canyon literature,
+    not measured field constants. Treat them as directional.
+    """
+    if period is None:
+        return 1.0, None, 0.0
+    strength = max(0.0, min(1.0, (period - 8.0) / 10.0))  # 0 at 8s, full at 18s
+    if strength <= 0.02:
+        return 1.0, None, 0.0
     if mode == "amplify":
         # +80% to ~+100% at the focal band. The focal band migrates north as
         # period stretches: from due west, South Peak reads +72% at 14s but
         # -6% at 20s.
         if sdir is not None and 265 <= sdir <= 275 and period >= 19:
-            return round(hs * 0.98, 1), ("Very long-period straight W -- the focal band has migrated "
-                                         "north. Torrey Pines may be the beneficiary today, not Black's")
+            return 0.98, ("Very long-period straight W -- the focal band has migrated "
+                          "north. Torrey Pines may be the beneficiary today, not Black's"), strength
         amp = 1.0 + 0.85 * strength
-        return round(hs * amp, 1), f"Canyon amplification ~+{int((amp - 1) * 100)}% at {period:.0f}s"
+        return amp, f"Canyon amplification ~+{int((amp - 1) * 100)}% (modelled) on the {period:.0f}s energy", strength
     if mode == "shadow_moderate":
         # Central-SD.md: "Long-period FROM THE SOUTH is the worst case -- canyon
         # shadow up to -64%." A long-period WNW is this spot's best swell.
         southerly = sdir is not None and 170 <= sdir <= 250
         red = 1.0 - (0.64 if southerly else 0.35) * strength
-        who = "from the south, the worst case here" if southerly else ""
-        return round(hs * red, 1), (f"Canyon shadow ~-{int((1 - red) * 100)}%"
-                                    + (f" -- {who}" if who else " -- Black's is taking a cut"))
+        who = "from the south, the worst case here" if southerly else "Black's is taking a cut"
+        return red, f"Canyon shadow ~-{int((1 - red) * 100)}% on the {period:.0f}s energy -- {who}", strength
     if mode == "shadow_deep":
         red = 1.0 - 0.75 * strength
-        return round(hs * red, 1), (f"Deep canyon shadow ~-{int((1 - red) * 100)}% -- "
-                                    f"long period actively hurts the Shores")
-    return hs, None
+        return red, (f"Deep canyon shadow ~-{int((1 - red) * 100)}% on the {period:.0f}s "
+                     f"energy -- long period actively hurts the Shores"), strength
+    return 1.0, None, 0.0
+
+
+def canyon_transform(brk, hs, period, sdir, sea=None):
+    """Apply the La Jolla canyon lens from Central-SD.md.
+
+    Black's amplifies on long-period; Scripps and the Shores are drained on the
+    same swells. The lens only exists for groundswell -- short-period windswell
+    skims the whole shelf and the three break much more alike.
+
+    Returns (local_hs, note) when called without `sea` (legacy signature), or
+    (local_hs, note, effective_period) when `sea` is supplied. See sea_state().
+    """
+    mode = brk.get("canyon", "none")
+    if mode == "none" or hs is None or period is None:
+        return (hs, None) if sea is None else (hs, None, period)
+
+    # ---- legacy path: no decomposition available, whole sea as one component
+    if sea is None:
+        if period < 9:
+            return hs, ("Short period -- the canyon is barely in play; the three "
+                        "canyon spots break alike today")
+        f, note, _ = _canyon_factor(mode, period, sdir)
+        return round(hs * f, 1), note
+
+    # ---- decomposed path
+    lh, lp = sea["long_hs"], sea["long_period"]
+    sh, sp = sea["short_hs"], sea["short_period"]
+    ldir = sea.get("long_dir")
+    if ldir is None:
+        ldir = sdir
+
+    if lp is None or lp < 9 or not lh:
+        return hs, ("Short period -- the canyon is barely in play; the three "
+                    "canyon spots break alike today"), period
+
+    f, note, _ = _canyon_factor(mode, lp, ldir)
+
+    # The lens acts on the long-period energy alone; the windwave passes over
+    # the canyon untouched. Recombine in quadrature -- wave energy adds, heights
+    # do not.
+    lh2 = lh * f
+    total = math.sqrt(lh2 ** 2 + (sh or 0) ** 2)
+
+    # Effective period shifts with the new energy mix: amplified groundswell
+    # pulls it up, a shadowed spot left with windchop pulls it down.
+    e_long, e_short = lh2 ** 2, (sh or 0) ** 2
+    if e_long + e_short > 0 and sp:
+        eff = (e_long * lp + e_short * sp) / (e_long + e_short)
+    else:
+        eff = lp
+
+    if sea["source"] == "buoy" and abs(lp - (sea["tm_total"] or lp)) >= 3:
+        note = (note or "") + (f" (buoy reads {lp:.0f}s in the water; the model's "
+                               f"blended {sea['tm_total']:.0f}s hides it)")
+    return round(total, 1), note, round(eff, 1)
 
 
 def score_break(brk, cond):
@@ -311,10 +479,18 @@ def score_break(brk, cond):
     tide_h = cond["tide_h"]
     tide_dir = cond["tide_dir"]
 
-    local_hs, canyon_note = canyon_transform(brk, hs, period, sdir)
+    sea = cond.get("sea")
+    if sea is None:
+        local_hs, canyon_note = canyon_transform(brk, hs, period, sdir)
+        eff_period = period
+    else:
+        local_hs, canyon_note, eff_period = canyon_transform(brk, hs, period, sdir, sea)
     if canyon_note:
         notes.append(canyon_note)
-    face = face_height(local_hs, period)
+    # Face uses the EFFECTIVE period -- identical to the blended period for every
+    # non-canyon spot, but at the three canyon spots the lens has changed the
+    # energy mix and therefore how the sea shoals.
+    face = face_height(local_hs, eff_period)
 
     # --- swell direction (0-28)
     windows = brk["swell_windows"]
@@ -542,6 +718,30 @@ def build(day=None):
                              "wind_wave_height", "wave_height", "wave_period"], h0, h1)
         sdir = circ_avg(mh, "swell_wave_direction", h0, h1)
         tdir = circ_avg(mh, "wave_direction", h0, h1)
+        sea = sea_state({**sw, "swell_wave_direction": sdir}, buoy, day)
+
+        # Which direction does SCORING use? Not the model's swell partition --
+        # that's the same untrustworthy field the canyon fix stopped relying on,
+        # and direction is the single largest scoring lever (28 pts).
+        #
+        # Found 2026-08-30 when Swami's was added: on a measured 16.7s SSW
+        # groundswell the model's partition said 279 (W), which scored Swami's
+        # 26.8/28 and ranked it #1 in the county -- a W/NW-only point, on a
+        # south swell it barely sees. The buoy's measured 209 (SSW) scores it
+        # 0.0. A 27-point swing, and the brief would have sent him 32 minutes
+        # north to a spot that wasn't breaking.
+        #
+        # So: use the long-period component's direction when there IS a real
+        # long-period component (that's the energy making rideable waves), and
+        # fall back to the TOTAL sea direction -- a trusted field -- not the
+        # partition.
+        dom_dir, dir_source = tdir, "total"
+        if sea and sea["source"] in ("buoy", "model") and sea.get("long_dir") is not None:
+            el = (sea["long_hs"] or 0) ** 2
+            es = (sea["short_hs"] or 0) ** 2
+            share = el / (el + es) if (el + es) > 0 else 0
+            if share >= 0.40 and (sea["long_period"] or 0) >= 10:
+                dom_dir, dir_source = sea["long_dir"], sea["source"]
 
         wn = weather["north"]["hourly"]
         ws = weather["south"]["hourly"]
@@ -562,11 +762,12 @@ def build(day=None):
                 # Total wave height drives size -- it is what tracks the buoy.
                 "swell_hs": sw["wave_height"],
                 "swell_period": sw["wave_period"],
-                "swell_dir": sdir,
+                "swell_dir": dom_dir,
                 "wind_speed": wnorth["wind_speed_10m"] if north else wsouth["wind_speed_10m"],
                 "wind_dir": wdir_n if north else wdir_s,
                 "tide_h": tide_h, "tide_dir": tide_dir,
                 "window_end_hour": h1, "is_weekend": is_weekend,
+                "sea": sea,
             }
             score, bd, notes, face, local_hs, crowd = score_break(brk, cond)
             primary, backup, bnote = pick_board(brk, face, cond)
@@ -597,6 +798,9 @@ def build(day=None):
                 "gap": face is not None and (
                     face >= brk.get("gap_above", 999) or face >= 8),
                 "water": wq, "surf_score": score,
+                "region": brk.get("region"),
+                "drive_minutes": brk.get("drive_minutes"),
+                "far": (brk.get("drive_minutes") or 0) > DRIVE_FLAG_MINUTES,
             })
         # Blocked spots sink to the bottom regardless of how good the surf is.
         scored.sort(key=lambda x: (x["water"]["blocked"], -x["score"]))
@@ -606,11 +810,13 @@ def build(day=None):
             "swell_hs": sw["wave_height"],
             "swell_period": sw["wave_period"],
             "swell_dir": sdir, "swell_dir_txt": compass(sdir),
+            "dom_dir": dom_dir, "dom_dir_txt": compass(dom_dir), "dir_source": dir_source,
             "total_dir": tdir, "total_dir_txt": compass(tdir),
             "swell_partition_ft": sw["swell_wave_height"],
             "swell_partition_period": sw["swell_wave_period"],
             "face_est": face_height(sw["wave_height"], sw["wave_period"]),
             "windwave_ft": sw["wind_wave_height"],
+            "sea": sea,
             "wind_speed_n": wnorth["wind_speed_10m"], "wind_dir_n": wdir_n,
             "wind_dir_n_txt": compass(wdir_n),
             "wind_speed_s": wsouth["wind_speed_10m"], "wind_dir_s": wdir_s,
