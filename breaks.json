@@ -1,6 +1,7 @@
 {
   "_comment": "Scoring rules extracted from 01-San-Diego-Breaks/Central-SD.md and South-County.md (researched 2026-08-27). Degree windows are DERIVED from the compass directions in those write-ups, not from a degree-publishing source -- the folder is explicit that no public source publishes degree windows for these spots except Black's. Treat them as approximations of the prose.",
   "_face_note": "size_ideal / size_max are FACE feet, matching how the write-ups talk about size.",
+  "_board_swaps_note": "board_ladder rungs are keyed on face height alone. Optional board_swaps override the rung when CONDITIONS, not size, decide the board: {face:[lo,hi], max_wind (mph), min_period (s), primary, backup, note}. First match wins; a swap never overrides a null 'don't paddle out' rung. Added 2026-08-29 for the mini-Simmons, whose limit is takeoff shape and surface texture rather than wave height -- see 02-Gear/Mini-Simmons-Deep-Dive.md. Board names here must match the nine in 02-Gear/Owned-and-Wishlist.md, same as the ladder.",
   "breaks": [
     {
       "name": "Black's Beach",
@@ -146,6 +147,16 @@
           "Chest-to-head with push -- the Rosa's assigned slot, and the F8 Legacy Large is the right fin"
         ]
       ],
+      "board_swaps": [
+        {
+          "face": [2.5, 5.0],
+          "max_wind": 8,
+          "min_period": 9,
+          "primary": "5'4 Mini-Simmons",
+          "backup": "5'8 Fish",
+          "note": "Same canyon shadow as the Shores and a rolling beachbreak takeoff -- clean and organised, this is planing-hull water well past waist-high, not a grovel call."
+        }
+      ],
       "quality_cap": 86,
       "water": {
         "chronic": "elevated",
@@ -208,17 +219,27 @@
         [
           2,
           3.5,
-          "9'4 Pink Panther",
           "5'4 Mini-Simmons",
-          "Clean small day -- one of the few spots where the Greenough 4-A gets to do what it's for"
+          "9'4 Pink Panther",
+          "Shadowed, gentle and gutless -- exactly the wave a planing hull turns into speed. The Panther if you'd rather noseride; the Greenough 4-A gets to do what it's for here."
         ],
         [
           3.5,
           99,
           "5'8 Fish",
           "9'4 Pink Panther",
-          "North end toward Scripps picks up noticeably more punch than the south. Past waist-high the Simmons is out of its range -- it's an ankle-to-waist board."
+          "North end toward Scripps picks up noticeably more punch than the south."
         ]
+      ],
+      "board_swaps": [
+        {
+          "face": [2.5, 5.5],
+          "max_wind": 8,
+          "min_period": 9,
+          "primary": "5'4 Mini-Simmons",
+          "backup": "5'8 Fish",
+          "note": "Clean and organised past waist-high -- the Simmons' actual range, not a grovel call. Gentlest takeoff of the ten, so it gets the widest band. Draw lateral lines and trim high; don't try to surf it vertically."
+        }
       ],
       "quality_cap": 74,
       "water": {
@@ -432,6 +453,16 @@
           "The better days"
         ]
       ],
+      "board_swaps": [
+        {
+          "face": [2.5, 5.0],
+          "max_wind": 8,
+          "min_period": 10,
+          "primary": "5'4 Mini-Simmons",
+          "backup": "5'8 Fish",
+          "note": "Clean, organised sandbar rights are a down-the-line planing-hull wave -- the Simmons goes faster than the fish here when the swell has real period behind it. Period gate is 10s: this stretch wants organised swell, not windslop."
+        }
+      ],
       "quality_cap": 88,
       "water": {
         "chronic": "normal",
@@ -498,6 +529,16 @@
           "Rosa on a decent combo day, fish otherwise"
         ]
       ],
+      "board_swaps": [
+        {
+          "face": [2.5, 4.5],
+          "max_wind": 8,
+          "min_period": 9,
+          "primary": "5'4 Mini-Simmons",
+          "backup": "6'0 Surfer Rosa",
+          "note": "Clean chest-high Mission is a fine Simmons day. Capped at 4.5ft because this beach walls up and closes out at size -- and a closeout is the one thing a flat-rockered nose can't get out of."
+        }
+      ],
       "quality_cap": 86,
       "water": {
         "chronic": "elevated",
@@ -562,6 +603,16 @@
           "6'0 Surfer Rosa",
           "Fish or Rosa -- but honestly this is a Waterhog spot as often as not"
         ]
+      ],
+      "board_swaps": [
+        {
+          "face": [2.5, 4.5],
+          "max_wind": 8,
+          "min_period": 9,
+          "primary": "5'4 Mini-Simmons",
+          "backup": "5'8 Fish",
+          "note": "Low-stakes beachbreak on a clean morning is a good place to actually learn what this board does past waist-high. Water quality is the gate here, not the board."
+        }
       ],
       "quality_cap": 74,
       "water": {

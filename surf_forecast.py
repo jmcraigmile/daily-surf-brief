@@ -453,14 +453,48 @@ def score_break(brk, cond):
     return round(min(100, max(0, total))), breakdown, notes, face, local_hs, crowd
 
 
-def pick_board(brk, face):
+def pick_board(brk, face, ctx=None):
+    """Ladder pick by face height, then any condition-gated swap.
+
+    The ladder answers "how big is it". Swaps answer "what shape is it in" --
+    some boards are gated by surface texture and takeoff shape rather than by
+    size. The mini-Simmons is the case that forced this: it is a planing hull,
+    not an ankle-to-waist groveller, and it holds well past waist-high on a
+    clean organised face while being genuinely bad on a steep late drop. See
+    ../02-Gear/Mini-Simmons-Deep-Dive.md.
+
+    Swap gates use local WIND (mph) and PERIOD, deliberately not wind-wave
+    height -- the marine model dumps ~all energy into the swell partition and
+    ~0 into wind wave, so windwave is not a trustworthy texture proxy here.
+    See "Two calibrations that look wrong but aren't" in README.md.
+    """
     if face is None:
         return None, None, "No size estimate"
-    for lo, hi, primary, backup, note in brk["board_ladder"]:
-        if lo <= face < hi:
-            return primary, backup, note
-    last = brk["board_ladder"][-1]
-    return last[2], last[3], last[4]
+    primary = backup = note = None
+    for rung in brk["board_ladder"]:
+        if rung[0] <= face < rung[1]:
+            primary, backup, note = rung[2], rung[3], rung[4]
+            break
+    else:
+        last = brk["board_ladder"][-1]
+        primary, backup, note = last[2], last[3], last[4]
+
+    # A swap never overrides a "don't paddle out" rung (null primary).
+    if primary is None or not ctx:
+        return primary, backup, note
+
+    for sw in brk.get("board_swaps", []):
+        lo, hi = sw["face"]
+        if not (lo <= face < hi):
+            continue
+        wspd = ctx.get("wind_speed")
+        if wspd is not None and wspd > sw.get("max_wind", 999):
+            continue
+        per = ctx.get("swell_period")
+        if per is not None and per < sw.get("min_period", 0):
+            continue
+        return sw["primary"], sw.get("backup"), sw["note"]
+    return primary, backup, note
 
 
 def verdict_label(score):
@@ -535,7 +569,7 @@ def build(day=None):
                 "window_end_hour": h1, "is_weekend": is_weekend,
             }
             score, bd, notes, face, local_hs, crowd = score_break(brk, cond)
-            primary, backup, bnote = pick_board(brk, face)
+            primary, backup, bnote = pick_board(brk, face, cond)
             label, cls = verdict_label(score)
 
             # Water quality is a veto, not a scoring component. A severe read

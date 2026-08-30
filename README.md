@@ -188,6 +188,35 @@ Per-break `board_ladder` rungs: `[min_face, max_face, primary, backup, note]`.
 Every board name must exactly match one of the nine in
 `../02-Gear/Owned-and-Wishlist.md`.
 
+**Condition-gated swaps (added 2026-08-29).** The ladder answers *how big is it*. An
+optional per-break `board_swaps` list answers *what shape is it in*, and overrides the
+rung when it matches:
+
+```json
+"board_swaps": [
+  {"face": [2.5, 5.5], "max_wind": 8, "min_period": 9,
+   "primary": "5'4 Mini-Simmons", "backup": "5'8 Fish", "note": "..."}
+]
+```
+
+First match wins; a swap **never** overrides a `null` "don't paddle out" rung; with no
+condition context (`pick_board(brk, face)` with no third argument) swaps are skipped and
+the ladder result stands. Swap board names are subject to the same nine-board rule as
+rungs — check both.
+
+This exists because the **mini-Simmons is gated by takeoff shape and surface texture, not
+by wave height**. It's a planing hull, not an ankle-to-waist groveller: fast and legitimate
+past waist-high on a clean organised face, genuinely bad on a steep late drop. Full
+reasoning and sources in [`../02-Gear/Mini-Simmons-Deep-Dive.md`](../02-Gear/Mini-Simmons-Deep-Dive.md).
+It currently has swap bands at La Jolla Shores, Scripps, PB Drive, Mission and OB Pier, and
+is deliberately absent from Black's, OB Jetty, Sunset Cliffs, Crystal Pier and PB Point —
+that file explains each exclusion.
+
+⚠️ **Gates use wind (mph) and period, never wind-wave height.** Open-Meteo puts ~all energy
+in the swell partition and ~0 in wind wave here — see *Two calibrations that look wrong but
+aren't* above. Wind-wave height is not a usable texture proxy in this pipeline; adding it
+to a swap would look like an improvement and silently disable the gate.
+
 A `null` primary means **don't paddle out** — Black's above 7ft face, Sunset Cliffs
 above 10ft. That's not an oversight: the folder says plainly the 7'6 Magic is "not
 the tool when the canyon is doubling a 16-second swell," and the quiver has "nothing

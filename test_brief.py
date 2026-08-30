@@ -63,6 +63,52 @@ def test_board_names():
             for board in (rung[2], rung[3]):
                 check(board is None or board in OWNED_BOARDS,
                       f"{b['name']}: unknown board {board!r}")
+        # Swaps carry board names too -- a typo here invents a board just as
+        # silently as one in a rung.
+        for sw in b.get("board_swaps", []):
+            for board in (sw["primary"], sw.get("backup")):
+                check(board is None or board in OWNED_BOARDS,
+                      f"{b['name']}: unknown swap board {board!r}")
+
+
+def test_board_swaps():
+    """Condition-gated swaps: well-formed, and they only ever fire in-band."""
+    for b in BREAKS:
+        for sw in b.get("board_swaps", []):
+            lo, hi = sw["face"]
+            check(0 <= lo < hi, f"{b['name']}: bad swap band {sw['face']}")
+            check("note" in sw and sw["note"], f"{b['name']}: swap has no note")
+            ctx = cond(wind_speed=sw.get("max_wind", 8),
+                       swell_period=sw.get("min_period", 12))
+            # In band, gates satisfied -> the swap wins.
+            mid = (lo + hi) / 2
+            check(sf.pick_board(b, mid, ctx)[0] == sw["primary"],
+                  f"{b['name']}: swap didn't fire at {mid}ft in clean conditions")
+            # Blown out -> ladder stands.
+            blown = cond(wind_speed=sw.get("max_wind", 8) + 15,
+                         swell_period=sw.get("min_period", 12))
+            check(sf.pick_board(b, mid, blown) == sf.pick_board(b, mid),
+                  f"{b['name']}: swap fired at {sw.get('max_wind')}+15mph wind")
+            # Short-period slop -> ladder stands.
+            if sw.get("min_period"):
+                slop = cond(wind_speed=sw.get("max_wind", 8),
+                            swell_period=sw["min_period"] - 2)
+                check(sf.pick_board(b, mid, slop) == sf.pick_board(b, mid),
+                      f"{b['name']}: swap fired below its period gate")
+            # Above the band -> ladder stands.
+            check(sf.pick_board(b, hi + 0.5, ctx) == sf.pick_board(b, hi + 0.5),
+                  f"{b['name']}: swap fired above its band")
+
+
+def test_swaps_never_override_dont_paddle():
+    """A null primary means don't paddle out. No swap may undo that."""
+    for b in BREAKS:
+        for rung in b["board_ladder"]:
+            if rung[2] is None:
+                face = (rung[0] + min(rung[1], rung[0] + 4)) / 2
+                got = sf.pick_board(b, face, cond(wind_speed=1, swell_period=14))
+                check(got[0] is None,
+                      f"{b['name']}: swap overrode a don't-paddle rung at {face}ft")
 
 
 # ------------------------------------------------------------------- scoring
