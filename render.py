@@ -140,6 +140,7 @@ header.top{margin-bottom:26px}
 .eyebrow .brand{color:var(--accent);letter-spacing:.1em}
 .eyebrow.gen,.eyebrow .gen{text-transform:none;letter-spacing:.02em;font-weight:500;font-variant-numeric:tabular-nums}
 .eyebrow.gen{margin-top:3px;font-size:11.5px}
+.eyebrow.gen svg{width:12.5px;height:12.5px;vertical-align:-2.5px;margin-right:3px}
 h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spacing:-.022em;font-weight:700}
 .dayline{font-size:17px;color:var(--ink-2);max-width:62ch;margin:0}
 .dayline strong{color:var(--ink);font-weight:650}
@@ -247,9 +248,12 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
   .stat.tides{grid-column:auto}}
 .outlink{margin-top:6px;font-size:13px}
 .outlink a,.olback a{display:inline-block;padding:10px 0}
-.nav{margin-top:4px;font-size:13px;display:flex;gap:22px}
-.nav a{color:var(--flash);text-decoration:none;font-weight:650;display:inline-block;padding:10px 0}
-.nav a:hover{text-decoration:underline}
+.nav{margin-top:12px;display:flex;gap:8px}
+.nav a{font-family:var(--font-data);font-size:12px;letter-spacing:var(--tracking-label);
+  text-transform:uppercase;text-decoration:none;padding:9px 16px;
+  border:1px solid var(--line);border-radius:var(--radius-badge);
+  background:var(--panel);color:var(--ink-2)}
+.nav a:hover{color:var(--flash);border-color:var(--flash);background:var(--go-tint);text-decoration:none}
 .wtabs{display:none;gap:8px;margin:0 0 14px}
 body.tabbed .wtabs{display:flex}
 .wtabs button{flex:1;font-family:var(--font-data);font-size:13px;letter-spacing:var(--tracking-label);
@@ -303,6 +307,7 @@ header.top{position:relative}
   .tabbar{display:grid}
   .nav{display:none}
   .olback{display:none}
+  .themebtn{display:none}
   .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 }
 .outlink a,.olback a{color:var(--accent);text-decoration:none;font-weight:650}
@@ -676,6 +681,12 @@ SUN_JS = """<script>
     if (!mc.parentNode) document.head.appendChild(mc);
   }
   apply(stored() || sunTheme());
+  // Tiny API for the Dawn/Dusk tabs (phones): the tab drives the theme there,
+  // and reset() hands control back to sun-or-stored when the tabs go away.
+  window.gfTheme = {
+    set: apply,
+    reset: function () { apply(stored() || sunTheme()); }
+  };
   var btn = document.getElementById("themebtn");
   if (btn) {
     btn.hidden = false;
@@ -687,6 +698,27 @@ SUN_JS = """<script>
   }
 })();
 </script>"""
+
+
+_PIN_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+             'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+             '<path d="M12 21s-6.5-5.4-6.5-10.2a6.5 6.5 0 0 1 13 0C18.5 15.6 12 21 12 21z"/>'
+             '<circle cx="12" cy="10.5" r="2.3"/></svg>')
+_CLOCK_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+               'stroke-width="1.8" stroke-linecap="round">'
+               '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>')
+
+
+def _fmt_gen(ts):
+    """'2026-08-30 15:37' -> '8/30/2026, 3:37 PM'. The JSON stays ISO-ish for
+    machines; this is display only, and an unparseable stamp passes through."""
+    try:
+        dt = datetime.strptime(ts, "%Y-%m-%d %H:%M")
+    except (ValueError, TypeError):
+        return ts
+    h12 = dt.hour % 12 or 12
+    ampm = "AM" if dt.hour < 12 else "PM"
+    return f"{dt.month}/{dt.day}/{dt.year}, {h12}:{dt.minute:02d} {ampm}"
 
 
 def _fmt_tide_time(t):
@@ -768,7 +800,7 @@ def render(data):
 <header class="top">
   {THEME_BTN}
   <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
-  <div class="eyebrow gen" style="margin-top:10px">San Diego &middot; generated {esc(data['generated'])}</div>
+  <div class="eyebrow gen" style="margin-top:10px">{_PIN_ICON}San Diego &middot; <span title="generated">{_CLOCK_ICON}{esc(_fmt_gen(data['generated']))}</span></div>
   <h1>{d.strftime('%A, %B %-d')}</h1>
   <p class="dayline">{day_verdict(data)}</p>
   {stat_grid(data)}
@@ -794,8 +826,8 @@ def render(data):
 </footer>
 </div>
 {tabbar("home")}
-{TABS_JS}
 {SUN_JS}
+{TABS_JS}
 </body>
 </html>"""
 
@@ -822,8 +854,14 @@ TABS_JS = """<script>
     idx = i;
     wins.forEach(function (w, j) { w.classList.toggle("active", j === i); });
     tabs.forEach(function (t, j) { t.classList.toggle("on", j === i); t.setAttribute("aria-selected", String(j === i)); });
+    // On phones the tab IS the theme: Dawn = sea-mist, Dusk = blue-hour.
+    if (mq.matches && window.gfTheme) window.gfTheme.set(i === 0 ? "light" : "dark");
   }
-  function apply() { document.body.classList.toggle("tabbed", mq.matches); show(idx); }
+  function apply() {
+    document.body.classList.toggle("tabbed", mq.matches);
+    show(idx);
+    if (!mq.matches && window.gfTheme) window.gfTheme.reset();
+  }
   tabs.forEach(function (t, i) { t.addEventListener("click", function () { show(i); }); });
   if (mq.addEventListener) mq.addEventListener("change", apply); else mq.addListener(apply);
   apply();
@@ -882,7 +920,7 @@ def render_outlook(data):
   <div class="olback"><a href="./">&larr; today's brief</a></div>
   <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
   <div class="eyebrow" style="margin-top:8px">5-day outlook</div>
-  <div class="eyebrow gen">generated {esc(data['generated'])}</div>
+  <div class="eyebrow gen"><span title="generated">{_CLOCK_ICON}{esc(_fmt_gen(data['generated']))}</span></div>
   <h1>The next five days</h1>
 </header>
 <div class="olrows">{rows}</div>
