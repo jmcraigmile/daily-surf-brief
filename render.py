@@ -397,15 +397,15 @@ def render(data):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f4f7f9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1418" media="(prefers-color-scheme: dark)">
-<meta name="apple-mobile-web-app-title" content="greenlight">
+<meta name="apple-mobile-web-app-title" content="greenflash">
 <meta name="description" content="Which break, which board. A daily San Diego surf brief, including the days you shouldn't.">
-<title>greenlight.surf</title>
+<title>greenflash.surf</title>
 <style>{CSS}</style>
 </head>
 <body>
 <div class="wrap">
 <header class="top">
-  <div class="eyebrow"><b class="brand">greenlight</b> &middot; which break, which board</div>
+  <div class="eyebrow"><b class="brand">greenflash</b> &middot; which break, which board</div>
   <div class="eyebrow gen">San Diego &middot; generated {esc(data['generated'])}</div>
   <h1>{d.strftime('%A, %B %-d')}</h1>
   <p class="dayline">{day_verdict(data)}</p>

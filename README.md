@@ -82,20 +82,20 @@ to GitHub Pages. `.github/workflows/publish.yml` is the whole thing:
   line in the page header is the staleness signal. Check it before trusting a
   pre-dawn read.
 
-The repo root is this folder. **Live at [greenlight.surf](https://greenlight.surf)**
+The repo root is this folder. **Live at [greenflash.surf](https://greenflash.surf)**
 (custom domain added 2026-08-30, renamed from glassoff.surf 2026-08-29:
 Cloudflare-registered, DNS-only records pointing at GitHub Pages, which serves the
 SSL cert — the DNS-only choice is deliberate, Cloudflare's proxy would block
-GitHub's cert issuance). Phone access: open greenlight.surf, Add to Home Screen.
+GitHub's cert issuance). Phone access: open greenflash.surf, Add to Home Screen.
 The old jmcraigmile.github.io/daily-surf-brief URL redirects.
 
 **The rename needs three manual steps outside this repo**, and the page stays
 broken until all three are done:
 
-1. Register/confirm `greenlight.surf` in Cloudflare and recreate the DNS records —
+1. Register/confirm `greenflash.surf` in Cloudflare and recreate the DNS records —
    the four apex `A` records to GitHub Pages' IPs plus the `www` `CNAME` to
    `jmcraigmile.github.io`, all **DNS-only (grey cloud)**, never proxied.
-2. In the repo's Settings → Pages, change the custom domain to `greenlight.surf`,
+2. In the repo's Settings → Pages, change the custom domain to `greenflash.surf`,
    then wait for the new cert to issue before ticking "Enforce HTTPS".
 3. Re-add the phone home-screen shortcut — the old icon points at the previous
    host and won't follow a redirect.
