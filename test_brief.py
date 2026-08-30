@@ -687,18 +687,22 @@ def test_wetsuit_ladder():
         check(got == want, f"wetsuit_call({temp}) = {got!r}, want {want!r}")
 
 
-def test_render_suit_line():
-    """Header shows temp + suit when measured, and an honest no-call when not."""
+def test_stat_grid():
+    """Header stat row: water, air, gear, tides -- with honest degradation
+    when the water reading is missing (dashes and a no-call, never a guess)."""
     d = synthetic_data(buoy=None)
     d["water_temp"] = {"ok": True, "temp_f": 66.2, "when": "2026-08-30 05:00"}
     d["wetsuit"] = sf.wetsuit_call(66.2)
     html = render.render(d)
-    check("66.2" in html and "Spring Suit" in html, "suit line missing temp or call")
+    check("66.2" in html and "Spring Suit" in html, "stat grid missing temp or suit")
+    check(">Tides" in html and "5:12a" in html and "11:40a" in html,
+          "tide chips missing or mis-formatted")
+    check("68" in html, "air temp missing from stat grid")
     d2 = synthetic_data(buoy=None)
     d2["water_temp"] = {"ok": False, "error": "x"}
     d2["wetsuit"] = None
     html2 = render.render(d2)
-    check("temp unavailable" in html2, "missing-temp fallback not shown")
+    check("your call" in html2 and "no reading" in html2, "missing-temp fallback not honest")
     check("None" not in html2, "None leaked from missing water temp")
 
 
@@ -930,6 +934,8 @@ def test_outlook_summary_and_render():
     check("beyond the swell model" in html, "no-data row missing honest note")
     check('pill go' in html and "Go" in html, "verdict pill missing")
     check("cannot see a storm" in html, "water-caveat missing from outlook")
+
+
 
 
 def test_breaks_and_quiver_pages():

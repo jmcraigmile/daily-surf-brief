@@ -227,10 +227,21 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .brk-sub{font-size:12.5px;color:var(--ink-3);margin-top:3px;font-variant-numeric:tabular-nums}
 .brk-sub .far{color:var(--marg);background:var(--marg-bg);border-radius:5px;padding:1px 6px;font-weight:650}
 .brk-verdict{font-size:13px;color:var(--ink-2);margin-top:6px;line-height:1.45}
-.suitline{margin-top:10px;font-size:14px;color:var(--ink-2);font-variant-numeric:tabular-nums}
-.suitline b{color:var(--ink);font-weight:680}
-.suit-k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650;margin-right:2px}
-.suit-v{color:var(--flash);font-weight:700;white-space:nowrap}
+.statgrid{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-card);
+  padding:10px 12px;min-width:0}
+.stat .sk{display:flex;align-items:center;gap:6px;font-family:var(--font-data);
+  font-size:10px;letter-spacing:var(--tracking-label);text-transform:uppercase;
+  color:var(--ink-3)}
+.stat .sk svg{width:14px;height:14px;flex:0 0 auto}
+.stat .sv{margin-top:5px;font-family:var(--font-data);font-size:14px;color:var(--ink);
+  line-height:1.4;overflow-wrap:anywhere}
+.stat.suit .sv{color:var(--flash)}
+.stat.tides{grid-column:1/-1}
+.stat.tides .sv{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px}
+.stat.tides .sv b{font-weight:400;color:var(--ink-3)}
+@media(min-width:860px){.statgrid{grid-template-columns:repeat(3,minmax(0,180px)) 1fr}
+  .stat.tides{grid-column:auto}}
 .outlink{margin-top:6px;font-size:13px}
 .outlink a,.olback a{display:inline-block;padding:10px 0}
 .nav{margin-top:4px;font-size:13px;display:flex;gap:22px}
@@ -648,24 +659,59 @@ SUN_JS = """<script>
 </script>"""
 
 
-def suit_line(data):
-    """Water temp + wetsuit call in the header. Measured at the Scripps Pier
-    station; no reading means no call, shown honestly, never a guessed suit."""
+def _fmt_tide_time(t):
+    """"05:12" -> "5:12a" -- compact 12-hour for the tide chips."""
+    h, m = int(t[:2]), t[3:5]
+    ap = "a" if h < 12 else "p"
+    h12 = h % 12 or 12
+    return f"{h12}:{m}{ap}"
+
+
+_STAT_ICONS = {
+    "water": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5S6.5 9.8 6.5 13.7a5.5 5.5 0 0 0 11 0C17.5 9.8 12 3.5 12 3.5z"/></svg>',
+    "air": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4a2 2 0 0 1 2 2v7.4a4 4 0 1 1-4 0V6a2 2 0 0 1 2-2z"/><path d="M12 10v5"/></svg>',
+    "suit": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M8.5 4 4 6.8l1.8 3 2.2-1.1V20h8V8.7l2.2 1.1 1.8-3L15.5 4a3.5 3.5 0 0 1-7 0z"/></svg>',
+    "tides": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 10c3-2.4 6-2.4 9 0s6 2.4 9 0"/><path d="M3 16c3-2.4 6-2.4 9 0s6 2.4 9 0"/></svg>',
+}
+
+
+def stat_grid(data):
+    """Water temp, air temp, gear call, and tides -- one clean row up top.
+    Missing readings degrade to dashes and an honest no-call, never guesses."""
     wt = data.get("water_temp") or {}
-    if not wt.get("ok"):
-        return ("<div class='suitline'><span class='suit-k'>Water</span> "
-                "temp unavailable this run &mdash; suit call is yours</div>")
-    suit = data.get("wetsuit") or "--"
-    return (f"<div class='suitline'><span class='suit-k'>Water</span> "
-            f"<b>{wt['temp_f']}&deg;F</b> at Scripps Pier &middot; "
-            f"<span class='suit-v'>{esc(suit)}</span></div>")
+    if wt.get("ok"):
+        water_v = f"{wt['temp_f']}&deg;F"
+        suit_v = esc(data.get("wetsuit") or "--")
+    else:
+        water_v = "--"
+        suit_v = "your call &mdash; no reading"
+
+    airs = [w.get("air_temp") for w in data.get("windows", []) if w.get("air_temp") is not None]
+    if not airs:
+        air_v = "--"
+    elif max(airs) - min(airs) >= 2:
+        air_v = f"{min(airs):.0f}&ndash;{max(airs):.0f}&deg;F"
+    else:
+        air_v = f"{airs[0]:.0f}&deg;F"
+
+    tide_bits = "".join(
+        f"<span><b>{esc(t['type'][0])}</b> {_fmt_tide_time(t['time'])}</span>"
+        for t in data.get("tides", [])) or "<span>--</span>"
+
+    def chip(key, label, value, extra=""):
+        return (f'<div class="stat{extra}"><div class="sk">{_STAT_ICONS[key]}'
+                f'{label}</div><div class="sv">{value}</div></div>')
+
+    return ('<div class="statgrid">'
+            + chip("water", "Water", water_v)
+            + chip("air", "Air", air_v)
+            + chip("suit", "Gear", suit_v, " suit")
+            + chip("tides", "Tides &middot; Scripps Pier", tide_bits, " tides")
+            + "</div>")
 
 
 def render(data):
     d = datetime.strptime(data["date"], "%Y-%m-%d")
-    tides = "".join(
-        f"<span class='tide {t['type'][0]}'>{esc(t['type'])} <b>{t['height']}ft</b> "
-        f"{esc(t['time'])}</span>" for t in data["tides"])
 
     return f"""<!doctype html>
 <html lang="en">
@@ -692,11 +738,10 @@ def render(data):
 <header class="top">
   {THEME_BTN}
   <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
-  <div class="eyebrow" style="margin-top:8px">which break, which board</div>
-  <div class="eyebrow gen">San Diego &middot; generated {esc(data['generated'])}</div>
+  <div class="eyebrow gen" style="margin-top:10px">San Diego &middot; generated {esc(data['generated'])}</div>
   <h1>{d.strftime('%A, %B %-d')}</h1>
   <p class="dayline">{day_verdict(data)}</p>
-  {suit_line(data)}
+  {stat_grid(data)}
   <nav class="nav"><a href="outlook.html">Outlook</a><a href="breaks.html">Breaks</a><a href="quiver.html">Quiver</a></nav>
 </header>
 
@@ -710,11 +755,6 @@ def render(data):
 </div>
 
 {render_water(data)}
-
-<div class="strip">
-  <h3>Tides &mdash; Scripps Pier</h3>
-  <div class="tides">{tides}</div>
-</div>
 
 <footer>
   Sunrise {esc(data['sunrise'])} &middot; sunset {esc(data['sunset'])}. Faces are
