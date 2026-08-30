@@ -297,16 +297,17 @@ header.top{position:relative}
 .outlink a,.olback a{color:var(--accent);text-decoration:none;font-weight:650}
 .outlink a:hover,.olback a:hover{text-decoration:underline}
 .olrows{display:flex;flex-direction:column;gap:10px;margin-top:20px}
-.olrow{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);
-       border-radius:var(--radius-card);padding:13px 16px;box-shadow:var(--shadow)}
-.olday{width:64px;flex:0 0 auto}
+.olrow{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);
+       border-radius:var(--radius-card);padding:13px 14px;box-shadow:var(--shadow)}
+.olrow .pill{flex:0 0 auto}
+.olday{width:54px;flex:0 0 auto}
 .olday b{display:block;font-size:16px;letter-spacing:-.01em}
 .olday span{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
-.olface{width:84px;flex:0 0 auto;font-size:16px;font-weight:680;font-variant-numeric:tabular-nums}
+.olface{width:72px;flex:0 0 auto;font-size:15px;font-weight:680;font-variant-numeric:tabular-nums}
 .olface span{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
 .olspot{flex:1;font-size:14px;color:var(--ink-2);min-width:0}
 .olspot b{color:var(--ink);font-weight:650}
-.olspot .win{color:var(--ink-3);font-size:12px}
+.olspot .olw{color:var(--ink-3);font-size:12px;font-family:var(--font-data)}
 .olnote{font-size:12.5px;color:var(--ink-3)}
 .olback{margin-bottom:14px;font-size:13px}
 .olcaveat{margin-top:20px;font-size:12.5px;color:var(--ink-3);line-height:1.55}
@@ -819,7 +820,7 @@ def _outlook_row(day):
     return f"""<div class="olrow">
   <div class="olday">{who}</div>
   <div class="olface">{face}<span>face</span></div>
-  <div class="olspot"><b>{esc(b['name'])}</b> <span class="win">{esc(b['window'])}</span></div>
+  <div class="olspot"><b>{esc(b['name'])}</b> <span class="olw">{esc(b['window'])}</span></div>
   <span class="pill {esc(b['cls'])}">{esc(b['label'])}</span>
 </div>"""
 
@@ -892,7 +893,7 @@ def _break_card(brk):
         ladder_rows += (f"<tr><td class='sc' style='text-align:left;width:70px'>{face}</td>"
                         f"<td>{call}</td></tr>"
                         f"<tr><td></td><td class='laddernote'>{esc(note)}</td></tr>")
-    drive = f"{brk.get('drive_minutes', '--')} min · {brk.get('drive_miles', '--')} mi"
+    drive = f"{brk.get('drive_minutes', '--')} min"
     hazards = f"<div class='flag'>{esc(brk['hazards'])}</div>" if brk.get("hazards") else ""
     return f"""<article class="bk" id="{slugify(brk['name'])}">
   <h2>{esc(brk['name'])}</h2>
