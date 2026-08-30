@@ -1000,6 +1000,34 @@ def test_tabbar_and_sun_theme():
               f"{active}: theme override script missing")
 
 
+def test_pick_selection():
+    """Jake's card rule (2026-08-30), pinned: Gos crowd out everything, Maybes
+    cap at two, all-Skip windows show the sit-out message and zero cards."""
+    def mk(label, score):
+        return {"label": label, "score": score, "name": f"{label}{score}"}
+    gos = [mk("Go", 90), mk("Go", 88), mk("Maybe", 70), mk("Skip", 40)]
+    picks, sitout = render.select_picks(gos)
+    check([p["label"] for p in picks] == ["Go", "Go"] and not sitout,
+          "Go window should show all Gos and nothing else")
+    maybes = [mk("Maybe", 75), mk("Maybe", 70), mk("Maybe", 65), mk("Skip", 40)]
+    picks, sitout = render.select_picks(maybes)
+    check(len(picks) == 2 and all(p["label"] == "Maybe" for p in picks) and not sitout,
+          "Maybe window should cap at top two")
+    skips = [mk("Skip", 40), mk("Skip", 30)]
+    picks, sitout = render.select_picks(skips)
+    check(picks == [] and sitout, "all-Skip window should sit out")
+    # And the rendered sit-out message, end to end:
+    d = synthetic_data(buoy=None)
+    for w in d["windows"]:
+        w["breaks"] = [dict(b) for b in w["breaks"]]
+        for b in w["breaks"]:
+            if not b["water"]["blocked"]:
+                b["label"], b["cls"], b["score"] = "Skip", "skip", 30
+    html = render.render(d)
+    check("Sit this one out" in html, "sit-out message missing")
+    check("Blocked on water quality" in html, "blocked section must survive sit-out")
+
+
 # ---------------------------------------------------------------------- main
 
 if __name__ == "__main__":

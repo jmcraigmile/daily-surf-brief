@@ -145,9 +145,10 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 @media(min-width:860px){.windows{grid-template-columns:1fr 1fr}}
 
 .win{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-card);box-shadow:var(--shadow);overflow:hidden}
-.win-hd{padding:16px 18px 14px;border-bottom:1px solid var(--line);background:var(--panel-2)}
-.win-hd h2{margin:0;font-size:19px;letter-spacing:-.01em;font-weight:700}
-.win-time{font-size:13px;color:var(--ink-3);margin-top:3px;font-variant-numeric:tabular-nums}
+.win-hd{padding:13px 16px;border-bottom:1px solid var(--line);background:var(--panel-2);
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.win-hd h2{margin:0;font-size:17px;letter-spacing:-.01em;font-weight:700;white-space:nowrap}
+.win-time{font-size:11.5px;color:var(--ink-3);text-align:right}
 
 .cond{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
 .cond>div{padding:12px 14px;border-right:1px solid var(--line)}
@@ -155,8 +156,14 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .cond .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
 .cond .v{font-size:16px;font-weight:680;margin-top:3px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .cond .s{font-size:12px;color:var(--ink-3);margin-top:1px}
-.cond .split{margin-top:5px;padding-top:5px;border-top:1px dotted var(--line-2);font-size:11.5px;line-height:1.4}
-.cond .split b{color:var(--ink-2);font-weight:650}
+.cond>.seastate{grid-column:1/-1;border-right:0;padding:8px 14px;
+  border-top:1px dotted var(--line-2);font-family:var(--font-data);
+  font-size:11.5px;line-height:1.45;color:var(--ink-3)}
+.cond>.seastate b{color:var(--ink-2);font-weight:400}
+.sitout{border:1px dashed var(--line-2);border-radius:var(--radius-card);
+  padding:16px;font-size:14px;color:var(--ink-2);line-height:1.5}
+.sitout b{color:var(--ink)}
+.sitout a{color:var(--flash);font-weight:650}
 @media(max-width:479px){
   .cond{grid-template-columns:1fr}
   .cond>div{border-right:0;border-bottom:1px solid var(--line);padding:10px 14px;
@@ -164,8 +171,8 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
   .cond>div:last-child{border-bottom:0}
   .cond .k{flex:0 0 52px}
   .cond .v{margin-top:0}
-  .cond .s{margin-top:0;flex-basis:100%;padding-left:64px}
-  .cond .split{flex-basis:100%;margin-left:64px}
+  .cond .s{margin-top:0;margin-left:auto;text-align:right;color:var(--ink-3)}
+  .cond>.seastate{display:block;border-bottom:0;padding:8px 14px}
 }
 
 .picks{padding:14px 14px 6px;display:flex;flex-direction:column;gap:11px}
@@ -375,11 +382,27 @@ def day_verdict(data):
     return f"Nothing worth the drive today. Best-scoring spot doesn't clear the bar.{suffix}"
 
 
+def select_picks(surfable):
+    """Which cards the window shows (Jake's rule, 2026-08-30):
+    - one or more Go: show every Go, no Maybes or Skips
+    - no Go, some Maybes: top two Maybes, no Skips
+    - neither: no cards at all -- a sit-this-one-out message instead
+    Blocked spots are a safety display handled separately and always shown.
+    Everything surfable but not picked stays reachable in the collapsed table."""
+    gos = [b for b in surfable if b["label"] == "Go"]
+    if gos:
+        return gos, False
+    maybes = [b for b in surfable if b["label"] == "Maybe"]
+    if maybes:
+        return maybes[:2], False
+    return [], True
+
+
 def render_break(b, rank):
     cls = "brk rank1" if rank == 0 else "brk"
     stars = "★" * b["crowd"] + "☆" * (5 - b["crowd"])
     face = "size n/a" if b["face_ft"] is None else f"~{b['face_ft']}ft face"
-    sub = f"{face} &middot; crowd {stars} &middot; {esc(b['skill'])}"
+    sub = f"{face} &middot; crowd {stars}"
     dm = b.get("drive_minutes")
     if dm:
         sub += f" &middot; {dm} min"
@@ -451,7 +474,7 @@ def split_line(w):
     if not lp or not sp or abs(lp - sp) < 4:
         return ""
     src = "buoy 46258" if s["source"] == "buoy" else "model"
-    return (f"<div class='s split'><b>{s['long_hs']:.1f}ft @ {lp:.0f}s</b> groundswell "
+    return (f"<div class='seastate'><b>{s['long_hs']:.1f}ft @ {lp:.0f}s</b> groundswell "
             f"under <b>{s['short_hs']:.1f}ft @ {sp:.0f}s</b> chop &middot; {src}</div>")
 
 
@@ -462,11 +485,16 @@ def render_window(w):
     ok = [b for b in w["breaks"] if not (b.get("water") or {}).get("blocked")]
     blocked = [b for b in w["breaks"] if (b.get("water") or {}).get("blocked")]
 
-    picks = "".join(render_break(b, i) for i, b in enumerate(ok[:3]))
+    chosen, sitout = select_picks(ok)
+    picks = "".join(render_break(b, i) for i, b in enumerate(chosen))
+    if sitout:
+        picks = ("<div class='sitout'><b>Sit this one out.</b> Nothing clears the "
+                 "bar this window &mdash; check the <a href='outlook.html'>outlook</a>, "
+                 "or just enjoy the coffee.</div>")
     if blocked:
         picks += ("<div class='blockhd'>Blocked on water quality</div>"
                   + "".join(render_break(b, 9) for b in blocked))
-    rest = ok[3:]
+    rest = [b for b in ok if b not in chosen]
     rows = "".join(
         f"<tr><td class='n'>{esc(b['name'])}</td><td>{esc(b['label'])}</td>"
         f"<td>{esc(b['board_primary'] or '--')}</td>"
@@ -487,12 +515,12 @@ def render_window(w):
   <div class="cond">
     <div><div class="k">Swell</div>
       <div class="v">{num(w['swell_hs'], 'ft')} @ {num(w['swell_period'], 's')}</div>
-      <div class="s">from {esc(w['total_dir_txt'])} &middot; ~{num(w['face_est'], 'ft')} face</div>
-      {split_line(w)}</div>
+      <div class="s">from {esc(w['total_dir_txt'])} &middot; ~{num(w['face_est'], 'ft')} face</div></div>
     <div><div class="k">Tide</div><div class="v">{num(w['tide_h'], 'ft')}</div>
       <div class="s">{esc(w['tide_state'])}, {esc(w['tide_dir'])}</div></div>
     <div><div class="k">Wind</div><div class="v">{wind}</div>
       <div class="s">{num(w['air_temp'], '&deg;F')} air</div></div>
+    {split_line(w)}
   </div>
   <div class="picks">{picks}</div>
   <details class="rest"><summary>{len(rest)} more breaks</summary>
@@ -636,19 +664,6 @@ def render(data):
         f"<span class='tide {t['type'][0]}'>{esc(t['type'])} <b>{t['height']}ft</b> "
         f"{esc(t['time'])}</span>" for t in data["tides"])
 
-    b = data.get("buoy")
-    if b:
-        # NDBC reports missing fields as "MM", which parse to None -- every slot
-        # here must degrade to a dash, same as the rest of the page.
-        buoy = (f"<b>Buoy 46258</b> (Mission Bay, last reading {esc(b['time'])}): "
-                f"swell {num(b['swell_ft'], 'ft')} @ {num(b['swell_period'], 's')} "
-                f"from {esc(b['swell_dir_txt'] or '--')}, "
-                f"wind wave {num(b['windwave_ft'], 'ft')} @ {num(b['windwave_period'], 's')}. "
-                f"The model and the buoy agree on total height; they split the swell and "
-                f"wind-wave partition differently, so size here is driven by the total.")
-    else:
-        buoy = "<b>Buoy 46258</b> unavailable this run &mdash; size is model-only."
-
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -694,22 +709,15 @@ def render(data):
 {render_water(data)}
 
 <div class="strip">
-  <h3>Tides &mdash; La Jolla / Scripps Pier</h3>
+  <h3>Tides &mdash; Scripps Pier</h3>
   <div class="tides">{tides}</div>
-  <div class="meta">{buoy}</div>
 </div>
 
 <footer>
-  Sunrise {esc(data['sunrise'])} &middot; sunset {esc(data['sunset'])} &middot;
-  generated {esc(data['generated'])}.<br>
-  Swell and wind from Open-Meteo Marine + Forecast models; tides from NOAA CO-OPS station
-  9410230; buoy from NDBC 46258. Scoring windows are derived from the write-ups in
-  <code>01-San-Diego-Breaks/</code> &mdash; degree ranges approximate the compass directions
-  in those notes, since no public source publishes degree windows for these spots except
-  Black's. Face heights are estimates, not measurements. The marine model grid is ~5km and
-  cannot resolve one break from its neighbour: the canyon lens at Black's/Scripps/the Shores
-  and the kelp effect at Sunset Cliffs are applied from the folder's own research, not from
-  the model. Check <a href="https://www.sdbeachinfo.com/">sdbeachinfo.com</a> before OB.
+  Sunrise {esc(data['sunrise'])} &middot; sunset {esc(data['sunset'])}. Faces are
+  estimates; spot research and caveats live on the <a href="breaks.html">Breaks</a> page.
+  Data: Open-Meteo &middot; NOAA 9410230 &middot; NDBC 46258 &middot; USGS.
+  Check <a href="https://www.sdbeachinfo.com/">sdbeachinfo.com</a> before OB.
 </footer>
 </div>
 {tabbar("home")}

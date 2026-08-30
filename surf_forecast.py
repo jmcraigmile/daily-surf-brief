@@ -914,7 +914,7 @@ def build(day=None):
         {"key": "morning", "label": "Dawn patrol", "range": MORNING,
          "time_txt": "7:00 - 8:30am"},
         {"key": "evening", "label": "Evening glass", "range": (ev_start, ev_end),
-         "time_txt": f"{fmt_hour(ev_start)} - {fmt_hour(ev_end)} (sunset {sunset_dt.strftime('%-I:%M%p').lower()})"},
+         "time_txt": f"{fmt_hour(ev_start)} to sunset {fmt_hour(ev_end)}"},
     ]
 
     results = []
