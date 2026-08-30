@@ -1048,6 +1048,57 @@ def build(day=None):
     }
 
 
+# ---------------------------------------------------------------- outlook
+
+def summarize_outlook_day(data):
+    """One brief -> one compact outlook row: face height + the day's best call.
+
+    Pure function over build() output so it's testable without network. The
+    day's verdict is the top surfable break of the better window -- the same
+    ranking the daily page shows, just reduced to what fits in a glance.
+    Beyond the marine model's horizon (~8 days) swell comes back null; that is
+    a no_data row, never a fabricated call.
+    """
+    if all(w.get("swell_hs") is None for w in data["windows"]):
+        return {"no_data": True, "faces": [], "best": None}
+    faces, best = [], None
+    for w in data["windows"]:
+        if w.get("face_est") is not None:
+            faces.append(w["face_est"])
+        surfable = [b for b in w["breaks"] if not (b.get("water") or {}).get("blocked")]
+        if not surfable:
+            continue
+        top = surfable[0]
+        cand = {"name": top["name"], "score": top["score"], "label": top["label"],
+                "cls": top["cls"],
+                "window": "am" if w.get("key") == "morning" else "pm"}
+        if best is None or cand["score"] > best["score"]:
+            best = cand
+    return {"no_data": False, "faces": faces, "best": best}
+
+
+def build_outlook(days=5, start=1):
+    """Compact outlook for the next `days` days, starting `start` days out.
+
+    Runs the full daily build per day (the tested path) and reduces each to a
+    row. Honesty caveats carried in the JSON and printed by the renderer:
+    beyond tomorrow the buoy split is out of trust range (source model/none),
+    and the water-quality veto reflects CURRENT rain/river, not forecast rain.
+    A day that fails to build becomes an ok:false row, not a dead page.
+    """
+    rows = []
+    for i in range(start, start + days):
+        d = date.today() + timedelta(days=i)
+        day = d.strftime("%Y-%m-%d")
+        row = {"date": day, "dow": d.strftime("%a"), "disp": d.strftime("%-m/%-d")}
+        try:
+            row.update(ok=True, **summarize_outlook_day(build(day)))
+        except Exception as e:
+            row.update(ok=False, error=str(e))
+        rows.append(row)
+    return {"generated": datetime.now().strftime("%Y-%m-%d %H:%M"), "days": rows}
+
+
 def fmt_hour(h):
     hh = int(h)
     mm = int(round((h - hh) * 60))
@@ -1062,8 +1113,10 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--date")
     ap.add_argument("--json")
+    ap.add_argument("--outlook", type=int, metavar="DAYS",
+                    help="build a compact N-day outlook instead of a daily brief")
     args = ap.parse_args()
-    data = build(args.date)
+    data = build_outlook(days=args.outlook) if args.outlook else build(args.date)
     out = json.dumps(data, indent=2)
     if args.json:
         with open(args.json, "w") as f:

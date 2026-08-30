@@ -115,6 +115,23 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .suitline b{color:var(--ink);font-weight:680}
 .suit-k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650;margin-right:2px}
 .suit-v{color:var(--accent);font-weight:700}
+.outlink{margin-top:10px;font-size:13px}
+.outlink a,.olback a{color:var(--accent);text-decoration:none;font-weight:650}
+.outlink a:hover,.olback a:hover{text-decoration:underline}
+.olrows{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.olrow{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);
+       border-radius:11px;padding:13px 16px;box-shadow:var(--shadow)}
+.olday{width:64px;flex:0 0 auto}
+.olday b{display:block;font-size:16px;letter-spacing:-.01em}
+.olday span{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.olface{width:84px;flex:0 0 auto;font-size:16px;font-weight:680;font-variant-numeric:tabular-nums}
+.olface span{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
+.olspot{flex:1;font-size:14px;color:var(--ink-2);min-width:0}
+.olspot b{color:var(--ink);font-weight:650}
+.olspot .win{color:var(--ink-3);font-size:12px}
+.olnote{font-size:12.5px;color:var(--ink-3)}
+.olback{margin-bottom:14px;font-size:13px}
+.olcaveat{margin-top:20px;font-size:12.5px;color:var(--ink-3);line-height:1.55}
 
 .board{margin-top:11px;padding:10px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)}
 .board-k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
@@ -410,6 +427,7 @@ def render(data):
   <h1>{d.strftime('%A, %B %-d')}</h1>
   <p class="dayline">{day_verdict(data)}</p>
   {suit_line(data)}
+  <div class="outlink"><a href="outlook.html">5-day outlook &rarr;</a></div>
 </header>
 
 <div class="windows">
@@ -441,11 +459,70 @@ def render(data):
 </html>"""
 
 
+def _outlook_row(day):
+    """One outlook day -> one row. Missing data degrades to dashes, honestly."""
+    who = f"<b>{esc(day['dow'])}</b><span>{esc(day['disp'])}</span>"
+    if not day.get("ok"):
+        return (f"<div class='olrow'><div class='olday'>{who}</div>"
+                f"<div class='olface'>--</div>"
+                f"<div class='olspot olnote'>couldn't build this day &mdash; source outage</div></div>")
+    if day.get("no_data") or not day.get("best"):
+        return (f"<div class='olrow'><div class='olday'>{who}</div>"
+                f"<div class='olface'>--</div>"
+                f"<div class='olspot olnote'>beyond the swell model's horizon</div></div>")
+    faces = day.get("faces") or []
+    lo, hi = min(faces), max(faces)
+    face = f"~{lo:g}ft" if abs(hi - lo) < 0.5 else f"{lo:g}&ndash;{hi:g}ft"
+    b = day["best"]
+    return f"""<div class="olrow">
+  <div class="olday">{who}</div>
+  <div class="olface">{face}<span>face</span></div>
+  <div class="olspot"><b>{esc(b['name'])}</b> <span class="win">{esc(b['window'])}</span></div>
+  <span class="pill {esc(b['cls'])}">{esc(b['label'])}</span>
+</div>"""
+
+
+def render_outlook(data):
+    rows = "".join(_outlook_row(d) for d in data["days"])
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1418" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="greenflash">
+<title>greenflash &middot; outlook</title>
+<style>{CSS}</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="olback"><a href="./">&larr; today's brief</a></div>
+  <div class="eyebrow"><b class="brand">greenflash</b> &middot; 5-day outlook</div>
+  <div class="eyebrow gen">generated {esc(data['generated'])}</div>
+  <h1>The next five days</h1>
+</header>
+<div class="olrows">{rows}</div>
+<div class="olcaveat">Each row is the day's best window and its top-ranked break, from the
+same scoring as the daily brief. <b>The further out, the softer the read:</b> beyond
+tomorrow the buoy can't help (model-only sea), sizes are estimates, and the water-quality
+veto reflects <b>current</b> rain and river conditions &mdash; it cannot see a storm that
+hasn't happened yet. Trust the shape, not the decimals; check back as the day gets close.</div>
+</div>
+</body>
+</html>"""
+
+
 if __name__ == "__main__":
-    src = sys.argv[1] if len(sys.argv) > 1 else "/tmp/surf.json"
-    dst = sys.argv[2] if len(sys.argv) > 2 else "/tmp/surf.html"
+    argv = sys.argv[1:]
+    outlook = "--outlook" in argv
+    if outlook:
+        argv.remove("--outlook")
+    src = argv[0] if len(argv) > 0 else "/tmp/surf.json"
+    dst = argv[1] if len(argv) > 1 else "/tmp/surf.html"
     with open(src) as f:
         data = json.load(f)
     with open(dst, "w") as f:
-        f.write(render(data))
+        f.write(render_outlook(data) if outlook else render(data))
     print(f"wrote {dst}")

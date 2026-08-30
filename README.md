@@ -46,6 +46,7 @@ python3 water.py                                                # water signals 
 | `render.py` | JSON → self-contained HTML. No network, no assets, no external CSS. |
 | `breaks.json` | **The knob.** All per-break scoring rules and board ladders. Edit this, not the Python. |
 | `test_brief.py` | No-network invariant suite: ladders, board names, direction monotonicity, component maxima, water-veto sims, render regressions. Gates every CI publish. |
+| `outlook.html` (published) | **5-day outlook**: one row per day -- face height, the day's best break, Go/Maybe/Skip. Built by `--outlook 5` + `render.py --outlook`; non-fatal in CI (a failure writes a fallback page, never blocks the daily brief). Beyond tomorrow the buoy split is out of trust range and the water veto reflects current conditions -- the page says so. |
 | `.github/workflows/publish.yml` | The scheduler + publisher: four UTC crons (two per window, covering DST), tests → fetch → render → deploy to Pages. |
 
 `__pycache__/` is generated — gitignore it.

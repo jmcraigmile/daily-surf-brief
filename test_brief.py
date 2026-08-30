@@ -898,6 +898,40 @@ def test_day_verdict_matches_pill():
               f"day_verdict at score {score} ({label}): {phrase!r} not in {got[:80]!r}")
 
 
+def test_outlook_summary_and_render():
+    """Outlook: the day reduces to face + the best window's top call, no-data
+    days degrade to dashes (never a fabricated verdict), and the page renders
+    without leaked Nones."""
+    d = synthetic_data(buoy=None)
+    d["windows"][0]["face_est"], d["windows"][1]["face_est"] = 3.6, 4.1
+    # synthetic_data's windows share one breaks list -- split before mutating
+    d["windows"][1]["breaks"] = [dict(b) for b in d["windows"][1]["breaks"]]
+    d["windows"][1]["breaks"][0]["score"] = 90
+    d["windows"][1]["breaks"][0]["label"], d["windows"][1]["breaks"][0]["cls"] = "Go", "go"
+    s = sf.summarize_outlook_day(d)
+    check(not s["no_data"], "real day marked no_data")
+    check(s["best"]["score"] == 90 and s["best"]["window"] == "pm",
+          f"best pick wrong: {s['best']}")
+    check(s["faces"] == [3.6, 4.1], f"faces wrong: {s['faces']}")
+
+    d2 = synthetic_data(buoy=None)
+    for w in d2["windows"]:
+        w["swell_hs"] = None
+    s2 = sf.summarize_outlook_day(d2)
+    check(s2["no_data"] and s2["best"] is None, "horizon day fabricated a call")
+
+    ol = {"generated": "2026-08-30 18:00", "days": [
+        dict(date="2026-08-31", dow="Mon", disp="8/31", ok=True, **s),
+        dict(date="2026-09-07", dow="Sun", disp="9/7", ok=True, **s2),
+        {"date": "2026-09-01", "dow": "Tue", "disp": "9/1", "ok": False, "error": "x"},
+    ]}
+    html = render.render_outlook(ol)
+    check("None" not in html, "None leaked into outlook page")
+    check("beyond the swell model" in html, "no-data row missing honest note")
+    check('pill go' in html and "Go" in html, "verdict pill missing")
+    check("cannot see a storm" in html, "water-caveat missing from outlook")
+
+
 # ---------------------------------------------------------------------- main
 
 if __name__ == "__main__":

@@ -57,6 +57,17 @@ jobs:
           mkdir -p site
           python3 render.py brief.json site/index.html
 
+      - name: 5-day outlook (non-fatal -- the daily brief publishes regardless)
+        run: |
+          if python3 surf_forecast.py --outlook 5 --json outlook.json \
+             && python3 render.py --outlook outlook.json site/outlook.html \
+             && ! grep -q "None" site/outlook.html; then
+            echo "outlook built"
+          else
+            printf '%s' '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>greenflash outlook</title></head><body style="font-family:system-ui;padding:2rem;background:#0b1418;color:#e8f1f5"><p>Outlook unavailable this run &mdash; <a style="color:#5cb6e8" href="./">back to today&#39;s brief</a>.</p></body></html>' > site/outlook.html
+            echo "::warning::outlook failed; wrote fallback page"
+          fi
+
       - name: Guard against leaked nulls
         run: |
           if grep -q "None" site/index.html; then
