@@ -1,6 +1,7 @@
 # Daily Surf Brief
 
-Scores thirteen written-up San Diego breaks against live swell, tide, wind and
+Scores the written-up San Diego breaks (13 on file, 12 in the daily rotation --
+Oceanside Pier is `"hidden": true`, kept but not shown) against live swell, tide, wind and
 bacterial risk, twice a day, and names a board from Jake's actual quiver.
 
 **Two windows:** dawn patrol 7:00–8:30am, and the hour before sunset (recalculated
@@ -40,7 +41,7 @@ python3 water.py                                                # water signals 
 
 | File | Role |
 |---|---|
-| `surf_forecast.py` | Fetches conditions, scores all thirteen breaks for both windows, picks boards. Writes JSON. |
+| `surf_forecast.py` | Fetches conditions, scores every non-hidden break for both windows, picks boards. Writes JSON. |
 | `water.py` | Bacterial risk per break from rainfall + river discharge. Imported by `surf_forecast.py`; also runnable standalone. |
 | `render.py` | JSON → self-contained HTML. No network, no assets, no external CSS. |
 | `breaks.json` | **The knob.** All per-break scoring rules and board ladders. Edit this, not the Python. |
