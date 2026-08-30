@@ -430,7 +430,7 @@ def canyon_transform(brk, hs, period, sdir, sea=None):
     # ---- legacy path: no decomposition available, whole sea as one component
     if sea is None:
         if period < 9:
-            return hs, ("Short period -- the canyon is barely in play; the three "
+            return hs, ("Short period -- the canyon's off, and the three "
                         "canyon spots break alike today")
         f, note, _ = _canyon_factor(mode, period, sdir)
         return round(hs * f, 1), note
@@ -443,7 +443,7 @@ def canyon_transform(brk, hs, period, sdir, sea=None):
         ldir = sdir
 
     if lp is None or lp < 9 or not lh:
-        return hs, ("Short period -- the canyon is barely in play; the three "
+        return hs, ("Short period -- the canyon's off, and the three "
                     "canyon spots break alike today"), period
 
     f, note, _ = _canyon_factor(mode, lp, ldir)
@@ -507,11 +507,11 @@ def score_break(brk, cond):
         if dist > 0:
             dir_score = max(0.0, dir_score - 6 - dist * 0.7)
             if dist > 12:
-                notes.append(f"Swell is {compass(sdir)} -- outside this spot's window "
+                notes.append(f"Swell's {compass(sdir)} -- outside this spot's window "
                              f"by ~{int(dist)}deg")
         elif off > 55:
-            notes.append(f"Swell is {compass(sdir)} -- inside the window but well off this "
-                         f"spot's best angle ({compass(ideal)})")
+            notes.append(f"Swell's {compass(sdir)} -- in the window, but well off the best "
+                         f"angle here ({compass(ideal)})")
 
     # --- size fit (0-30)
     lo, hi = brk["size_ideal"]
@@ -523,19 +523,19 @@ def score_break(brk, cond):
     elif face < lo:
         if face < smin:
             size_score = max(0, 12 * (face / smin) if smin else 0)
-            notes.append(f"Under this spot's minimum (~{smin}ft face)")
+            notes.append(f"Under this spot's minimum (~{smin}ft face) -- probably not awake")
         else:
             size_score = 12 + 18 * (face - smin) / max(0.1, lo - smin)
     else:
         if face > smax:
             size_score = max(0, 8 - (face - smax) * 3)
-            notes.append(f"Over the closeout ceiling (~{smax}ft face)")
+            notes.append(f"Past the closeout ceiling (~{smax}ft face)")
         else:
             size_score = 30 - 22 * (face - hi) / max(0.1, smax - hi)
 
     if brk.get("special") == "needs_size" and face is not None and face < smin:
         size_score *= 0.35
-        notes.append("PB Point genuinely doesn't break most of the time -- needs an above-average swell")
+        notes.append("PB Point spends most of its life flat -- it takes an above-average swell to exist")
 
     # --- period fit (0-8)
     pl, ph = brk.get("period_ideal", [8, 18])
@@ -550,7 +550,7 @@ def score_break(brk, cond):
         per_score = max(0, 8 - off * 1.5)
     if brk.get("period_closeout_long") and period and period >= 15 and face and face > 5:
         per_score = max(0, per_score - 5)
-        notes.append("Long-period straight-in at size is the worst case here -- it walls up and closes out")
+        notes.append("Long-period straight-in at size is the worst case here -- walls up and shuts down")
 
     # --- tide (0-18)
     st = tide_state(tide_h)
@@ -579,13 +579,13 @@ def score_break(brk, cond):
         wind_score = 8
     elif wspd <= 3:
         wind_score = 16
-        notes.append("Near-glassy")
+        notes.append("Near-glassy. Go")
     elif in_arc(wdir, wlo, whi):
         # Offshore, but a gale is a gale -- it will still hold you out of waves
         wind_score = 16 if wspd <= 12 else max(0, 16 - (wspd - 12) * 0.8)
         if wspd > 25:
             wind_score = min(wind_score, 3)
-            notes.append(f"Offshore but howling at {wspd:.0f}mph -- hard to get in")
+            notes.append(f"Offshore but howling at {wspd:.0f}mph -- less grooming, more sandblasting")
     else:
         if wspd <= tol:
             wind_score = 11
@@ -594,22 +594,22 @@ def score_break(brk, cond):
         # Sunset Cliffs kelp bed smooths NW onshore bump
         if brk.get("kelp_bonus") and in_arc(wdir, 290, 30):
             wind_score = min(16, wind_score + 7)
-            notes.append("The kelp bed smooths this NW bump -- clean here when PB, Mission and OB are blown out")
+            notes.append("The kelp's doing its job on this NW bump -- combed here while PB, Mission and OB go victory-at-sea")
         # La Jolla Shores: a south wind that ruins the county can go sideshore here.
         # Arc starts at 181 so it doesn't overlap this spot's own offshore arc.
         if brk.get("wind_south_ok") and in_arc(wdir, 181, 215):
             wind_score = min(16, wind_score + 6)
-            notes.append("South wind isn't a session-killer here -- it can blow off or go sideshore")
+            notes.append("A south wind isn't a session-killer here -- it can back off or bend sideshore")
 
     if brk.get("wind_deadline_hour") and cond["window_end_hour"] > brk["wind_deadline_hour"]:
         wind_score = max(0, wind_score - 3)
-        notes.append(f"This stretch catches wind easily -- be in before {brk['wind_deadline_hour']}am")
+        notes.append(f"This stretch catches wind early -- be wet before {brk['wind_deadline_hour']}am")
 
     # --- crowd: information first, small tiebreaker second
     crowd = brk["crowd"]
     if cond.get("is_weekend") and brk.get("crowd_weekend"):
         crowd = brk["crowd_weekend"]
-        notes.append("Weekend -- ultra-crowded and the vibe turns cutthroat here. Surf it midweek")
+        notes.append("Weekend -- packed, and the vibe goes cutthroat. Save it for midweek")
     crowd_pen = max(0, (crowd - 3)) * 2.0
 
     total = dir_score + size_score + per_score + tide_score + wind_score - crowd_pen

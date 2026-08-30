@@ -109,6 +109,7 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .brk.isblocked{opacity:.72;border-style:dashed}
 .brk-sub{font-size:12.5px;color:var(--ink-3);margin-top:3px;font-variant-numeric:tabular-nums}
 .brk-sub .far{color:var(--marg);background:var(--marg-bg);border-radius:5px;padding:1px 6px;font-weight:650}
+.brk-verdict{font-size:13px;color:var(--ink-2);margin-top:6px;line-height:1.45}
 
 .board{margin-top:11px;padding:10px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)}
 .board-k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
@@ -243,6 +244,7 @@ def render_break(b, rank):
   <div class="brk-hd"><span class="brk-name">{esc(b['name'])}</span>
     <span class="pill {b['cls']}">{esc(b['label'])}</span></div>
   <div class="brk-sub">{sub}</div>
+  <div class="brk-verdict">{esc(b['verdict'])}</div>
   {wqhtml}{board}{notes}{flag}
 </div>"""
 
