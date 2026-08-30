@@ -42,6 +42,16 @@
       "slug": "egg"
     },
     {
+      "name": "7'0 CI Waterhog",
+      "shaper": "Channel Islands",
+      "dims": "7'0 × ? × ?",
+      "volume": "TBD",
+      "fins": "Futures Tokoro thruster",
+      "range": "Small, soft, crowded, or junk",
+      "role": "Soft top with a glassed bottom, so it still has real glide. Zero-consequence days, guests, shorebreak, OB Pier as often as not.",
+      "slug": "waterhog"
+    },
+    {
       "name": "7'6 Magic",
       "shaper": "Bob Mitsven",
       "dims": "7'6 × 21½ × 2¹⁄₁₆",
@@ -50,6 +60,16 @@
       "range": "Chest to overhead trim -- points and long walls",
       "role": "Trim and glide. Thin for its length, so it's not a paddle machine and it is NOT a step-up -- 'not the tool when the canyon is doubling a 16-second swell.' PB Point is nearly its job description.",
       "slug": "magic"
+    },
+    {
+      "name": "9'0 Ron Jon",
+      "shaper": "Ron Jon (early 2000s shop board)",
+      "dims": "9'0 × 23½ × 3¼",
+      "volume": "~76–82L est",
+      "fins": "2+1 -- FCS II Flow (marked 9.0) + plastic side bites",
+      "range": "Beater / loaner / guest board",
+      "role": "No anxiety attached. The board that gets lent, dinged, and left on racks without a second thought.",
+      "slug": "ron-jon"
     },
     {
       "name": "9'4 Pink Panther",
@@ -70,26 +90,6 @@
       "range": "Tiny, weak surf",
       "role": "The glider. It doesn't need waves, just water -- flat-spell mornings at the Shores and Cardiff are what you own it for.",
       "slug": "chris-craft"
-    },
-    {
-      "name": "7'0 CI Waterhog",
-      "shaper": "Channel Islands",
-      "dims": "7'0 × ? × ?",
-      "volume": "TBD",
-      "fins": "Futures Tokoro thruster",
-      "range": "Small, soft, crowded, or junk",
-      "role": "Soft top with a glassed bottom, so it still has real glide. Zero-consequence days, guests, shorebreak, OB Pier as often as not.",
-      "slug": "waterhog"
-    },
-    {
-      "name": "9'0 Ron Jon",
-      "shaper": "Ron Jon (early 2000s shop board)",
-      "dims": "9'0 × 23½ × 3¼",
-      "volume": "~76–82L est",
-      "fins": "2+1 -- FCS II Flow (marked 9.0) + plastic side bites",
-      "range": "Beater / loaner / guest board",
-      "role": "No anxiety attached. The board that gets lent, dinged, and left on racks without a second thought.",
-      "slug": "ron-jon"
     }
   ]
 }

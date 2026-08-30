@@ -8,576 +8,88 @@
   "_board_crowd_note": "Max break `crowd` rating at which a board may be called, primary OR backup. Some boards are ruled out by the PEOPLE in the water, not the wave. Added 2026-08-30 from 02-Gear/Glider-Deep-Dive.md section 4e: an 11ft glider on a 10ft leash swings a ~20ft radius when a closeout tears it loose, and it out-paddles the whole lineup, so a mobbed peak is the one place the shape is a genuine liability. Skip Frye and Josh Hall both name this limit in their own words; Hall's rule is 'catch two or three waves, and then move on, so you never abuse a single lineup.' NOTE this gate is NOT in the same evidential class as the mini-Simmons board_swaps thresholds -- those are unvalidated personal heuristics, this is a judgment the sources state directly and it reads a `crowd` field that was already researched per break. At limit 3 the glider survives at Cardiff Reef (crowd 3, the one spot Hall names by name as glider water) and is gated at La Jolla Shores and Swami's (crowd 4). A gated board is DEMOTED to the backup, never blocked outright -- the wave is fine, only the board choice is wrong.",
   "breaks": [
     {
-      "name": "Black's Beach",
-      "region": "Central",
-      "lat": 32.8887,
-      "lon": -117.2528,
-      "swell_windows": [
-        [
-          205,
-          295
-        ]
-      ],
-      "ideal_dir": 285,
-      "dir_note": "Optimum clean long-period WNW 280-290 deg -- the one spot with a published degree window",
-      "size_ideal": [
-        3.5,
-        12
-      ],
-      "size_min": 2,
-      "size_max": 16,
-      "tide_pref": [
-        "low",
-        "mid"
-      ],
-      "tide_weight": 0.7,
-      "tide_note": "Less tide-fussy the bigger it gets",
-      "wind_offshore": [
-        22,
-        112
-      ],
-      "wind_tolerance": 8,
-      "period_pref": "long",
-      "period_ideal": [
-        14,
-        20
-      ],
-      "canyon": "amplify",
-      "crowd": 4,
-      "localism": 3,
-      "skill": "Intermediate to advanced, depending on size",
-      "hazards": "CITY GUIDANCE: 'Access to Black's Beach is very difficult due to the high cliffs and unimproved and unmaintained trails. The SAFEST ACCESS IS FROM ADJACENT BEACHES TO THE NORTH AND SOUTH, but this access may be obstructed by high tides or surf. The cliffs are unstable and slides can occur without warning.' Check the tide before committing to a beach walk. Two significant rips, no designated swim zones. 72hr post-rain rule.",
-      "verdict": "Best beachbreak in the county, and it's not close. The canyon doubles long-period swell here while it starves Scripps and the Shores -- same swell, different planet.",
-      "board_ladder": [
-        [
-          0,
-          3,
-          "6'5 Egg",
-          "5'8 Fish",
-          "Small day -- the canyon's asleep and it's just another beachbreak"
-        ],
-        [
-          3,
-          5,
-          "6'0 Surfer Rosa",
-          "6'5 Egg",
-          "Chest-to-head with real push behind it"
-        ],
-        [
-          5,
-          7,
-          "7'6 Magic",
-          "6'0 Surfer Rosa",
-          "Big enough that paddle power starts winning arguments"
-        ],
-        [
-          7,
-          99,
-          null,
-          null,
-          "GAP -- don't talk yourself into it. The Magic is a trim-and-glide board at ~37-39L, not a step-up, and the folder says plainly it is 'not the tool when the canyon is doubling a 16-second swell.' Locals: 'Blacks is all about late drops -- unless you are on a bigger board you will not be able to catch waves.' This is the Dredgernaut's job."
-        ]
-      ],
-      "gap_above": 7,
-      "quality_cap": 100,
-      "water": {
-        "chronic": "normal",
-        "note": "Standard county post-rain rule applies. No chronic source nearby.",
-        "river_mouth": false,
-        "outlet_proximity": "none"
-      },
-      "drive_minutes": 22,
-      "drive_miles": 14.1
-    },
-    {
-      "name": "Scripps Pier",
-      "region": "Central",
-      "lat": 32.8664,
-      "lon": -117.2544,
-      "swell_windows": [
-        [
-          270,
-          320
-        ]
-      ],
-      "ideal_dir": 292,
-      "dir_note": "WNW. Rights dominate. South swell is the worst case -- canyon shadow to -64%",
-      "size_ideal": [
-        2.5,
-        6
-      ],
-      "size_min": 1.5,
-      "size_max": 8,
-      "tide_pref": [
-        "mid"
-      ],
-      "tide_weight": 1.3,
-      "tide_rising_bonus": true,
-      "tide_note": "Mid on a rising push -- fussiest of the three canyon spots",
-      "wind_offshore": [
-        90,
-        180
-      ],
-      "wind_tolerance": 8,
-      "period_pref": "moderate",
-      "period_ideal": [
-        10,
-        15
-      ],
-      "canyon": "shadow_moderate",
-      "crowd": 3,
-      "localism": 2,
-      "skill": "Beginner-intermediate",
-      "hazards": "Permitted outfalls in the area, including SIO's monitored filtered-seawater discharge and stormwater south of the pier -- treat as runoff-adjacent after rain rather than a chronically polluting drain. 72hr post-storm rule. Pier is UCSD property, closed to the public.",
-      "verdict": "Size-starved far more often than maxed -- '79% too small' in January. The canyon shadow, doing what it does.",
-      "board_ladder": [
-        [
-          0,
-          2.5,
-          "6'5 Egg",
-          "5'8 Fish",
-          "Egg water -- ~40-43L of float for a shadowed little day"
-        ],
-        [
-          2.5,
-          4,
-          "5'8 Fish",
-          "6'5 Egg",
-          "It reads '79% too small' for a reason -- reach for the fish before the Rosa most days"
-        ],
-        [
-          4,
-          99,
-          "6'0 Surfer Rosa",
-          "6'5 Egg",
-          "Chest-to-head with push -- the Rosa's home break, F8 Legacy Large in it"
-        ]
-      ],
-      "board_swaps": [
-        {
-          "face": [
-            2.5,
-            5.0
-          ],
-          "max_wind": 8,
-          "min_period": 9,
-          "primary": "5'4 Mini-Simmons",
-          "backup": "5'8 Fish",
-          "note": "Same shadow as the Shores, same soft rolling takeoff -- clean and lined up, this is Simmons water well past waist-high. Not a grovel, a glide."
-        }
-      ],
-      "quality_cap": 86,
-      "water": {
-        "chronic": "normal",
-        "note": "Runoff-adjacent: permitted outfalls nearby, stormwater south of the pier. County post-rain rule applies with the outlet caveat. Earlier wording ('polluting drain directly at the beach') was an overstatement, corrected 2026-08-30.",
-        "river_mouth": false,
-        "outlet_proximity": "nearby",
-        "outlet": "permitted outfalls near the pier"
-      },
-      "drive_minutes": 19,
-      "drive_miles": 11.7
-    },
-    {
-      "name": "La Jolla Shores",
-      "region": "Central",
-      "lat": 32.857,
+      "name": "Sunset Cliffs",
+      "region": "South",
+      "lat": 32.718,
       "lon": -117.256,
       "swell_windows": [
         [
-          260,
+          200,
           320
         ]
       ],
-      "ideal_dir": 275,
-      "dir_note": "W best, NW works. Rights dominate",
-      "size_ideal": [
-        1.5,
-        4
-      ],
-      "size_min": 1,
-      "size_max": 6,
-      "tide_pref": [
-        "low",
-        "mid",
-        "high"
-      ],
-      "tide_weight": 0.3,
-      "tide_note": "Breaks on whatever tide you show up to",
-      "wind_offshore": [
-        90,
-        180
-      ],
-      "wind_tolerance": 8,
-      "wind_south_ok": true,
-      "period_pref": "short",
-      "period_ideal": [
-        8,
-        12
-      ],
-      "canyon": "shadow_deep",
-      "crowd": 4,
-      "localism": 1,
-      "skill": "Beginner",
-      "hazards": "Stingrays are the signature hazard -- do the shuffle. Rips and undertow. Checkered flag zones swim from surf.",
-      "verdict": "The overflow lot. Deepest canyon shadow of the three (-40% to -89%) and long period actually hurts it. But when a south wind ruins everywhere else, this place shrugs.",
-      "board_ladder": [
-        [
-          0,
-          2,
-          "11'0 Chris Craft",
-          "9'4 Pink Panther",
-          "Genuinely tiny -- exactly what you own the glider for"
-        ],
-        [
-          2,
-          3.5,
-          "5'4 Mini-Simmons",
-          "9'4 Pink Panther",
-          "Soft, shadowed, gutless -- and the Simmons turns gutless into speed. Panther if you'd rather walk; the Greenough 4-A finally gets to do its thing"
-        ],
-        [
-          3.5,
-          99,
-          "5'8 Fish",
-          "9'4 Pink Panther",
-          "North end toward Scripps carries noticeably more punch than the south"
-        ]
-      ],
-      "board_swaps": [
-        {
-          "face": [
-            2.5,
-            5.5
-          ],
-          "max_wind": 8,
-          "min_period": 9,
-          "primary": "5'4 Mini-Simmons",
-          "backup": "5'8 Fish",
-          "note": "Clean past waist-high is the Simmons' actual wheelhouse -- softest takeoff of the bunch, so it gets the widest band. Draw long lines and trim high; it doesn't do vertical and doesn't want to."
-        }
-      ],
-      "quality_cap": 74,
-      "water": {
-        "chronic": "normal",
-        "note": "Standard county post-rain rule applies.",
-        "river_mouth": false,
-        "outlet_proximity": "none"
-      },
-      "drive_minutes": 17,
-      "drive_miles": 11.1
-    },
-    {
-      "name": "PB Point",
-      "region": "Central",
-      "lat": 32.801,
-      "lon": -117.262,
-      "swell_windows": [
-        [
-          263,
-          322
-        ]
-      ],
-      "ideal_dir": 297,
-      "dir_note": "NW and W only -- unanimous across sources",
+      "ideal_dir": 270,
+      "dir_note": "W, NW, SW. Ideal angle from the west paired with an east offshore",
       "size_ideal": [
         4,
-        12
+        10
       ],
-      "size_min": 3.5,
-      "size_max": 12,
+      "size_min": 3,
+      "size_max": 15,
       "tide_pref": [
         "low",
         "mid"
       ],
-      "tide_weight": 1.0,
-      "tide_note": "Low to mid. Fattens up and goes soft on the high",
+      "tide_weight": 1.2,
+      "tide_rising_bonus": true,
+      "tide_note": "Low to mid and specifically RISING -- two independent sources call that out. Mid to high can go slow to nonexistent",
       "wind_offshore": [
         22,
         112
       ],
       "wind_tolerance": 6,
+      "kelp_bonus": true,
       "period_pref": "long",
       "period_ideal": [
         13,
         20
       ],
       "canyon": "none",
-      "crowd": 2,
-      "crowd_weekend": 5,
-      "localism": 3,
-      "skill": "Intermediate",
-      "hazards": "Documented localism: do not park up by the cliff on a good swell (wax on windshields). Stay away from the hut area halfway down the point. Reef at the top is protected by the shortboarding crew.",
-      "verdict": "Flat when PB's fun, working when PB's blown. Needs a real swell just to show up -- 3-5ft before it's a wave at all.",
-      "board_ladder": [
-        [
-          0,
-          4,
-          "9'4 Pink Panther",
-          "7'6 Magic",
-          "Below turn-on size -- but if it's breaking at all, bigger boards rule the peak"
-        ],
-        [
-          4,
-          99,
-          "7'6 Magic",
-          "9'4 Pink Panther",
-          "About as close to purpose-built for the Magic as SD gets -- 'it's the slowest wave around' and 'bigger boards rule.' Frye 7.5\" for hold through the long sections; drop to the 6.5\" if it feels stiff. Big winter days are the Dredgernaut's, once it exists"
-        ]
-      ],
-      "special": "needs_size",
-      "quality_cap": 92,
-      "water": {
-        "chronic": "normal",
-        "note": "Standard county post-rain rule applies.",
-        "river_mouth": false,
-        "outlet_proximity": "none"
-      },
-      "drive_minutes": 19,
-      "drive_miles": 9.9
-    },
-    {
-      "name": "Crystal Pier",
-      "region": "Central",
-      "lat": 32.7947,
-      "lon": -117.2565,
-      "swell_windows": [
-        [
-          190,
-          20
-        ]
-      ],
-      "ideal_dir": 280,
-      "dir_note": "Widest window of the group -- N, NW, W, SW",
-      "size_ideal": [
-        2,
-        5
-      ],
-      "size_min": 1.5,
-      "size_max": 7,
-      "tide_pref": [
-        "mid",
-        "high"
-      ],
-      "tide_weight": 0.9,
-      "tide_note": "Mid to high. The rising-vs-falling argument is unsettled -- sources split",
-      "wind_offshore": [
-        22,
-        112
-      ],
-      "wind_tolerance": 6,
-      "period_pref": "any",
-      "period_ideal": [
-        8,
-        16
-      ],
-      "canyon": "none",
       "crowd": 4,
-      "localism": 2,
-      "skill": "Intermediate-advanced at the pier",
-      "hazards": "Pier pilings and rips near them. The most contested lineup in PB -- surfers bunch at the wedge off the pier. Parking is notoriously hard.",
-      "verdict": "The dependable one in PB. Sit a little north of the pier and let everyone else fistfight over the wedge.",
+      "localism": 4,
+      "skill": "Intermediate-advanced",
+      "hazards": "MOST DANGEROUS SPOT IN THE GUIDE. An average of 5 deaths or serious injuries per year, 2005-2018. The cliffs themselves are the danger -- people have been battered against them trying to exit. Active erosion, a bluff section broke off April 2026. Rope and peg descents are the norm. The tide governs your exit, not just the wave: surfers unfamiliar with the area are often unable to get back up the trails on bigger days at higher tides. Urchins, rips, rocks.",
+      "verdict": "The kelp out the back irons out NW windbump -- when the afternoon onshore has wrecked PB, Mission and OB, the Cliffs are still combed. Most of these reefs don't properly wake up until it's overhead.",
       "board_ladder": [
         [
           0,
-          2,
-          "5'4 Mini-Simmons",
-          "5'8 Fish",
-          "Works from under 3ft. Simmons country"
-        ],
-        [
-          2,
-          3.5,
-          "5'8 Fish",
-          "5'4 Mini-Simmons",
-          "Fish gets the nod -- catches more of the small stuff, and you skip the scrum at the one good peak"
-        ],
-        [
-          3.5,
-          99,
+          4,
           "6'0 Surfer Rosa",
           "5'8 Fish",
-          "Chest-high plus with push"
+          "Under the reefs' wake-up size -- they 'only really start to work when it's overhead.' Garbage is the summer exception"
+        ],
+        [
+          4,
+          7,
+          "6'0 Surfer Rosa",
+          "7'6 Magic",
+          "Sub or Ab. Rock bottom, rope descents, cliff exits -- boards get dinged here, bring the right one anyway"
+        ],
+        [
+          7,
+          10,
+          "7'6 Magic",
+          "6'0 Surfer Rosa",
+          "Clean and well-overhead at Garbage or New Break -- long rights made for trim, and the Frye holds a line through those 300m walls. Run the 7.5\""
+        ],
+        [
+          10,
+          99,
+          null,
+          null,
+          "NOTHING. Genuinely big at the outer reefs is not a day you own a board for. Wait for the step-up."
         ]
       ],
+      "gap_above": 10,
       "quality_cap": 86,
       "water": {
-        "chronic": "normal",
-        "note": "Standard county post-rain rule applies.",
+        "chronic": "good",
+        "note": "Best water quality of the ten -- away from the river mouth. 'Typically ok but gets dicey after a rain.'",
         "river_mouth": false,
         "outlet_proximity": "none"
       },
       "drive_minutes": 16,
-      "drive_miles": 8.8
-    },
-    {
-      "name": "PB Drive",
-      "region": "Central",
-      "lat": 32.792,
-      "lon": -117.256,
-      "swell_windows": [
-        [
-          0,
-          359
-        ]
-      ],
-      "ideal_dir": 280,
-      "dir_note": "Reportedly works on any direction; PB-wide answer is W/NW/SW",
-      "size_ideal": [
-        2,
-        6
-      ],
-      "size_min": 1.5,
-      "size_max": 8,
-      "tide_pref": [
-        "mid",
-        "high"
-      ],
-      "tide_weight": 0.7,
-      "tide_note": "Mid to high, but the sandbars move and take the answer with them",
-      "wind_offshore": [
-        22,
-        112
-      ],
-      "wind_tolerance": 6,
-      "period_pref": "short",
-      "period_ideal": [
-        8,
-        14
-      ],
-      "period_closeout_long": true,
-      "canyon": "none",
-      "crowd": 2,
-      "localism": 1,
-      "skill": "All levels",
-      "hazards": "Rips. Little else -- this is the mellowest lineup of the ten.",
-      "verdict": "Mellowest lineup on the list, peaks spread everywhere. Fall combo swells are its whole personality. Walls up and shuts down once it's overhead on long period.",
-      "board_ladder": [
-        [
-          0,
-          2.5,
-          "5'8 Fish",
-          "5'4 Mini-Simmons",
-          "The local book says 'fish or funboard,' and the local book is right"
-        ],
-        [
-          2.5,
-          5,
-          "5'8 Fish",
-          "6'0 Surfer Rosa",
-          "The local book for this stretch is 'fish or funboard, especially during those Autumn combo swells' -- the fish is that call"
-        ],
-        [
-          5,
-          99,
-          "6'0 Surfer Rosa",
-          "5'8 Fish",
-          "The good days"
-        ]
-      ],
-      "board_swaps": [
-        {
-          "face": [
-            2.5,
-            5.0
-          ],
-          "max_wind": 8,
-          "min_period": 10,
-          "primary": "5'4 Mini-Simmons",
-          "backup": "5'8 Fish",
-          "note": "Clean, lined-up sandbar rights are a down-the-line planing wave -- the Simmons outruns the fish here when there's real period underneath. 10s minimum: this stretch wants swell, not slop."
-        }
-      ],
-      "quality_cap": 88,
-      "water": {
-        "chronic": "normal",
-        "note": "Standard county post-rain rule applies.",
-        "river_mouth": false,
-        "outlet_proximity": "none"
-      },
-      "drive_minutes": 15,
-      "drive_miles": 7.9
-    },
-    {
-      "name": "Mission Beach",
-      "region": "Central",
-      "lat": 32.7707,
-      "lon": -117.2525,
-      "swell_windows": [
-        [
-          190,
-          340
-        ]
-      ],
-      "ideal_dir": 285,
-      "dir_note": "NW and SW. Crossed-up combo swell is what makes it good",
-      "size_ideal": [
-        2,
-        5
-      ],
-      "size_min": 1.5,
-      "size_max": 6.5,
-      "tide_pref": [
-        "mid"
-      ],
-      "tide_weight": 1.0,
-      "tide_note": "Mid. Low tide plus size equals closeouts",
-      "wind_offshore": [
-        22,
-        112
-      ],
-      "wind_tolerance": 5,
-      "wind_deadline_hour": 11,
-      "period_pref": "short",
-      "period_ideal": [
-        8,
-        13
-      ],
-      "period_closeout_long": true,
-      "canyon": "none",
-      "crowd": 4,
-      "localism": 1,
-      "skill": "All levels",
-      "hazards": "Strong rips -- stay ~100m off the South Jetty. Rose and Tecolote Creeks exceed state recreation standards at least half the time even in dry weather.",
-      "verdict": "Reliably average. The good version needs everything at once: crossed-up combo swell, a bank that showed up, offshore E before 11am, moderate size. A big clean long-period swell straight at it is the worst case -- one long closeout.",
-      "board_ladder": [
-        [
-          0,
-          2.5,
-          "5'8 Fish",
-          "5'4 Mini-Simmons",
-          "The two things that fix this spot aren't boards: walk further than everyone else, and be in before 11am"
-        ],
-        [
-          2.5,
-          99,
-          "6'0 Surfer Rosa",
-          "5'8 Fish",
-          "Rosa on a proper combo day, fish the rest of the time"
-        ]
-      ],
-      "board_swaps": [
-        {
-          "face": [
-            2.5,
-            4.5
-          ],
-          "max_wind": 8,
-          "min_period": 9,
-          "primary": "5'4 Mini-Simmons",
-          "backup": "6'0 Surfer Rosa",
-          "note": "Clean chest-high Mission is a genuinely fun Simmons day. Capped at 4.5ft because this beach walls and shuts down at size -- and a flat-rockered nose has no exit from a closeout."
-        }
-      ],
-      "quality_cap": 86,
-      "water": {
-        "chronic": "elevated",
-        "note": "Mission Bay's Rose and Tecolote Creeks exceed state recreation standards at least half the time EVEN IN DRY WEATHER. Stay clear of the south jetty and the bay side.",
-        "river_mouth": false,
-        "outlet_proximity": "nearby",
-        "outlet": "Rose and Tecolote Creeks into Mission Bay"
-      },
-      "drive_minutes": 13,
-      "drive_miles": 6.5
+      "drive_miles": 7.3
     },
     {
       "name": "OB Pier",
@@ -730,88 +242,576 @@
       "drive_miles": 6.2
     },
     {
-      "name": "Sunset Cliffs",
-      "region": "South",
-      "lat": 32.718,
+      "name": "Mission Beach",
+      "region": "Central",
+      "lat": 32.7707,
+      "lon": -117.2525,
+      "swell_windows": [
+        [
+          190,
+          340
+        ]
+      ],
+      "ideal_dir": 285,
+      "dir_note": "NW and SW. Crossed-up combo swell is what makes it good",
+      "size_ideal": [
+        2,
+        5
+      ],
+      "size_min": 1.5,
+      "size_max": 6.5,
+      "tide_pref": [
+        "mid"
+      ],
+      "tide_weight": 1.0,
+      "tide_note": "Mid. Low tide plus size equals closeouts",
+      "wind_offshore": [
+        22,
+        112
+      ],
+      "wind_tolerance": 5,
+      "wind_deadline_hour": 11,
+      "period_pref": "short",
+      "period_ideal": [
+        8,
+        13
+      ],
+      "period_closeout_long": true,
+      "canyon": "none",
+      "crowd": 4,
+      "localism": 1,
+      "skill": "All levels",
+      "hazards": "Strong rips -- stay ~100m off the South Jetty. Rose and Tecolote Creeks exceed state recreation standards at least half the time even in dry weather.",
+      "verdict": "Reliably average. The good version needs everything at once: crossed-up combo swell, a bank that showed up, offshore E before 11am, moderate size. A big clean long-period swell straight at it is the worst case -- one long closeout.",
+      "board_ladder": [
+        [
+          0,
+          2.5,
+          "5'8 Fish",
+          "5'4 Mini-Simmons",
+          "The two things that fix this spot aren't boards: walk further than everyone else, and be in before 11am"
+        ],
+        [
+          2.5,
+          99,
+          "6'0 Surfer Rosa",
+          "5'8 Fish",
+          "Rosa on a proper combo day, fish the rest of the time"
+        ]
+      ],
+      "board_swaps": [
+        {
+          "face": [
+            2.5,
+            4.5
+          ],
+          "max_wind": 8,
+          "min_period": 9,
+          "primary": "5'4 Mini-Simmons",
+          "backup": "6'0 Surfer Rosa",
+          "note": "Clean chest-high Mission is a genuinely fun Simmons day. Capped at 4.5ft because this beach walls and shuts down at size -- and a flat-rockered nose has no exit from a closeout."
+        }
+      ],
+      "quality_cap": 86,
+      "water": {
+        "chronic": "elevated",
+        "note": "Mission Bay's Rose and Tecolote Creeks exceed state recreation standards at least half the time EVEN IN DRY WEATHER. Stay clear of the south jetty and the bay side.",
+        "river_mouth": false,
+        "outlet_proximity": "nearby",
+        "outlet": "Rose and Tecolote Creeks into Mission Bay"
+      },
+      "drive_minutes": 13,
+      "drive_miles": 6.5
+    },
+    {
+      "name": "PB Drive",
+      "region": "Central",
+      "lat": 32.792,
       "lon": -117.256,
       "swell_windows": [
         [
-          200,
-          320
+          0,
+          359
         ]
       ],
-      "ideal_dir": 270,
-      "dir_note": "W, NW, SW. Ideal angle from the west paired with an east offshore",
+      "ideal_dir": 280,
+      "dir_note": "Reportedly works on any direction; PB-wide answer is W/NW/SW",
       "size_ideal": [
-        4,
-        10
+        2,
+        6
       ],
-      "size_min": 3,
-      "size_max": 15,
+      "size_min": 1.5,
+      "size_max": 8,
       "tide_pref": [
-        "low",
-        "mid"
+        "mid",
+        "high"
       ],
-      "tide_weight": 1.2,
-      "tide_rising_bonus": true,
-      "tide_note": "Low to mid and specifically RISING -- two independent sources call that out. Mid to high can go slow to nonexistent",
+      "tide_weight": 0.7,
+      "tide_note": "Mid to high, but the sandbars move and take the answer with them",
       "wind_offshore": [
         22,
         112
       ],
       "wind_tolerance": 6,
-      "kelp_bonus": true,
+      "period_pref": "short",
+      "period_ideal": [
+        8,
+        14
+      ],
+      "period_closeout_long": true,
+      "canyon": "none",
+      "crowd": 2,
+      "localism": 1,
+      "skill": "All levels",
+      "hazards": "Rips. Little else -- this is the mellowest lineup of the ten.",
+      "verdict": "Mellowest lineup on the list, peaks spread everywhere. Fall combo swells are its whole personality. Walls up and shuts down once it's overhead on long period.",
+      "board_ladder": [
+        [
+          0,
+          2.5,
+          "5'8 Fish",
+          "5'4 Mini-Simmons",
+          "The local book says 'fish or funboard,' and the local book is right"
+        ],
+        [
+          2.5,
+          5,
+          "5'8 Fish",
+          "6'0 Surfer Rosa",
+          "The local book for this stretch is 'fish or funboard, especially during those Autumn combo swells' -- the fish is that call"
+        ],
+        [
+          5,
+          99,
+          "6'0 Surfer Rosa",
+          "5'8 Fish",
+          "The good days"
+        ]
+      ],
+      "board_swaps": [
+        {
+          "face": [
+            2.5,
+            5.0
+          ],
+          "max_wind": 8,
+          "min_period": 10,
+          "primary": "5'4 Mini-Simmons",
+          "backup": "5'8 Fish",
+          "note": "Clean, lined-up sandbar rights are a down-the-line planing wave -- the Simmons outruns the fish here when there's real period underneath. 10s minimum: this stretch wants swell, not slop."
+        }
+      ],
+      "quality_cap": 88,
+      "water": {
+        "chronic": "normal",
+        "note": "Standard county post-rain rule applies.",
+        "river_mouth": false,
+        "outlet_proximity": "none"
+      },
+      "drive_minutes": 15,
+      "drive_miles": 7.9
+    },
+    {
+      "name": "Crystal Pier",
+      "region": "Central",
+      "lat": 32.7947,
+      "lon": -117.2565,
+      "swell_windows": [
+        [
+          190,
+          20
+        ]
+      ],
+      "ideal_dir": 280,
+      "dir_note": "Widest window of the group -- N, NW, W, SW",
+      "size_ideal": [
+        2,
+        5
+      ],
+      "size_min": 1.5,
+      "size_max": 7,
+      "tide_pref": [
+        "mid",
+        "high"
+      ],
+      "tide_weight": 0.9,
+      "tide_note": "Mid to high. The rising-vs-falling argument is unsettled -- sources split",
+      "wind_offshore": [
+        22,
+        112
+      ],
+      "wind_tolerance": 6,
+      "period_pref": "any",
+      "period_ideal": [
+        8,
+        16
+      ],
+      "canyon": "none",
+      "crowd": 4,
+      "localism": 2,
+      "skill": "Intermediate-advanced at the pier",
+      "hazards": "Pier pilings and rips near them. The most contested lineup in PB -- surfers bunch at the wedge off the pier. Parking is notoriously hard.",
+      "verdict": "The dependable one in PB. Sit a little north of the pier and let everyone else fistfight over the wedge.",
+      "board_ladder": [
+        [
+          0,
+          2,
+          "5'4 Mini-Simmons",
+          "5'8 Fish",
+          "Works from under 3ft. Simmons country"
+        ],
+        [
+          2,
+          3.5,
+          "5'8 Fish",
+          "5'4 Mini-Simmons",
+          "Fish gets the nod -- catches more of the small stuff, and you skip the scrum at the one good peak"
+        ],
+        [
+          3.5,
+          99,
+          "6'0 Surfer Rosa",
+          "5'8 Fish",
+          "Chest-high plus with push"
+        ]
+      ],
+      "quality_cap": 86,
+      "water": {
+        "chronic": "normal",
+        "note": "Standard county post-rain rule applies.",
+        "river_mouth": false,
+        "outlet_proximity": "none"
+      },
+      "drive_minutes": 16,
+      "drive_miles": 8.8
+    },
+    {
+      "name": "PB Point",
+      "region": "Central",
+      "lat": 32.801,
+      "lon": -117.262,
+      "swell_windows": [
+        [
+          263,
+          322
+        ]
+      ],
+      "ideal_dir": 297,
+      "dir_note": "NW and W only -- unanimous across sources",
+      "size_ideal": [
+        4,
+        12
+      ],
+      "size_min": 3.5,
+      "size_max": 12,
+      "tide_pref": [
+        "low",
+        "mid"
+      ],
+      "tide_weight": 1.0,
+      "tide_note": "Low to mid. Fattens up and goes soft on the high",
+      "wind_offshore": [
+        22,
+        112
+      ],
+      "wind_tolerance": 6,
       "period_pref": "long",
       "period_ideal": [
         13,
         20
       ],
       "canyon": "none",
-      "crowd": 4,
-      "localism": 4,
-      "skill": "Intermediate-advanced",
-      "hazards": "MOST DANGEROUS SPOT IN THE GUIDE. An average of 5 deaths or serious injuries per year, 2005-2018. The cliffs themselves are the danger -- people have been battered against them trying to exit. Active erosion, a bluff section broke off April 2026. Rope and peg descents are the norm. The tide governs your exit, not just the wave: surfers unfamiliar with the area are often unable to get back up the trails on bigger days at higher tides. Urchins, rips, rocks.",
-      "verdict": "The kelp out the back irons out NW windbump -- when the afternoon onshore has wrecked PB, Mission and OB, the Cliffs are still combed. Most of these reefs don't properly wake up until it's overhead.",
+      "crowd": 2,
+      "crowd_weekend": 5,
+      "localism": 3,
+      "skill": "Intermediate",
+      "hazards": "Documented localism: do not park up by the cliff on a good swell (wax on windshields). Stay away from the hut area halfway down the point. Reef at the top is protected by the shortboarding crew.",
+      "verdict": "Flat when PB's fun, working when PB's blown. Needs a real swell just to show up -- 3-5ft before it's a wave at all.",
       "board_ladder": [
         [
           0,
           4,
-          "6'0 Surfer Rosa",
-          "5'8 Fish",
-          "Under the reefs' wake-up size -- they 'only really start to work when it's overhead.' Garbage is the summer exception"
+          "9'4 Pink Panther",
+          "7'6 Magic",
+          "Below turn-on size -- but if it's breaking at all, bigger boards rule the peak"
         ],
         [
           4,
-          7,
-          "6'0 Surfer Rosa",
-          "7'6 Magic",
-          "Sub or Ab. Rock bottom, rope descents, cliff exits -- boards get dinged here, bring the right one anyway"
-        ],
-        [
-          7,
-          10,
-          "7'6 Magic",
-          "6'0 Surfer Rosa",
-          "Clean and well-overhead at Garbage or New Break -- long rights made for trim, and the Frye holds a line through those 300m walls. Run the 7.5\""
-        ],
-        [
-          10,
           99,
-          null,
-          null,
-          "NOTHING. Genuinely big at the outer reefs is not a day you own a board for. Wait for the step-up."
+          "7'6 Magic",
+          "9'4 Pink Panther",
+          "About as close to purpose-built for the Magic as SD gets -- 'it's the slowest wave around' and 'bigger boards rule.' Frye 7.5\" for hold through the long sections; drop to the 6.5\" if it feels stiff. Big winter days are the Dredgernaut's, once it exists"
         ]
       ],
-      "gap_above": 10,
-      "quality_cap": 86,
+      "special": "needs_size",
+      "quality_cap": 92,
       "water": {
-        "chronic": "good",
-        "note": "Best water quality of the ten -- away from the river mouth. 'Typically ok but gets dicey after a rain.'",
+        "chronic": "normal",
+        "note": "Standard county post-rain rule applies.",
         "river_mouth": false,
         "outlet_proximity": "none"
       },
-      "drive_minutes": 16,
-      "drive_miles": 7.3
+      "drive_minutes": 19,
+      "drive_miles": 9.9
+    },
+    {
+      "name": "La Jolla Shores",
+      "region": "Central",
+      "lat": 32.857,
+      "lon": -117.256,
+      "swell_windows": [
+        [
+          260,
+          320
+        ]
+      ],
+      "ideal_dir": 275,
+      "dir_note": "W best, NW works. Rights dominate",
+      "size_ideal": [
+        1.5,
+        4
+      ],
+      "size_min": 1,
+      "size_max": 6,
+      "tide_pref": [
+        "low",
+        "mid",
+        "high"
+      ],
+      "tide_weight": 0.3,
+      "tide_note": "Breaks on whatever tide you show up to",
+      "wind_offshore": [
+        90,
+        180
+      ],
+      "wind_tolerance": 8,
+      "wind_south_ok": true,
+      "period_pref": "short",
+      "period_ideal": [
+        8,
+        12
+      ],
+      "canyon": "shadow_deep",
+      "crowd": 4,
+      "localism": 1,
+      "skill": "Beginner",
+      "hazards": "Stingrays are the signature hazard -- do the shuffle. Rips and undertow. Checkered flag zones swim from surf.",
+      "verdict": "The overflow lot. Deepest canyon shadow of the three (-40% to -89%) and long period actually hurts it. But when a south wind ruins everywhere else, this place shrugs.",
+      "board_ladder": [
+        [
+          0,
+          2,
+          "11'0 Chris Craft",
+          "9'4 Pink Panther",
+          "Genuinely tiny -- exactly what you own the glider for"
+        ],
+        [
+          2,
+          3.5,
+          "5'4 Mini-Simmons",
+          "9'4 Pink Panther",
+          "Soft, shadowed, gutless -- and the Simmons turns gutless into speed. Panther if you'd rather walk; the Greenough 4-A finally gets to do its thing"
+        ],
+        [
+          3.5,
+          99,
+          "5'8 Fish",
+          "9'4 Pink Panther",
+          "North end toward Scripps carries noticeably more punch than the south"
+        ]
+      ],
+      "board_swaps": [
+        {
+          "face": [
+            2.5,
+            5.5
+          ],
+          "max_wind": 8,
+          "min_period": 9,
+          "primary": "5'4 Mini-Simmons",
+          "backup": "5'8 Fish",
+          "note": "Clean past waist-high is the Simmons' actual wheelhouse -- softest takeoff of the bunch, so it gets the widest band. Draw long lines and trim high; it doesn't do vertical and doesn't want to."
+        }
+      ],
+      "quality_cap": 74,
+      "water": {
+        "chronic": "normal",
+        "note": "Standard county post-rain rule applies.",
+        "river_mouth": false,
+        "outlet_proximity": "none"
+      },
+      "drive_minutes": 17,
+      "drive_miles": 11.1
+    },
+    {
+      "name": "Scripps Pier",
+      "region": "Central",
+      "lat": 32.8664,
+      "lon": -117.2544,
+      "swell_windows": [
+        [
+          270,
+          320
+        ]
+      ],
+      "ideal_dir": 292,
+      "dir_note": "WNW. Rights dominate. South swell is the worst case -- canyon shadow to -64%",
+      "size_ideal": [
+        2.5,
+        6
+      ],
+      "size_min": 1.5,
+      "size_max": 8,
+      "tide_pref": [
+        "mid"
+      ],
+      "tide_weight": 1.3,
+      "tide_rising_bonus": true,
+      "tide_note": "Mid on a rising push -- fussiest of the three canyon spots",
+      "wind_offshore": [
+        90,
+        180
+      ],
+      "wind_tolerance": 8,
+      "period_pref": "moderate",
+      "period_ideal": [
+        10,
+        15
+      ],
+      "canyon": "shadow_moderate",
+      "crowd": 3,
+      "localism": 2,
+      "skill": "Beginner-intermediate",
+      "hazards": "Permitted outfalls in the area, including SIO's monitored filtered-seawater discharge and stormwater south of the pier -- treat as runoff-adjacent after rain rather than a chronically polluting drain. 72hr post-storm rule. Pier is UCSD property, closed to the public.",
+      "verdict": "Size-starved far more often than maxed -- '79% too small' in January. The canyon shadow, doing what it does.",
+      "board_ladder": [
+        [
+          0,
+          2.5,
+          "6'5 Egg",
+          "5'8 Fish",
+          "Egg water -- ~40-43L of float for a shadowed little day"
+        ],
+        [
+          2.5,
+          4,
+          "5'8 Fish",
+          "6'5 Egg",
+          "It reads '79% too small' for a reason -- reach for the fish before the Rosa most days"
+        ],
+        [
+          4,
+          99,
+          "6'0 Surfer Rosa",
+          "6'5 Egg",
+          "Chest-to-head with push -- the Rosa's home break, F8 Legacy Large in it"
+        ]
+      ],
+      "board_swaps": [
+        {
+          "face": [
+            2.5,
+            5.0
+          ],
+          "max_wind": 8,
+          "min_period": 9,
+          "primary": "5'4 Mini-Simmons",
+          "backup": "5'8 Fish",
+          "note": "Same shadow as the Shores, same soft rolling takeoff -- clean and lined up, this is Simmons water well past waist-high. Not a grovel, a glide."
+        }
+      ],
+      "quality_cap": 86,
+      "water": {
+        "chronic": "normal",
+        "note": "Runoff-adjacent: permitted outfalls nearby, stormwater south of the pier. County post-rain rule applies with the outlet caveat. Earlier wording ('polluting drain directly at the beach') was an overstatement, corrected 2026-08-30.",
+        "river_mouth": false,
+        "outlet_proximity": "nearby",
+        "outlet": "permitted outfalls near the pier"
+      },
+      "drive_minutes": 19,
+      "drive_miles": 11.7
+    },
+    {
+      "name": "Black's Beach",
+      "region": "Central",
+      "lat": 32.8887,
+      "lon": -117.2528,
+      "swell_windows": [
+        [
+          205,
+          295
+        ]
+      ],
+      "ideal_dir": 285,
+      "dir_note": "Optimum clean long-period WNW 280-290 deg -- the one spot with a published degree window",
+      "size_ideal": [
+        3.5,
+        12
+      ],
+      "size_min": 2,
+      "size_max": 16,
+      "tide_pref": [
+        "low",
+        "mid"
+      ],
+      "tide_weight": 0.7,
+      "tide_note": "Less tide-fussy the bigger it gets",
+      "wind_offshore": [
+        22,
+        112
+      ],
+      "wind_tolerance": 8,
+      "period_pref": "long",
+      "period_ideal": [
+        14,
+        20
+      ],
+      "canyon": "amplify",
+      "crowd": 4,
+      "localism": 3,
+      "skill": "Intermediate to advanced, depending on size",
+      "hazards": "CITY GUIDANCE: 'Access to Black's Beach is very difficult due to the high cliffs and unimproved and unmaintained trails. The SAFEST ACCESS IS FROM ADJACENT BEACHES TO THE NORTH AND SOUTH, but this access may be obstructed by high tides or surf. The cliffs are unstable and slides can occur without warning.' Check the tide before committing to a beach walk. Two significant rips, no designated swim zones. 72hr post-rain rule.",
+      "verdict": "Best beachbreak in the county, and it's not close. The canyon doubles long-period swell here while it starves Scripps and the Shores -- same swell, different planet.",
+      "board_ladder": [
+        [
+          0,
+          3,
+          "6'5 Egg",
+          "5'8 Fish",
+          "Small day -- the canyon's asleep and it's just another beachbreak"
+        ],
+        [
+          3,
+          5,
+          "6'0 Surfer Rosa",
+          "6'5 Egg",
+          "Chest-to-head with real push behind it"
+        ],
+        [
+          5,
+          7,
+          "7'6 Magic",
+          "6'0 Surfer Rosa",
+          "Big enough that paddle power starts winning arguments"
+        ],
+        [
+          7,
+          99,
+          null,
+          null,
+          "GAP -- don't talk yourself into it. The Magic is a trim-and-glide board at ~37-39L, not a step-up, and the folder says plainly it is 'not the tool when the canyon is doubling a 16-second swell.' Locals: 'Blacks is all about late drops -- unless you are on a bigger board you will not be able to catch waves.' This is the Dredgernaut's job."
+        ]
+      ],
+      "gap_above": 7,
+      "quality_cap": 100,
+      "water": {
+        "chronic": "normal",
+        "note": "Standard county post-rain rule applies. No chronic source nearby.",
+        "river_mouth": false,
+        "outlet_proximity": "none"
+      },
+      "drive_minutes": 22,
+      "drive_miles": 14.1
     },
     {
       "name": "Cardiff Reef",
@@ -991,92 +991,6 @@
         "outlet_proximity": "none"
       },
       "drive_miles": 24.4
-    },
-    {
-      "name": "Oceanside Pier",
-      "hidden": true,
-      "hidden_note": "Hidden 2026-08-30: 49 min is too far for a daily call (Jake). Research and scoring rules kept -- flip hidden to false to restore, e.g. for a North County day or a trip stopover.",
-      "region": "North",
-      "lat": 33.1935,
-      "lon": -117.386,
-      "swell_windows": [
-        [
-          175,
-          345
-        ]
-      ],
-      "ideal_dir": 250,
-      "dir_note": "Picks up swell from essentially every direction -- widest window in the guide. WSW groundswell ideal; NW wraps into the bay to feed rights",
-      "size_ideal": [
-        2.5,
-        7.0
-      ],
-      "size_min": 1.5,
-      "size_max": 10,
-      "tide_pref": [
-        "low",
-        "mid",
-        "high"
-      ],
-      "tide_weight": 0.3,
-      "tide_note": "Any tide, genuinely",
-      "wind_offshore": [
-        22,
-        112
-      ],
-      "wind_tolerance": 10,
-      "wind_note": "Handles wind from any direction better than any Central beachbreak; NE offshore still cleans it up best. Blows out midday like everywhere else.",
-      "period_pref": "any",
-      "period_ideal": [
-        8,
-        18
-      ],
-      "canyon": "none",
-      "crowd": 2,
-      "localism": 2,
-      "skill": "All levels on the north side",
-      "hazards": "NORTH SIDE ONLY. The south side is documented as a much more aggressive crowd -- locals 'not afraid to regulate their spot' -- and is shallower, hollower and heavier. Paid parking at the pier is very limited; street park and walk. Wisconsin St entry has occasional big rocks.",
-      "verdict": "Very consistent, all tides, holds overhead, and November is its best clean month -- off-cycle from the January-dominant rest of the county. NOTE: an earlier claim that a submarine canyon amplifies swell into the pier was REMOVED 2026-08-30 as unsupported; Oceanside Canyon sits much farther offshore and there is no evidence of a Black's-class nearshore lens here.",
-      "board_ladder": [
-        [
-          0,
-          2.5,
-          "5'8 Fish",
-          "5'4 Mini-Simmons",
-          "Rideable from 2ft"
-        ],
-        [
-          2.5,
-          4.5,
-          "5'8 Fish",
-          "6'0 Surfer Rosa",
-          "Sand-bottom peaks, no consequence -- the fish catches more of them"
-        ],
-        [
-          4.5,
-          7,
-          "6'0 Surfer Rosa",
-          "7'6 Magic",
-          "Once it's got some push behind it"
-        ],
-        [
-          7,
-          99,
-          "7'6 Magic",
-          "6'0 Surfer Rosa",
-          "The bigger sandbar peaks. Sand bottom and a forgiving takeoff, which is why this doesn't block the way Black's does -- but it is past what the quiver is built for"
-        ]
-      ],
-      "quality_cap": 88,
-      "drive_minutes": 49,
-      "water": {
-        "chronic": "normal",
-        "note": "San Luis Rey River mouth is roughly a mile north at the harbour. INFERENCE, not a documented advisory -- modestly extended post-rain window on that basis.",
-        "river_mouth": false,
-        "outlet_proximity": "nearby",
-        "outlet": "San Luis Rey River mouth ~1 mi north"
-      },
-      "drive_miles": 37.4
     }
   ],
   "_water_note": "Water-risk profiles derived from the hazard sections of 01-San-Diego-Breaks/. The brief CANNOT read live County advisories. California publishes a machine-readable postings/closures dataset, but checked 2026-08-30 it was ~6 months stale and missing the then-active Imperial Beach and Coronado closures -- historical archive only, never a live gate. sdbeachinfo.com / 619-338-2073 remains authoritative. outlet_proximity (at|nearby|none) replaced invented rain_factor multipliers 2026-08-30, grounded in the County's own naming of storm drains, creeks, rivers and lagoon outlets.",

@@ -319,11 +319,17 @@ def test_score_break_without_sea_still_works():
 
 CARDIFF = next(b for b in BREAKS if b["name"] == "Cardiff Reef")
 SWAMIS = next(b for b in BREAKS if b["name"] == "Swami's")
-OSIDE = next(b for b in BREAKS if b["name"] == "Oceanside Pier")
+
+# Jake's rule (2026-08-30): the spots list reads south to north. New breaks
+# must be inserted at their geographic position, not appended.
+SOUTH_TO_NORTH = ["Sunset Cliffs", "OB Pier", "OB Jetty", "Mission Beach",
+                  "PB Drive", "Crystal Pier", "PB Point", "La Jolla Shores",
+                  "Scripps Pier", "Black's Beach", "Cardiff Reef", "Swami's"]
 
 
-def test_thirteen_breaks_with_regions_and_drive_times():
-    check(len(BREAKS) == 13, f"expected 13 breaks, got {len(BREAKS)}")
+def test_twelve_breaks_south_to_north_with_regions_and_drive_times():
+    check([b["name"] for b in BREAKS] == SOUTH_TO_NORTH,
+          f"breaks.json order is not south-to-north: {[b['name'] for b in BREAKS]}")
     for b in BREAKS:
         check(b.get("region") in ("Central", "North", "South"),
               f"{b['name']}: bad region {b.get('region')}")
@@ -360,24 +366,25 @@ def test_cardiff_is_the_second_kelp_spot():
 
 
 def test_new_spots_fill_the_gaps_they_were_added_for():
+    # (Oceanside Pier, the third 08-30 add, was removed outright 2026-08-30
+    # -- 49 min was too far to ever be the call. Its wide-window role is gone
+    # with it; Cardiff carries the high-tide gap, Swami's the size ceiling.)
     high = [b["name"] for b in BREAKS if "high" in b["tide_pref"]]
-    check("Cardiff Reef" in high and "Oceanside Pier" in high,
-          f"high-tide coverage not extended: {high}")
-    check(len(high) >= 5, f"expected high-tide options to grow past 3, got {len(high)}")
+    check("Cardiff Reef" in high, f"high-tide coverage not extended: {high}")
+    check(len(high) >= 4, f"expected high-tide options to grow past 3, got {len(high)}")
     big = [b["name"] for b in BREAKS if b["size_max"] > 8]
     check("Swami's" in big, "Swami's should extend the size ceiling")
-    # Oceanside's whole point is the widest swell window in the guide.
-    span = lambda b: min((hi - lo) % 360 or 360 for lo, hi in b["swell_windows"])
-    check(span(OSIDE) >= span(CARDIFF), "Oceanside should have a wider window than Cardiff")
 
 
 def test_drive_flag_threshold():
     """Scoring must NOT move with distance -- flag only (Jake's call 2026-08-30).
     Drive times are OSRM free-flow from the home neighbourhood, recomputed once
-    Jake gave his location; Oceanside at 49 min is the one that trips the flag."""
+    Jake gave his location. Nothing current trips it (Oceanside Pier, the one
+    spot that did at 49 min, was removed 2026-08-30); the mechanism stays for
+    San Onofre / Church if they get added."""
     check(sf.DRIVE_FLAG_MINUTES == 45, "drive flag threshold moved unexpectedly")
     far = [b["name"] for b in BREAKS if b["drive_minutes"] > sf.DRIVE_FLAG_MINUTES]
-    check(far == ["Oceanside Pier"], f"expected only Oceanside to trip the flag, got {far}")
+    check(far == [], f"expected no current break to trip the flag, got {far}")
     for b in BREAKS:
         check(isinstance(b.get("drive_miles"), (int, float)) and b["drive_miles"] > 0,
               f"{b['name']}: missing or bad drive_miles")
@@ -424,11 +431,11 @@ def test_wide_window_spot_wins_an_off_angle_swell():
     """The pay-off: on a south swell the guide should point at the spot that
     actually faces it, not at a W/NW point."""
     c = cond(swell_dir=209, swell_period=16.7)
-    osd = sf.score_break(OSIDE, c)[0]
-    swm = sf.score_break(SWAMIS, c)[0]
+    crd = sf.score_break(CARDIFF, c)[0]
+    scl = sf.score_break(next(b for b in BREAKS if b["name"] == "Sunset Cliffs"), c)[0]
     pbp = sf.score_break(next(b for b in BREAKS if b["name"] == "PB Point"), c)[0]
-    check(osd > swm, f"Oceanside {osd} should beat Swami's {swm} on a SSW swell")
-    check(osd > pbp, f"Oceanside {osd} should beat PB Point {pbp} on a SSW swell")
+    check(crd > pbp, f"Cardiff {crd} should beat PB Point {pbp} on a SSW swell")
+    check(scl > pbp, f"Sunset Cliffs {scl} should beat PB Point {pbp} on a SSW swell")
 
 
 # ------------------------------------ external fact-check corrections (08-30)
@@ -509,12 +516,15 @@ def test_blacks_access_uses_city_guidance():
           "Black's skill should be intermediate-to-advanced by size, not categorically advanced")
 
 
-def test_no_unsupported_oceanside_canyon_claim():
-    """The 'second submarine canyon amplifies the pier' claim was retracted."""
-    v = OSIDE["verdict"].lower()
-    check(OSIDE.get("canyon", "none") == "none", "Oceanside must not have a canyon transform")
-    check("removed" in v or "unsupported" in v,
-          "Oceanside verdict should record that the canyon claim was retracted")
+def test_canyon_transform_only_where_supported():
+    """Only the Scripps Canyon spots get a canyon transform. (The retracted
+    'second canyon amplifies Oceanside Pier' claim died with that spot's
+    removal 2026-08-30; this pins that no other break sneaks one in.)"""
+    for b in BREAKS:
+        if b["name"] in ("Black's Beach", "Scripps Pier", "La Jolla Shores"):
+            continue
+        check(b.get("canyon", "none") == "none",
+              f"{b['name']}: unexpected canyon transform {b.get('canyon')!r}")
 
 
 # --------------------------------------------------------------------- water
@@ -947,7 +957,10 @@ def test_breaks_and_quiver_pages():
         check(f'id="{render.slugify(b["name"])}"' in bh, f"{b['name']} missing from breaks page")
         check(b["verdict"][:40] in bh or True, "")
     check("don't paddle out" in bh, "don't-paddle rungs missing from breaks page")
-    check("On the bench" in bh, "hidden breaks section missing")
+    if any(b.get("hidden") for b in CFG["breaks"]):
+        check("On the bench" in bh, "hidden breaks section missing")
+    else:
+        check("On the bench" not in bh, "empty bench section rendered")
 
     qdata = json.load(open(os.path.join(HERE, "boards.json")))
     qh = render.render_quiver(qdata)

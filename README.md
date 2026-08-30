@@ -1,11 +1,12 @@
 # Daily Surf Brief
 
-Scores the written-up San Diego breaks (13 on file, 12 in the daily rotation --
-Oceanside Pier is `"hidden": true`, kept but not shown) against live swell, tide, wind and
-bacterial risk, twice a day, and names a board from Jake's actual quiver.
+Scores the written-up San Diego breaks (12 on file, all in the daily rotation,
+ordered south to north — Oceanside Pier was removed outright 2026-08-30, too far at
+49 min; its write-up survives in `01-San-Diego-Breaks/`) against live swell, tide,
+wind and bacterial risk, twice a day, and names a board from Jake's actual quiver.
 
-**Two windows:** dawn patrol 7:00–8:30am, and the hour before sunset (recalculated
-daily, so it tracks the season).
+**Two windows:** dawn patrol from actual sunrise to 9:00am, and the hour before
+sunset (both recalculated daily, so they track the season).
 
 > **Ported from Claude Cowork 2026-08-27; scheduling re-wired 2026-08-29.**
 > Production is now GitHub Actions + GitHub Pages
@@ -371,10 +372,13 @@ quiver has "nothing built for overhead." Any face ≥8ft anywhere raises the qui
 flag. Swami's ceiling sits higher than Black's because a point takeoff is more
 forgiving than a Black's late drop, not because the quiver improved.
 
-### Region, drive time, and the thirteen
+### Region, drive time, and the twelve
 
 **Cardiff Reef, Swami's and Oceanside Pier were added 2026-08-30** to close measured
-coverage gaps — NW-onshore wind, high tide, and size — rather than by reputation. The
+coverage gaps — NW-onshore wind, high tide, and size — rather than by reputation.
+(**Oceanside Pier was removed the same day**: 49 minutes proved too far to ever be
+the call, and its wide-swell-window role went with it. The write-up stays in
+`01-San-Diego-Breaks/`.) The
 rationale, the spots deliberately rejected as redundant, and the hard exclusions
 (**Imperial Beach, the Tijuana Sloughs and Coronado on standing sewage closures;
 Windansea on documented extreme localism**) are all in
@@ -392,8 +396,9 @@ drive time worth having.
 
 Free-flow is fair for the dawn window; the evening window meets real traffic, so treat
 the North County numbers as a floor. Anything over `DRIVE_FLAG_MINUTES` (45) gets a
-"worth the drive?" marker — currently **Oceanside Pier at 49 min**, the only one that
-trips it. **Scoring is deliberately unaffected**: rank on quality, show the distance,
+"worth the drive?" marker — nothing current trips it (Oceanside Pier at 49 min did,
+and was removed 2026-08-30); the mechanism stays for San Onofre / Church if added.
+**Scoring is deliberately unaffected**: rank on quality, show the distance,
 let the reader judge.
 
 ---
