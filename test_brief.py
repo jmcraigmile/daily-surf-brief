@@ -992,6 +992,12 @@ def test_tabbar_and_sun_theme():
           "daily page missing sun times for the theme")
     for label in (">Home<", ">Outlook<", ">Breaks<", ">Quiver<"):
         check(label in daily, f"tab label {label} missing")
+    # Theme toggle: one button per page, ships hidden (JS reveals it), and the
+    # script carries the self-expiring override (gf-theme with an until stamp).
+    for active, html in pages.items():
+        check(html.count('id="themebtn"') == 1, f"{active}: theme toggle missing")
+        check("gf-theme" in html and "nextBoundaryMs" in html,
+              f"{active}: theme override script missing")
 
 
 # ---------------------------------------------------------------------- main

@@ -261,6 +261,15 @@ body.tabbed .windows .win.active{display:block}
   text-transform:uppercase}
 .tabbar a svg{width:22px;height:22px;display:block}
 .tabbar a[aria-current="page"]{color:var(--flash)}
+header.top{position:relative}
+.themebtn{position:absolute;top:0;right:0;width:44px;height:44px;display:flex;
+  align-items:center;justify-content:center;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius-badge);
+  color:var(--ink-2);cursor:pointer;padding:0}
+.themebtn svg{width:20px;height:20px;display:block}
+.themebtn .ic-sun{display:none}
+:root[data-theme="dark"] .themebtn .ic-sun{display:block}
+:root[data-theme="dark"] .themebtn .ic-moon{display:none}
 @media(max-width:859px){
   .tabbar{display:grid}
   .nav{display:none}
@@ -531,6 +540,13 @@ def render_water(data):
 </div>"""
 
 
+THEME_BTN = ('<button type="button" id="themebtn" class="themebtn" hidden '
+             'aria-label="Toggle light/dark theme">'
+             '<svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>'
+             '<svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>'
+             '</button>')
+
+
 _ICONS = {
     "home": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 13a3.5 3.5 0 0 1 7 0" fill="currentColor" stroke="none"/><path d="M2 16.5c3.3-2.6 6.7-2.6 10 0s6.7 2.6 10 0"/></svg>',
     "outlook": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 11h12M4 16h8"/><circle cx="18" cy="16" r="2.6" fill="currentColor" stroke="none"/></svg>',
@@ -552,10 +568,10 @@ def tabbar(active):
 
 SUN_JS = """<script>
 (function () {
-  // The theme follows the sun: sea-mist (light) between sunrise and sunset,
-  // blue-hour (dark) otherwise -- so the 5:45am read is dark and a noon check
-  // is daylight. The daily page carries real sun times and caches them for the
-  // other pages; without JS or times, the OS color-scheme fallback stands.
+  // Theme follows the sun (sea-mist in daylight, blue-hour otherwise), with a
+  // manual toggle override that self-expires at the NEXT sunrise/sunset
+  // boundary -- flip to dark at noon and tomorrow is automatic again. The
+  // daily page carries real sun times and caches them for the other pages.
   function mins(t) { var p = t.split(":"); return (+p[0]) * 60 + (+p[1]); }
   var sr = document.body.getAttribute("data-sunrise");
   var ss = document.body.getAttribute("data-sunset");
@@ -564,13 +580,39 @@ SUN_JS = """<script>
     else { var c = localStorage.getItem("gf-sun"); if (c) { sr = c.split("|")[0]; ss = c.split("|")[1]; } }
   } catch (e) {}
   if (!sr || !ss) { sr = "06:00"; ss = "19:00"; }
-  var n = new Date(); var now = n.getHours() * 60 + n.getMinutes();
-  var theme = (now >= mins(sr) && now < mins(ss)) ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", theme);
-  var mc = document.querySelector('meta[name="theme-color"]:not([media])') || document.createElement("meta");
-  mc.setAttribute("name", "theme-color");
-  mc.setAttribute("content", theme === "light" ? "#eaf0ec" : "#1a2030");
-  if (!mc.parentNode) document.head.appendChild(mc);
+  var srm = mins(sr), ssm = mins(ss);
+  function nowMins() { var n = new Date(); return n.getHours() * 60 + n.getMinutes(); }
+  function sunTheme() { var m = nowMins(); return (m >= srm && m < ssm) ? "light" : "dark"; }
+  function nextBoundaryMs() {
+    var m = nowMins();
+    var d = m < srm ? srm - m : (m < ssm ? ssm - m : 1440 - m + srm);
+    return Date.now() + d * 60000;
+  }
+  function stored() {
+    try {
+      var o = JSON.parse(localStorage.getItem("gf-theme") || "null");
+      if (o && o.until > Date.now()) return o.theme;
+      localStorage.removeItem("gf-theme");
+    } catch (e) {}
+    return null;
+  }
+  function apply(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    var mc = document.querySelector('meta[name="theme-color"]:not([media])') || document.createElement("meta");
+    mc.setAttribute("name", "theme-color");
+    mc.setAttribute("content", theme === "light" ? "#eaf0ec" : "#1a2030");
+    if (!mc.parentNode) document.head.appendChild(mc);
+  }
+  apply(stored() || sunTheme());
+  var btn = document.getElementById("themebtn");
+  if (btn) {
+    btn.hidden = false;
+    btn.addEventListener("click", function () {
+      var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      try { localStorage.setItem("gf-theme", JSON.stringify({ theme: next, until: nextBoundaryMs() })); } catch (e) {}
+      apply(next);
+    });
+  }
 })();
 </script>"""
 
@@ -630,6 +672,7 @@ def render(data):
 <body data-date="{esc(data['date'])}" data-sunrise="{esc(data['sunrise'])}" data-sunset="{esc(data['sunset'])}">
 <div class="wrap">
 <header class="top">
+  {THEME_BTN}
   <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
   <div class="eyebrow" style="margin-top:8px">which break, which board</div>
   <div class="eyebrow gen">San Diego &middot; generated {esc(data['generated'])}</div>
@@ -750,6 +793,7 @@ def render_outlook(data):
 <body>
 <div class="wrap">
 <header class="top">
+  {THEME_BTN}
   <div class="olback"><a href="./">&larr; today's brief</a></div>
   <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
   <div class="eyebrow" style="margin-top:8px">5-day outlook</div>
@@ -828,6 +872,7 @@ def render_breaks(cfg):
 <body>
 <div class="wrap">
 <header class="top">
+  {THEME_BTN}
   <div class="olback"><a href="./">&larr; today's brief</a></div>
   <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
   <div class="eyebrow" style="margin-top:8px">the breaks</div>
@@ -871,6 +916,7 @@ def render_quiver(data):
 <body>
 <div class="wrap">
 <header class="top">
+  {THEME_BTN}
   <div class="olback"><a href="./">&larr; today's brief</a></div>
   <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
   <div class="eyebrow" style="margin-top:8px">the quiver</div>
