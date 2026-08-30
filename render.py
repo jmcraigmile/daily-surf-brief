@@ -305,6 +305,7 @@ header.top{position:relative}
 .board-v{font-size:16px;font-weight:600;margin-top:3px;color:var(--flash);letter-spacing:-.01em}
 .board-b{font-size:13px;color:var(--ink-2);margin-top:3px}
 .board-b b{color:var(--ink);font-weight:650}
+.board-b a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--line-2)}
 .board-n{font-size:12.5px;color:var(--ink-3);margin-top:6px;line-height:1.45}
 
 .notes{margin:9px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
@@ -372,12 +373,13 @@ def day_verdict(data):
               f"{'is' if len(blocked) == 1 else 'are'} out on water quality."
               if blocked else "")
     grab = f" Grab the <strong>{esc(board)}</strong>." if board else ""
+    winb = f"<strong>{esc(win).lower()}</strong>"
     if tier == "Go":
         return (f"<strong>{esc(name)}</strong> is the call &mdash; best window is "
-                f"{esc(win).lower()}.{grab}{suffix}")
+                f"{winb}.{grab}{suffix}")
     if tier == "Maybe":
         return (f"A maybe day. <strong>{esc(name)}</strong> is the best of it on the "
-                f"{esc(win).lower()}{' with the <strong>' + esc(board) + '</strong>' if board else ''} "
+                f"{winb}{' with the <strong>' + esc(board) + '</strong>' if board else ''} "
                 f"&mdash; read the notes before you commit.{suffix}")
     return f"Nothing worth the drive today. Best-scoring spot doesn't clear the bar.{suffix}"
 
@@ -400,23 +402,24 @@ def select_picks(surfable):
 
 def render_break(b, rank):
     cls = "brk rank1" if rank == 0 else "brk"
-    stars = "★" * b["crowd"] + "☆" * (5 - b["crowd"])
     face = "size n/a" if b["face_ft"] is None else f"~{b['face_ft']}ft face"
-    sub = f"{face} &middot; crowd {stars}"
-    dm = b.get("drive_minutes")
-    if dm:
-        sub += f" &middot; {dm} min"
-        if b.get("far"):
-            sub += " <span class='far'>worth the drive?</span>"
+    sub = face
+    if b.get("far"):
+        sub += (f" &middot; {b.get('drive_minutes', '--')} min "
+                f"<span class='far'>worth the drive?</span>")
 
     if b["board_primary"]:
         bslug = board_slug(b["board_primary"])
         bname = (f"<a href='quiver.html#{bslug}'>{esc(b['board_primary'])}</a>"
                  if bslug else esc(b["board_primary"]))
         bv = f"<div class='board-v'>{bname}</div>"
-        bb = (f"<div class='board-b'>Backup: <b>{esc(b['board_backup'])}</b></div>"
-              if b["board_backup"] else
-              "<div class='board-b'>No backup &mdash; nothing else in the quiver fits</div>")
+        if b["board_backup"]:
+            kslug = board_slug(b["board_backup"])
+            kname = (f"<a href='quiver.html#{kslug}'>{esc(b['board_backup'])}</a>"
+                     if kslug else esc(b["board_backup"]))
+            bb = f"<div class='board-b'>Backup: <b>{kname}</b></div>"
+        else:
+            bb = "<div class='board-b'>No backup &mdash; nothing else in the quiver fits</div>"
     elif b["face_ft"] is None:
         bv = "<div class='board-v'>No call</div>"
         bb = "<div class='board-b'>Size data missing this run &mdash; check a cam</div>"
