@@ -123,9 +123,12 @@ body{
   font:15px/1.55 var(--font-prose);
   -webkit-font-smoothing:antialiased;
 }
+/* no link ever falls back to browser blue; scoped rules refine from here */
+a{color:var(--accent)}
+footer a,.pagenote a{color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--line-2)}
 /* every number, label and timestamp is data -- Fragment Mono, tabular by nature */
 .cond .v,.cond .s,.cond .split,.gauge,.tide,.win-time,.eyebrow,.gen,.brk-sub,
-th,td,.olface,.olday span,.suitline,.board-k,.cond .k,.board-b,.olspot .win{
+th,td,.olface,.olday span,.suitline,.board-k,.cond .k,.board-b,.olspot .olw{
   font-family:var(--font-data);
 }
 .gf-logo{display:inline-block;line-height:0;color:var(--ink)}
@@ -259,6 +262,12 @@ body.tabbed .windows .win.active{display:block}
 .brk-name a:hover{color:var(--flash)}
 .board-v a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--go-border)}
 .bk{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-card);padding:16px;margin-top:14px;scroll-margin-top:16px}
+.bk summary{cursor:pointer;list-style:none;position:relative;padding-right:30px;-webkit-tap-highlight-color:transparent}
+.bk summary::-webkit-details-marker{display:none}
+.bk summary::after{content:"";position:absolute;right:6px;top:12px;width:9px;height:9px;
+  border-right:1.8px solid var(--ink-3);border-bottom:1.8px solid var(--ink-3);
+  transform:rotate(45deg);transition:transform .15s ease}
+.bk[open] summary::after{transform:rotate(225deg);top:16px}
 .bk h2{margin:0;font-size:19px;letter-spacing:-.012em}
 .bk .meta1{font-family:var(--font-data);font-size:12px;color:var(--ink-3);margin-top:5px}
 .bk .prose{margin:10px 0 0;font-size:14px;color:var(--ink-2);line-height:1.55}
@@ -268,6 +277,8 @@ body.tabbed .windows .win.active{display:block}
 .bk .dr span{color:var(--ink-2)}
 .bk .flag{margin-top:12px}
 .laddernote{font-size:11.5px;color:var(--ink-3);font-family:var(--font-prose);padding:2px 6px 8px;line-height:1.45}
+.ladder a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--line-2)}
+.ladder a:hover{color:var(--flash);border-bottom-color:var(--flash)}
 .benchhd{margin-top:26px;font-family:var(--font-data);font-size:11px;letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--ink-3)}
 .pagenote{margin-top:16px;font-size:12.5px;color:var(--ink-3);line-height:1.55}
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;
@@ -609,6 +620,24 @@ def tabbar(active):
     return f'<nav class="tabbar" aria-label="Pages">{links}</nav>'
 
 
+# Cards on the breaks/quiver pages are collapsed <details>; a deep link from
+# the daily brief (breaks.html#slug, quiver.html#slug) must still land open.
+EXPAND_JS = """<script>
+(function(){
+  function openTarget(){
+    var id = decodeURIComponent(location.hash.slice(1));
+    if(!id) return;
+    var el = document.getElementById(id);
+    if(el && el.tagName === "DETAILS"){
+      el.open = true;
+      el.scrollIntoView();
+    }
+  }
+  window.addEventListener("hashchange", openTarget);
+  openTarget();
+})();
+</script>"""
+
 SUN_JS = """<script>
 (function () {
   // Theme follows the sun (sea-mist in daylight, blue-hour otherwise), with a
@@ -895,9 +924,11 @@ def _break_card(brk):
                         f"<tr><td></td><td class='laddernote'>{esc(note)}</td></tr>")
     drive = f"{brk.get('drive_minutes', '--')} min"
     hazards = f"<div class='flag'>{esc(brk['hazards'])}</div>" if brk.get("hazards") else ""
-    return f"""<article class="bk" id="{slugify(brk['name'])}">
-  <h2>{esc(brk['name'])}</h2>
-  <div class="meta1">{esc(brk.get('region', ''))} · {drive} · crowd {stars} · {esc(brk['skill'])}</div>
+    return f"""<details class="bk" id="{slugify(brk['name'])}">
+  <summary>
+    <h2>{esc(brk['name'])}</h2>
+    <div class="meta1">{esc(brk.get('region', ''))} · {drive} · crowd {stars} · {esc(brk['skill'])}</div>
+  </summary>
   <p class="prose">{esc(brk['verdict'])}</p>
   <div class="drows">
     <div class="dr"><b>Swell</b><span>{windows}{f" · ideal {ideal}°" if ideal is not None else ""}</span></div>
@@ -909,7 +940,7 @@ def _break_card(brk):
   {hazards}
   <div class="ladder"><div class="board-k" style="margin-top:12px">Board ladder</div>
     <div class="tw"><table><tbody>{ladder_rows}</tbody></table></div></div>
-</article>"""
+</details>"""
 
 
 def render_breaks(cfg):
@@ -944,6 +975,7 @@ each spot's chronic profile; the daily brief layers live rain and river on top. 
 </div>
 {tabbar("breaks")}
 {SUN_JS}
+{EXPAND_JS}
 </body>
 </html>"""
 
@@ -951,15 +983,17 @@ each spot's chronic profile; the daily brief layers live rain and river on top. 
 # ---------------------------------------------------------------- quiver page
 
 def _board_card(b):
-    return f"""<article class="bk" id="{esc(b['slug'])}">
-  <h2>{esc(b['name'])}</h2>
-  <div class="meta1">{esc(b['shaper'])} · {esc(b['dims'])} · {esc(b['volume'])}</div>
+    return f"""<details class="bk" id="{esc(b['slug'])}">
+  <summary>
+    <h2>{esc(b['name'])}</h2>
+    <div class="meta1">{esc(b['shaper'])} · {esc(b['dims'])} · {esc(b['volume'])}</div>
+  </summary>
   <p class="prose">{esc(b['role'])}</p>
   <div class="drows">
     <div class="dr"><b>Fins</b><span>{esc(b['fins'])}</span></div>
     <div class="dr"><b>Range</b><span>{esc(b['range'])}</span></div>
   </div>
-</article>"""
+</details>"""
 
 
 def render_quiver(data):
@@ -986,6 +1020,7 @@ every litre here as approximate until the boards are actually measured.</div>
 </div>
 {tabbar("quiver")}
 {SUN_JS}
+{EXPAND_JS}
 </body>
 </html>"""
 
