@@ -972,6 +972,28 @@ def test_landing_nav_and_tabs():
     check("quiver.html#fish" in html, "board call doesn't link to quiver")
 
 
+def test_tabbar_and_sun_theme():
+    """The fixed bottom app bar is on all four pages with the right item
+    active, and the sun-follows-theme script ships everywhere. The daily page
+    carries real sunrise/sunset for it; the others fall back via storage."""
+    daily = render.render(synthetic_data(buoy=None))
+    breaks_h = render.render_breaks(CFG)
+    quiver_h = render.render_quiver(json.load(open(os.path.join(HERE, "boards.json"))))
+    ol = {"generated": "x", "days": [{"date": "2026-08-31", "dow": "Mon",
+                                      "disp": "8/31", "ok": False, "error": "x"}]}
+    outlook_h = render.render_outlook(ol)
+    pages = {"home": daily, "breaks": breaks_h, "quiver": quiver_h, "outlook": outlook_h}
+    for active, html in pages.items():
+        check('class="tabbar"' in html, f"{active}: tab bar missing")
+        check("gf-sun" in html, f"{active}: sun-theme script missing")
+        body = html.split("</style>")[1]
+        check(body.count('aria-current="page"') == 1, f"{active}: active item count wrong")
+    check('data-sunrise="06:20"' in daily and 'data-sunset="19:15"' in daily,
+          "daily page missing sun times for the theme")
+    for label in (">Home<", ">Outlook<", ">Breaks<", ">Quiver<"):
+        check(label in daily, f"tab label {label} missing")
+
+
 # ---------------------------------------------------------------------- main
 
 if __name__ == "__main__":

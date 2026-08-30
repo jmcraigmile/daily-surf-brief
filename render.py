@@ -252,6 +252,21 @@ body.tabbed .windows .win.active{display:block}
 .laddernote{font-size:11.5px;color:var(--ink-3);font-family:var(--font-prose);padding:2px 6px 8px;line-height:1.45}
 .benchhd{margin-top:26px;font-family:var(--font-data);font-size:11px;letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--ink-3)}
 .pagenote{margin-top:16px;font-size:12.5px;color:var(--ink-3);line-height:1.55}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;
+  grid-template-columns:repeat(4,1fr);background:var(--panel);
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:9px 0 7px;color:var(--ink-3);text-decoration:none;
+  font-family:var(--font-data);font-size:10px;letter-spacing:var(--tracking-label);
+  text-transform:uppercase}
+.tabbar a svg{width:22px;height:22px;display:block}
+.tabbar a[aria-current="page"]{color:var(--flash)}
+@media(max-width:859px){
+  .tabbar{display:grid}
+  .nav{display:none}
+  .olback{display:none}
+  .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+}
 .outlink a,.olback a{color:var(--accent);text-decoration:none;font-weight:650}
 .outlink a:hover,.olback a:hover{text-decoration:underline}
 .olrows{display:flex;flex-direction:column;gap:10px;margin-top:20px}
@@ -516,6 +531,50 @@ def render_water(data):
 </div>"""
 
 
+_ICONS = {
+    "home": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 13a3.5 3.5 0 0 1 7 0" fill="currentColor" stroke="none"/><path d="M2 16.5c3.3-2.6 6.7-2.6 10 0s6.7 2.6 10 0"/></svg>',
+    "outlook": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 11h12M4 16h8"/><circle cx="18" cy="16" r="2.6" fill="currentColor" stroke="none"/></svg>',
+    "breaks": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18c2-6 6-11 9-11-2 3-2 6 0 7 1.8.9 5-.5 6-3 .6 3.5-2 8-7 8-3.5 0-6-.5-8-1z"/></svg>',
+    "quiver": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6.5 20.5C4 18 9.5 5.5 12 3.5c2.5 2 8 14.5 5.5 17-1.5 1.5-9.5 1.5-11 0z"/><path d="M12 6v13"/></svg>',
+}
+
+
+def tabbar(active):
+    """Fixed bottom app bar (phones). aria-current marks the open page."""
+    items = [("home", "./", "Home"), ("outlook", "outlook.html", "Outlook"),
+             ("breaks", "breaks.html", "Breaks"), ("quiver", "quiver.html", "Quiver")]
+    links = ""
+    for key, href, label in items:
+        cur = ' aria-current="page"' if key == active else ""
+        links += f'<a href="{href}"{cur}>{_ICONS[key]}<span>{label}</span></a>' 
+    return f'<nav class="tabbar" aria-label="Pages">{links}</nav>'
+
+
+SUN_JS = """<script>
+(function () {
+  // The theme follows the sun: sea-mist (light) between sunrise and sunset,
+  // blue-hour (dark) otherwise -- so the 5:45am read is dark and a noon check
+  // is daylight. The daily page carries real sun times and caches them for the
+  // other pages; without JS or times, the OS color-scheme fallback stands.
+  function mins(t) { var p = t.split(":"); return (+p[0]) * 60 + (+p[1]); }
+  var sr = document.body.getAttribute("data-sunrise");
+  var ss = document.body.getAttribute("data-sunset");
+  try {
+    if (sr && ss) localStorage.setItem("gf-sun", sr + "|" + ss);
+    else { var c = localStorage.getItem("gf-sun"); if (c) { sr = c.split("|")[0]; ss = c.split("|")[1]; } }
+  } catch (e) {}
+  if (!sr || !ss) { sr = "06:00"; ss = "19:00"; }
+  var n = new Date(); var now = n.getHours() * 60 + n.getMinutes();
+  var theme = (now >= mins(sr) && now < mins(ss)) ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", theme);
+  var mc = document.querySelector('meta[name="theme-color"]:not([media])') || document.createElement("meta");
+  mc.setAttribute("name", "theme-color");
+  mc.setAttribute("content", theme === "light" ? "#eaf0ec" : "#1a2030");
+  if (!mc.parentNode) document.head.appendChild(mc);
+})();
+</script>"""
+
+
 def suit_line(data):
     """Water temp + wetsuit call in the header. Measured at the Scripps Pier
     station; no reading means no call, shown honestly, never a guessed suit."""
@@ -568,7 +627,7 @@ def render(data):
 <title>greenflash.surf</title>
 <style>{CSS}</style>
 </head>
-<body data-date="{esc(data['date'])}">
+<body data-date="{esc(data['date'])}" data-sunrise="{esc(data['sunrise'])}" data-sunset="{esc(data['sunset'])}">
 <div class="wrap">
 <header class="top">
   <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
@@ -610,7 +669,9 @@ def render(data):
   the model. Check <a href="https://www.sdbeachinfo.com/">sdbeachinfo.com</a> before OB.
 </footer>
 </div>
+{tabbar("home")}
 {TABS_JS}
+{SUN_JS}
 </body>
 </html>"""
 
@@ -702,6 +763,8 @@ tomorrow the buoy can't help (model-only sea), sizes are estimates, and the wate
 veto reflects <b>current</b> rain and river conditions &mdash; it cannot see a storm that
 hasn't happened yet. Trust the shape, not the decimals; check back as the day gets close.</div>
 </div>
+{tabbar("outlook")}
+{SUN_JS}
 </body>
 </html>"""
 
@@ -778,6 +841,8 @@ notes, not from a degree-publishing source — treat them as approximations. Wat
 each spot's chronic profile; the daily brief layers live rain and river on top. sdbeachinfo.com
 / 619-338-2073 is the authoritative water check, every time at the river mouths.</div>
 </div>
+{tabbar("breaks")}
+{SUN_JS}
 </body>
 </html>"""
 
@@ -817,6 +882,8 @@ def render_quiver(data):
 anchor — the one “measured” figure matched the shaper's published stock number, so treat
 every litre here as approximate until the boards are actually measured.</div>
 </div>
+{tabbar("quiver")}
+{SUN_JS}
 </body>
 </html>"""
 
