@@ -56,6 +56,7 @@ jobs:
                  python3 surf_forecast.py --date "$TARGET" --json brief.json; }
           mkdir -p site
           python3 render.py brief.json site/index.html
+          cp -r assets site/assets
 
       - name: 5-day outlook (non-fatal -- the daily brief publishes regardless)
         run: |

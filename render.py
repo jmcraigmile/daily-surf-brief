@@ -2,46 +2,95 @@
 """Render the daily surf brief JSON into a self-contained HTML artifact."""
 
 import json
+import os
 import sys
 import html as H
 from datetime import datetime
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _logo_svg():
+    """Inline the wordmark so its letters take currentColor per theme; the
+    rising-sun 'flash' layer stays brand green inside the asset itself."""
+    try:
+        with open(os.path.join(HERE, "assets", "logo.svg")) as f:
+            return f.read()
+    except OSError:
+        return "<b class='brand'>greenflash</b>"
+
 CSS = """
+/* Greenflash design system (Claude Design project "Greenflash Surf Brief System",
+   applied 2026-08-30). Dark is the primary theme: the 5:45am read happens in a
+   dark room. Verdict colors are functional -- never the only signal. Old alias
+   names (--bg, --panel, --ink...) are kept and mapped so component rules below
+   stay stable while the token layer evolves. */
 :root{
-  --bg:#f4f7f9; --panel:#ffffff; --panel-2:#eef3f6; --ink:#0f2027; --ink-2:#4a616d;
-  --ink-3:#7c919c; --line:#dde6ec; --line-2:#c9d8e1;
-  --go:#0a7d5a; --go-bg:#dff5ec; --good:#1c6fa8; --good-bg:#dcecf8;
-  --marg:#8a6410; --marg-bg:#faf0d6; --skip:#7a4a4a; --skip-bg:#f2e4e4;
-  --accent:#0b6ea8; --warn:#a8410b; --warn-bg:#fbe8dc;
-  --bad:#b3261e; --bad-bg:#fbe1de;
-  --shadow:0 1px 2px rgba(15,32,39,.06),0 6px 20px rgba(15,32,39,.06);
+  /* neutrals -- blue hour */
+  --bg-0:#1a2030; --bg-1:#222a3c; --bg-2:#2c364a;
+  --border-1:#374359; --border-2:#475572;
+  --text-1:#e9edf5; --text-2:#9daac0; --text-3:#6f7c93; --horizon:#556480;
+  /* verdicts */
+  --go:#3fd97f; --go-tint:rgba(63,217,127,.12); --go-border:rgba(63,217,127,.38);
+  --maybe:#eac54f; --maybe-tint:rgba(234,197,79,.12); --maybe-border:rgba(234,197,79,.38);
+  --skipc:#f0766b; --skip-tint:rgba(240,118,107,.12); --skip-border:rgba(240,118,107,.38);
+  --danger:#e5484d; --danger-fill:#b3261e; --danger-on-fill:#ffffff;
+  --flash:#3fd97f; --focus-ring:rgba(63,217,127,.5);
+  /* type */
+  --font-prose:"Archivo","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --font-data:"Fragment Mono","SF Mono",Menlo,monospace;
+  --tracking-label:.08em;
+  /* shape */
+  --radius-badge:6px; --radius-card:10px;
+  /* aliases for the component rules below */
+  --bg:var(--bg-0); --panel:var(--bg-1); --panel-2:var(--bg-2);
+  --ink:var(--text-1); --ink-2:var(--text-2); --ink-3:var(--text-3);
+  --line:var(--border-1); --line-2:var(--border-2);
+  --go-bg:var(--go-tint); --marg:var(--maybe); --marg-bg:var(--maybe-tint);
+  --skip:var(--skipc); --skip-bg:var(--skip-tint);
+  --accent:var(--flash); --warn:var(--skipc); --warn-bg:var(--skip-tint);
+  --bad:var(--danger); --bad-bg:rgba(229,72,77,.14);
+  --shadow:none;
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#0b1418; --panel:#121e24; --panel-2:#182831; --ink:#e8f1f5; --ink-2:#a3bac6;
-    --ink-3:#6f8894; --line:#22343d; --line-2:#2e444f;
-    --go:#4fd8a4; --go-bg:#0e3529; --good:#66bdf0; --good-bg:#0d2c40;
-    --marg:#e5bd63; --marg-bg:#372c11; --skip:#d99b9b; --skip-bg:#361f1f;
-    --accent:#5cb6e8; --warn:#f0a271; --warn-bg:#3a2113;
-    --bad:#ff8a80; --bad-bg:#451c18;
-    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg-0:#eaf0ec; --bg-1:#fafcfa; --bg-2:#dce6df;
+    --border-1:#d0dcd4; --border-2:#b4c4ba;
+    --text-1:#1a211d; --text-2:#54615a; --text-3:#78857e;
+    --go:#067647; --go-tint:rgba(6,118,71,.09); --go-border:rgba(6,118,71,.35);
+    --maybe:#946300; --maybe-tint:rgba(148,99,0,.1); --maybe-border:rgba(148,99,0,.35);
+    --skipc:#ba3a2e; --skip-tint:rgba(186,58,46,.09); --skip-border:rgba(186,58,46,.35);
+    --danger:#b3261e; --danger-fill:#b3261e;
+    --flash:#067647; --focus-ring:rgba(6,118,71,.4);
+    --bad-bg:rgba(179,38,30,.1);
+    --shadow:0 1px 2px rgba(20,25,30,.06);
   }
 }
-:root[data-theme="dark"]{
-  --bg:#0b1418; --panel:#121e24; --panel-2:#182831; --ink:#e8f1f5; --ink-2:#a3bac6;
-  --ink-3:#6f8894; --line:#22343d; --line-2:#2e444f;
-  --go:#4fd8a4; --go-bg:#0e3529; --good:#66bdf0; --good-bg:#0d2c40;
-  --marg:#e5bd63; --marg-bg:#372c11; --skip:#d99b9b; --skip-bg:#361f1f;
-  --accent:#5cb6e8; --warn:#f0a271; --warn-bg:#3a2113;
-  --bad:#ff8a80; --bad-bg:#451c18;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+:root[data-theme="light"]{
+  --bg-0:#eaf0ec; --bg-1:#fafcfa; --bg-2:#dce6df;
+  --border-1:#d0dcd4; --border-2:#b4c4ba;
+  --text-1:#1a211d; --text-2:#54615a; --text-3:#78857e;
+  --go:#067647; --go-tint:rgba(6,118,71,.09); --go-border:rgba(6,118,71,.35);
+  --maybe:#946300; --maybe-tint:rgba(148,99,0,.1); --maybe-border:rgba(148,99,0,.35);
+  --skipc:#ba3a2e; --skip-tint:rgba(186,58,46,.09); --skip-border:rgba(186,58,46,.35);
+  --danger:#b3261e; --danger-fill:#b3261e;
+  --flash:#067647; --focus-ring:rgba(6,118,71,.4);
+  --bad-bg:rgba(179,38,30,.1);
+  --shadow:0 1px 2px rgba(20,25,30,.06);
 }
 *{box-sizing:border-box}
 body{
   margin:0; background:var(--bg); color:var(--ink);
-  font:16px/1.5 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  font:15px/1.55 var(--font-prose);
   -webkit-font-smoothing:antialiased;
 }
+/* every number, label and timestamp is data -- Fragment Mono, tabular by nature */
+.cond .v,.cond .s,.cond .split,.gauge,.tide,.win-time,.eyebrow,.gen,.brk-sub,
+th,td,.olface,.olday span,.suitline,.board-k,.cond .k,.board-b,.olspot .win{
+  font-family:var(--font-data);
+}
+.gf-logo{display:inline-block;line-height:0;color:var(--ink)}
+.gf-logo svg{height:22px;width:auto;display:block}
 .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 64px}
 
 header.top{margin-bottom:26px}
@@ -56,7 +105,7 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .windows{display:grid;gap:20px;grid-template-columns:1fr}
 @media(min-width:860px){.windows{grid-template-columns:1fr 1fr}}
 
-.win{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.win{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-card);box-shadow:var(--shadow);overflow:hidden}
 .win-hd{padding:16px 18px 14px;border-bottom:1px solid var(--line);background:var(--panel-2)}
 .win-hd h2{margin:0;font-size:19px;letter-spacing:-.01em;font-weight:700}
 .win-time{font-size:13px;color:var(--ink-3);margin-top:3px;font-variant-numeric:tabular-nums}
@@ -71,22 +120,33 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .cond .split b{color:var(--ink-2);font-weight:650}
 
 .picks{padding:14px 14px 6px;display:flex;flex-direction:column;gap:11px}
-.brk{border:1px solid var(--line);border-radius:11px;padding:13px 14px;background:var(--panel)}
+.brk{border:1px solid var(--line);border-radius:var(--radius-card);padding:13px 14px;background:var(--panel)}
 .brk.rank1{border-color:var(--line-2);background:var(--panel-2)}
 .brk-hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .brk-name{font-size:17px;font-weight:700;letter-spacing:-.012em}
-.pill{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:99px;white-space:nowrap}
-.pill.go{color:var(--go);background:var(--go-bg)}
-.pill.maybe{color:var(--marg);background:var(--marg-bg)}
-.pill.skip{color:var(--skip);background:var(--skip-bg)}
-.pill.blocked{color:#fff;background:var(--bad);letter-spacing:.06em}
+.pill{font-family:var(--font-data);font-size:11px;letter-spacing:var(--tracking-label);
+  text-transform:uppercase;padding:3px 8px;border-radius:var(--radius-badge);white-space:nowrap;
+  display:inline-flex;align-items:center;gap:6px;border:1px solid transparent}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 auto}
+.pill.go{color:var(--go);background:var(--go-tint);border-color:var(--go-border)}
+.pill.go::before{animation:gf-breathe 2.4s ease-in-out infinite}
+@keyframes gf-breathe{0%,100%{opacity:1}50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.pill.go::before{animation:none}}
+.pill.maybe{color:var(--maybe);background:var(--maybe-tint);border-color:var(--maybe-border)}
+.pill.skip{color:var(--skipc);background:var(--skip-tint);border-color:var(--skip-border)}
+.pill.blocked{color:var(--danger-on-fill);background:var(--danger-fill);border-color:var(--danger-fill)}
+.pill.blocked::before{background:var(--danger-on-fill)}
 
 /* water quality */
-.wq{margin-top:22px;border-radius:14px;padding:15px 17px;box-shadow:var(--shadow);
+.wq{margin-top:22px;border-radius:var(--radius-card);padding:15px 17px;box-shadow:var(--shadow);
     border:1px solid var(--line);background:var(--panel)}
 .wq.caution{border-color:var(--marg);background:var(--marg-bg)}
 .wq.avoid{border-color:var(--warn);background:var(--warn-bg)}
-.wq.severe{border-color:var(--bad);background:var(--bad-bg)}
+.wq.severe{border-color:var(--danger-fill);background:var(--danger-fill);color:var(--danger-on-fill)}
+.wq.severe .line,.wq.severe .src,.wq.severe .src b{color:rgba(255,255,255,.88)}
+.wq.severe a{color:#fff}
+.wq.severe .gauge{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff}
+.wq.severe .dot.severe{background:#fff}
 .wq h3{margin:0 0 4px;font-size:15px;font-weight:700;letter-spacing:-.01em;
        display:flex;align-items:center;gap:8px}
 .wq .line{font-size:14px;color:var(--ink-2);line-height:1.5}
@@ -120,7 +180,7 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .outlink a:hover,.olback a:hover{text-decoration:underline}
 .olrows{display:flex;flex-direction:column;gap:10px;margin-top:20px}
 .olrow{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);
-       border-radius:11px;padding:13px 16px;box-shadow:var(--shadow)}
+       border-radius:var(--radius-card);padding:13px 16px;box-shadow:var(--shadow)}
 .olday{width:64px;flex:0 0 auto}
 .olday b{display:block;font-size:16px;letter-spacing:-.01em}
 .olday span{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
@@ -135,7 +195,7 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 
 .board{margin-top:11px;padding:10px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)}
 .board-k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
-.board-v{font-size:16px;font-weight:700;margin-top:3px;color:var(--accent);letter-spacing:-.01em}
+.board-v{font-size:16px;font-weight:600;margin-top:3px;color:var(--flash);letter-spacing:-.01em}
 .board-b{font-size:13px;color:var(--ink-2);margin-top:3px}
 .board-b b{color:var(--ink);font-weight:650}
 .board-n{font-size:12.5px;color:var(--ink-3);margin-top:6px;line-height:1.45}
@@ -159,12 +219,12 @@ td.n{color:var(--ink);font-weight:620}
 td.sc{font-variant-numeric:tabular-nums;text-align:right;width:38px}
 .tw{overflow-x:auto}
 
-.strip{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+.strip{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-card);padding:16px 18px;box-shadow:var(--shadow)}
 .strip h3{margin:0 0 10px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
 .tides{display:flex;flex-wrap:wrap;gap:8px}
 .tide{border:1px solid var(--line);border-radius:8px;padding:7px 11px;font-size:13px;font-variant-numeric:tabular-nums;background:var(--bg)}
 .tide b{font-weight:680}
-.tide.H b{color:var(--good)} .tide.L b{color:var(--marg)}
+.tide.H b{color:var(--flash)} .tide.L b{color:var(--maybe)}
 .meta{margin-top:14px;font-size:12.5px;color:var(--ink-3);line-height:1.55}
 .meta code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;background:var(--panel-2);padding:1px 5px;border-radius:4px}
 footer{margin-top:22px;font-size:11.5px;color:var(--ink-3);line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
@@ -412,9 +472,15 @@ def render(data):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f4f7f9" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b1418" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eaf0ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a2030" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-title" content="greenflash">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="manifest" href="assets/manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,300..900;1,300..900&family=Fragment+Mono:ital@0;1&display=swap">
 <meta name="description" content="Which break, which board. A daily San Diego surf brief, including the days you shouldn't.">
 <title>greenflash.surf</title>
 <style>{CSS}</style>
@@ -422,7 +488,8 @@ def render(data):
 <body>
 <div class="wrap">
 <header class="top">
-  <div class="eyebrow"><b class="brand">greenflash</b> &middot; which break, which board</div>
+  <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
+  <div class="eyebrow" style="margin-top:8px">which break, which board</div>
   <div class="eyebrow gen">San Diego &middot; generated {esc(data['generated'])}</div>
   <h1>{d.strftime('%A, %B %-d')}</h1>
   <p class="dayline">{day_verdict(data)}</p>
@@ -489,9 +556,15 @@ def render_outlook(data):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f4f7f9" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b1418" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eaf0ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a2030" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-title" content="greenflash">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="manifest" href="assets/manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,300..900;1,300..900&family=Fragment+Mono:ital@0;1&display=swap">
 <title>greenflash &middot; outlook</title>
 <style>{CSS}</style>
 </head>
@@ -499,7 +572,8 @@ def render_outlook(data):
 <div class="wrap">
 <header class="top">
   <div class="olback"><a href="./">&larr; today's brief</a></div>
-  <div class="eyebrow"><b class="brand">greenflash</b> &middot; 5-day outlook</div>
+  <span class="gf-logo" role="img" aria-label="greenflash">{_logo_svg()}</span>
+  <div class="eyebrow" style="margin-top:8px">5-day outlook</div>
   <div class="eyebrow gen">generated {esc(data['generated'])}</div>
   <h1>The next five days</h1>
 </header>
