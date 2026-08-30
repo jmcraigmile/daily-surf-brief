@@ -27,7 +27,7 @@
         "mid"
       ],
       "tide_weight": 0.7,
-      "tide_note": "Less tide-sensitive as it gets bigger",
+      "tide_note": "Less tide-fussy the bigger it gets",
       "wind_offshore": [
         22,
         112
@@ -43,28 +43,28 @@
       "localism": 3,
       "skill": "Intermediate to advanced, depending on size",
       "hazards": "CITY GUIDANCE: 'Access to Black's Beach is very difficult due to the high cliffs and unimproved and unmaintained trails. The SAFEST ACCESS IS FROM ADJACENT BEACHES TO THE NORTH AND SOUTH, but this access may be obstructed by high tides or surf. The cliffs are unstable and slides can occur without warning.' Check the tide before committing to a beach walk. Two significant rips, no designated swim zones. 72hr post-rain rule.",
-      "verdict": "Best beachbreak in the county. The canyon doubles long-period swell here while draining Scripps and the Shores.",
+      "verdict": "Best beachbreak in the county, and it's not close. The canyon doubles long-period swell here while it starves Scripps and the Shores -- same swell, different planet.",
       "board_ladder": [
         [
           0,
           3,
           "6'5 Egg",
           "5'8 Fish",
-          "Small day -- the canyon isn't doing anything special yet"
+          "Small day -- the canyon's asleep and it's just another beachbreak"
         ],
         [
           3,
           5,
           "6'0 Surfer Rosa",
           "6'5 Egg",
-          "Chest-to-head with push"
+          "Chest-to-head with real push behind it"
         ],
         [
           5,
           7,
           "7'6 Magic",
           "6'0 Surfer Rosa",
-          "Getting into the range where you want paddle power"
+          "Big enough that paddle power starts winning arguments"
         ],
         [
           7,
@@ -109,7 +109,7 @@
       ],
       "tide_weight": 1.3,
       "tide_rising_bonus": true,
-      "tide_note": "Mid on a rising push -- the most tide-critical of the three canyon spots",
+      "tide_note": "Mid on a rising push -- fussiest of the three canyon spots",
       "wind_offshore": [
         90,
         180
@@ -125,28 +125,28 @@
       "localism": 2,
       "skill": "Beginner-intermediate",
       "hazards": "Permitted outfalls in the area, including SIO's monitored filtered-seawater discharge and stormwater south of the pier -- treat as runoff-adjacent after rain rather than a chronically polluting drain. 72hr post-storm rule. Pier is UCSD property, closed to the public.",
-      "verdict": "Size-starved far more often than maxed -- 79% too small in January. The canyon shadow at work.",
+      "verdict": "Size-starved far more often than maxed -- '79% too small' in January. The canyon shadow, doing what it does.",
       "board_ladder": [
         [
           0,
           2.5,
           "6'5 Egg",
           "5'8 Fish",
-          "The Egg at ~40-43L is your best small-day option here"
+          "Egg water -- ~40-43L of float for a shadowed little day"
         ],
         [
           2.5,
           4,
           "5'8 Fish",
           "6'5 Egg",
-          "Given '79% too small', expect the fish more than the Rosa"
+          "It reads '79% too small' for a reason -- reach for the fish before the Rosa most days"
         ],
         [
           4,
           99,
           "6'0 Surfer Rosa",
           "6'5 Egg",
-          "Chest-to-head with push -- the Rosa's assigned slot, and the F8 Legacy Large is the right fin"
+          "Chest-to-head with push -- the Rosa's home break, F8 Legacy Large in it"
         ]
       ],
       "board_swaps": [
@@ -159,7 +159,7 @@
           "min_period": 9,
           "primary": "5'4 Mini-Simmons",
           "backup": "5'8 Fish",
-          "note": "Same canyon shadow as the Shores and a rolling beachbreak takeoff -- clean and organised, this is planing-hull water well past waist-high, not a grovel call."
+          "note": "Same shadow as the Shores, same soft rolling takeoff -- clean and lined up, this is Simmons water well past waist-high. Not a grovel, a glide."
         }
       ],
       "quality_cap": 86,
@@ -198,7 +198,7 @@
         "high"
       ],
       "tide_weight": 0.3,
-      "tide_note": "Good at all stages -- not tide-critical",
+      "tide_note": "Breaks on whatever tide you show up to",
       "wind_offshore": [
         90,
         180
@@ -215,28 +215,28 @@
       "localism": 1,
       "skill": "Beginner",
       "hazards": "Stingrays are the signature hazard -- do the shuffle. Rips and undertow. Checkered flag zones swim from surf.",
-      "verdict": "The overflow spot. Deepest canyon shadow (-40% to -89%) and long period actively hurts it. But the one spot where a south wind isn't a session-killer.",
+      "verdict": "The overflow lot. Deepest canyon shadow of the three (-40% to -89%) and long period actually hurts it. But when a south wind ruins everywhere else, this place shrugs.",
       "board_ladder": [
         [
           0,
           2,
           "11'0 Chris Craft",
           "9'4 Pink Panther",
-          "Genuinely tiny -- this is where the glider earns its keep"
+          "Genuinely tiny -- exactly what you own the glider for"
         ],
         [
           2,
           3.5,
           "5'4 Mini-Simmons",
           "9'4 Pink Panther",
-          "Shadowed, gentle and gutless -- exactly the wave a planing hull turns into speed. The Panther if you'd rather noseride; the Greenough 4-A gets to do what it's for here."
+          "Soft, shadowed, gutless -- and the Simmons turns gutless into speed. Panther if you'd rather walk; the Greenough 4-A finally gets to do its thing"
         ],
         [
           3.5,
           99,
           "5'8 Fish",
           "9'4 Pink Panther",
-          "North end toward Scripps picks up noticeably more punch than the south."
+          "North end toward Scripps carries noticeably more punch than the south"
         ]
       ],
       "board_swaps": [
@@ -249,7 +249,7 @@
           "min_period": 9,
           "primary": "5'4 Mini-Simmons",
           "backup": "5'8 Fish",
-          "note": "Clean and organised past waist-high -- the Simmons' actual range, not a grovel call. Gentlest takeoff of the ten, so it gets the widest band. Draw lateral lines and trim high; don't try to surf it vertically."
+          "note": "Clean past waist-high is the Simmons' actual wheelhouse -- softest takeoff of the bunch, so it gets the widest band. Draw long lines and trim high; it doesn't do vertical and doesn't want to."
         }
       ],
       "quality_cap": 74,
@@ -286,7 +286,7 @@
         "mid"
       ],
       "tide_weight": 1.0,
-      "tide_note": "Low to mid. Goes soft and fat at higher tides",
+      "tide_note": "Low to mid. Fattens up and goes soft on the high",
       "wind_offshore": [
         22,
         112
@@ -303,21 +303,21 @@
       "localism": 3,
       "skill": "Intermediate",
       "hazards": "Documented localism: do not park up by the cliff on a good swell (wax on windshields). Stay away from the hut area halfway down the point. Reef at the top is protected by the shortboarding crew.",
-      "verdict": "Flat when PB is fun, working when PB is blown. Needs an above-average swell to exist at all -- 3-5ft to start working.",
+      "verdict": "Flat when PB's fun, working when PB's blown. Needs a real swell just to show up -- 3-5ft before it's a wave at all.",
       "board_ladder": [
         [
           0,
           4,
           "9'4 Pink Panther",
           "7'6 Magic",
-          "Below turn-on size, but if it's breaking at all, bigger boards rule"
+          "Below turn-on size -- but if it's breaking at all, bigger boards rule the peak"
         ],
         [
           4,
           99,
           "7'6 Magic",
           "9'4 Pink Panther",
-          "Nearly purpose-built for this wave. 'It's the slowest wave around' and 'bigger boards rule.' Run the 7.5\" Frye for hold through the long sections; drop to the 6.5\" if it feels stiff. Bigger winter days are the Dredgernaut's, once you have it."
+          "About as close to purpose-built for the Magic as SD gets -- 'it's the slowest wave around' and 'bigger boards rule.' Frye 7.5\" for hold through the long sections; drop to the 6.5\" if it feels stiff. Big winter days are the Dredgernaut's, once it exists"
         ]
       ],
       "special": "needs_size",
@@ -355,7 +355,7 @@
         "high"
       ],
       "tide_weight": 0.9,
-      "tide_note": "Mid to high. Sources split on rising vs falling",
+      "tide_note": "Mid to high. The rising-vs-falling argument is unsettled -- sources split",
       "wind_offshore": [
         22,
         112
@@ -371,28 +371,28 @@
       "localism": 2,
       "skill": "Intermediate-advanced at the pier",
       "hazards": "Pier pilings and rips near them. The most contested lineup in PB -- surfers bunch at the wedge off the pier. Parking is notoriously hard.",
-      "verdict": "Most reliable of the PB spots. Sit slightly north of the pier and stop fighting for the wedge.",
+      "verdict": "The dependable one in PB. Sit a little north of the pier and let everyone else fistfight over the wedge.",
       "board_ladder": [
         [
           0,
           2,
           "5'4 Mini-Simmons",
           "5'8 Fish",
-          "Works from under 3ft -- Simmons territory"
+          "Works from under 3ft. Simmons country"
         ],
         [
           2,
           3.5,
           "5'8 Fish",
           "5'4 Mini-Simmons",
-          "The fish is the smarter call: catches more of the smaller stuff and you won't compete for the one contested peak"
+          "Fish gets the nod -- catches more of the small stuff, and you skip the scrum at the one good peak"
         ],
         [
           3.5,
           99,
           "6'0 Surfer Rosa",
           "5'8 Fish",
-          "Chest-high-plus with push"
+          "Chest-high plus with push"
         ]
       ],
       "quality_cap": 86,
@@ -429,7 +429,7 @@
         "high"
       ],
       "tide_weight": 0.7,
-      "tide_note": "Mid to high, but the optimum shifts constantly because the sandbars move",
+      "tide_note": "Mid to high, but the sandbars move and take the answer with them",
       "wind_offshore": [
         22,
         112
@@ -446,14 +446,14 @@
       "localism": 1,
       "skill": "All levels",
       "hazards": "Rips. Little else -- this is the mellowest lineup of the ten.",
-      "verdict": "Mellowest lineup of the ten, spread across multiple peaks. Autumn combo swells are the standout. Closes out on longer-period swell once overhead.",
+      "verdict": "Mellowest lineup on the list, peaks spread everywhere. Fall combo swells are its whole personality. Walls up and shuts down once it's overhead on long period.",
       "board_ladder": [
         [
           0,
           2.5,
           "5'8 Fish",
           "5'4 Mini-Simmons",
-          "Local rec for this stretch is 'fish or funboard'"
+          "The local book says 'fish or funboard,' and the local book is right"
         ],
         [
           2.5,
@@ -467,7 +467,7 @@
           99,
           "6'0 Surfer Rosa",
           "5'8 Fish",
-          "The better days"
+          "The good days"
         ]
       ],
       "board_swaps": [
@@ -480,7 +480,7 @@
           "min_period": 10,
           "primary": "5'4 Mini-Simmons",
           "backup": "5'8 Fish",
-          "note": "Clean, organised sandbar rights are a down-the-line planing-hull wave -- the Simmons goes faster than the fish here when the swell has real period behind it. Period gate is 10s: this stretch wants organised swell, not windslop."
+          "note": "Clean, lined-up sandbar rights are a down-the-line planing wave -- the Simmons outruns the fish here when there's real period underneath. 10s minimum: this stretch wants swell, not slop."
         }
       ],
       "quality_cap": 88,
@@ -516,7 +516,7 @@
         "mid"
       ],
       "tide_weight": 1.0,
-      "tide_note": "Mid. Plagued by closeouts on larger days and/or low tide",
+      "tide_note": "Mid. Low tide plus size equals closeouts",
       "wind_offshore": [
         22,
         112
@@ -534,21 +534,21 @@
       "localism": 1,
       "skill": "All levels",
       "hazards": "Strong rips -- stay ~100m off the South Jetty. Rose and Tecolote Creeks exceed state recreation standards at least half the time even in dry weather.",
-      "verdict": "Consistently mediocre, rarely epic. What makes it good: crossed-up combo swell + decent sandbar + offshore E wind before 11am at moderate size. A big clean long-period groundswell straight on is the worst case.",
+      "verdict": "Reliably average. The good version needs everything at once: crossed-up combo swell, a bank that showed up, offshore E before 11am, moderate size. A big clean long-period swell straight at it is the worst case -- one long closeout.",
       "board_ladder": [
         [
           0,
           2.5,
           "5'8 Fish",
           "5'4 Mini-Simmons",
-          "Two levers make or break this spot and neither is a board: walk, and go before 11am"
+          "The two things that fix this spot aren't boards: walk further than everyone else, and be in before 11am"
         ],
         [
           2.5,
           99,
           "6'0 Surfer Rosa",
           "5'8 Fish",
-          "Rosa on a decent combo day, fish otherwise"
+          "Rosa on a proper combo day, fish the rest of the time"
         ]
       ],
       "board_swaps": [
@@ -561,7 +561,7 @@
           "min_period": 9,
           "primary": "5'4 Mini-Simmons",
           "backup": "6'0 Surfer Rosa",
-          "note": "Clean chest-high Mission is a fine Simmons day. Capped at 4.5ft because this beach walls up and closes out at size -- and a closeout is the one thing a flat-rockered nose can't get out of."
+          "note": "Clean chest-high Mission is a genuinely fun Simmons day. Capped at 4.5ft because this beach walls and shuts down at size -- and a flat-rockered nose has no exit from a closeout."
         }
       ],
       "quality_cap": 86,
@@ -599,7 +599,7 @@
         "mid"
       ],
       "tide_weight": 0.4,
-      "tide_note": "Low to mid, but will break well on just about any tide -- least tide-fussy of the OB spots",
+      "tide_note": "Low to mid, but honestly breaks on whatever -- least tide-fussy of the OB spots",
       "wind_offshore": [
         22,
         112
@@ -615,21 +615,21 @@
       "localism": 2,
       "skill": "Beginner to advanced",
       "hazards": "PIER CLOSED since Oct 2023, a support pile broke off into the ocean Dec 2023 -- broken pile in the water, demolition from 2027. Swim-only zone between the pier and Dog Beach is ticketable. Water 'toxic if the San Diego River is flowing.'",
-      "verdict": "Surfline: 'temperamental, shifty, unpredictable, perennially surfed and most often mediocre.' A check-it-on-the-way spot, not a destination.",
+      "verdict": "Surfline's words: 'temperamental, shifty, unpredictable, perennially surfed and most often mediocre.' Check it on the way to somewhere else.",
       "board_ladder": [
         [
           0,
           3,
           "7'0 CI Waterhog",
           "5'8 Fish",
-          "Mediocre, crowded, close to home, low stakes -- exactly what a soft top with a glassed bottom is for"
+          "Mediocre, crowded, close to home, zero stakes -- the Waterhog's entire reason to exist"
         ],
         [
           3,
           99,
           "5'8 Fish",
           "6'0 Surfer Rosa",
-          "Fish or Rosa -- but honestly this is a Waterhog spot as often as not"
+          "Fish or Rosa on paper. Waterhog in practice, more days than not"
         ]
       ],
       "board_swaps": [
@@ -642,7 +642,7 @@
           "min_period": 9,
           "primary": "5'4 Mini-Simmons",
           "backup": "5'8 Fish",
-          "note": "Low-stakes beachbreak on a clean morning is a good place to actually learn what this board does past waist-high. Water quality is the gate here, not the board."
+          "note": "Low-stakes sand on a clean morning -- the right classroom for learning what the Simmons does past waist-high. The water, not the wave, is the catch here."
         }
       ],
       "quality_cap": 74,
@@ -680,7 +680,7 @@
         "mid"
       ],
       "tide_weight": 0.6,
-      "tide_note": "Mid to low, but breaks well on most tides",
+      "tide_note": "Mid to low, breaks on most tides",
       "wind_offshore": [
         22,
         112
@@ -697,7 +697,7 @@
       "localism": 3,
       "skill": "Advanced -- 'not the place to go unless you are confident in your abilities'",
       "hazards": "WORST WATER QUALITY OF THE TEN. Breaks directly in front of Dog Beach at the river outlet. A County advisory ran from April 2, 2026. Check sdbeachinfo.com or 619-338-2073 before paddling out -- every time. Localism flagged as a hazard.",
-      "verdict": "Sandbar wave -- good some years, bad others. Steep small takeoff into a fast right wall. Surfline rates the right off the jetty the best of the local spots.",
+      "verdict": "A sandbar with moods -- good years and bad ones. Steep little takeoff into a fast right wall; Surfline rates the jetty right the best wave around here.",
       "board_ladder": [
         [
           0,
@@ -711,7 +711,7 @@
           99,
           "6'0 Surfer Rosa",
           "5'8 Fish",
-          "Steep small takeoff into a fast right wall is a performance-thruster brief, not a glide one. Only when the bank is good."
+          "Steep takeoff into a fast wall -- thruster surfing, not trim. Only when the bank's good"
         ]
       ],
       "quality_cap": 86,
@@ -750,7 +750,7 @@
       ],
       "tide_weight": 1.2,
       "tide_rising_bonus": true,
-      "tide_note": "Low to mid and specifically RISING -- two independent sources single that out. Mid to high can be slower to nonexistent.",
+      "tide_note": "Low to mid and specifically RISING -- two independent sources call that out. Mid to high can go slow to nonexistent",
       "wind_offshore": [
         22,
         112
@@ -767,28 +767,28 @@
       "localism": 4,
       "skill": "Intermediate-advanced",
       "hazards": "MOST DANGEROUS SPOT IN THE GUIDE. An average of 5 deaths or serious injuries per year, 2005-2018. The cliffs themselves are the danger -- people have been battered against them trying to exit. Active erosion, a bluff section broke off April 2026. Rope and peg descents are the norm. The tide governs your exit, not just the wave: surfers unfamiliar with the area are often unable to get back up the trails on bigger days at higher tides. Urchins, rips, rocks.",
-      "verdict": "The kelp bed several hundred yards outside smooths NW wind bump -- when the afternoon onshore has wrecked PB, Mission and OB, this is where you go. Most reefs only really start to work when it's overhead.",
+      "verdict": "The kelp out the back irons out NW windbump -- when the afternoon onshore has wrecked PB, Mission and OB, the Cliffs are still combed. Most of these reefs don't properly wake up until it's overhead.",
       "board_ladder": [
         [
           0,
           4,
           "6'0 Surfer Rosa",
           "5'8 Fish",
-          "Below where most of these reefs switch on -- they 'only really start to work when it's overhead.' Garbage is the summer exception."
+          "Under the reefs' wake-up size -- they 'only really start to work when it's overhead.' Garbage is the summer exception"
         ],
         [
           4,
           7,
           "6'0 Surfer Rosa",
           "7'6 Magic",
-          "Sub or Ab. Rock-bottom reef, rope descents and cliff exits are hard on boards -- expect dings, and bring the right board anyway"
+          "Sub or Ab. Rock bottom, rope descents, cliff exits -- boards get dinged here, bring the right one anyway"
         ],
         [
           7,
           10,
           "7'6 Magic",
           "6'0 Surfer Rosa",
-          "Clean well-overhead day at Garbage or New Break -- the long rights suit a trim board and the Frye will hold a line through those 300m walls. Use the 7.5\"."
+          "Clean and well-overhead at Garbage or New Break -- long rights made for trim, and the Frye holds a line through those 300m walls. Run the 7.5\""
         ],
         [
           10,
@@ -834,7 +834,7 @@
         "high"
       ],
       "tide_weight": 0.3,
-      "tide_note": "Good at all stages -- low-to-mid gives the better sections",
+      "tide_note": "Works all tides -- low to mid gives the better sections",
       "wind_offshore": [
         22,
         112
@@ -851,35 +851,35 @@
       "localism": 1,
       "skill": "All levels",
       "hazards": "Rocks. Otherwise the most forgiving reef in the guide -- no cliff exit, no rope descent, no urchin field.",
-      "verdict": "The second kelp spot, and the reason it goes in first: a large kelp bed plus wind-protecting cliffs smooth the chop when the rest of the county has gone crumbly. Rated very consistent. On a blown-out afternoon this is the call, not Sunset Cliffs.",
+      "verdict": "The other kelp spot, and the reason it made the list first: a big bed plus wind-blocking cliffs keep it combed when the county's gone crumbly. Rated very consistent. Blown-out afternoon? This is the call before the Cliffs.",
       "board_ladder": [
         [
           0,
           2,
           "11'0 Chris Craft",
           "9'4 Pink Panther",
-          "Slow, mushy, flat-bottomed reef -- genuinely somewhere for the glider to go"
+          "Slow, mushy, flat-bottomed reef -- honest glider water"
         ],
         [
           2,
           3.5,
           "9'4 Pink Panther",
           "7'6 Magic",
-          "Long reef walls, no push. Log water"
+          "Long soft walls, no push. Log it"
         ],
         [
           3.5,
           5.5,
           "7'6 Magic",
           "6'5 Egg",
-          "The Magic's brief exactly -- trim and glide down a long mushy wall. Frye 7.5\" for hold"
+          "The Magic's job description -- trim and glide down a long mushy wall. Frye 7.5\" for hold"
         ],
         [
           5.5,
           99,
           "6'0 Surfer Rosa",
           "6'5 Egg",
-          "Bigger winter swell at low tide, when the south peak finally gets punchy"
+          "Bigger winter swell at low tide, when the south peak finally puts its shoulders into it"
         ]
       ],
       "quality_cap": 88,
@@ -917,7 +917,7 @@
         "mid"
       ],
       "tide_weight": 1.0,
-      "tide_note": "Low to mid. Not a high-tide fix",
+      "tide_note": "Low to mid. Not a high-tide wave",
       "wind_offshore": [
         22,
         112
@@ -933,28 +933,28 @@
       "localism": 2,
       "skill": "Intermediate at size; advanced once overhead",
       "hazards": "Rocks. Long stairway from the bluff-top lot. Lineup runs on informal rotation etiquette and dropping in is the cardinal sin -- tight-knit, but no documented aggression record.",
-      "verdict": "Highest-rated spot in the county research (4/5, 52% clean in January) and the only real answer to the guide's size hole. Holds to triple-overhead -- long after the quiver stops.",
+      "verdict": "Highest-rated wave in the research (4/5, '52% clean' in January) and the county's real answer once it's big. Holds to triple-overhead -- long after the quiver taps out.",
       "board_ladder": [
         [
           0,
           2.5,
           "9'4 Pink Panther",
           "11'0 Chris Craft",
-          "One of the best longboard rights between San Diego and LA"
+          "One of the best longboard rights between SD and LA. Glide it"
         ],
         [
           2.5,
           4.5,
           "7'6 Magic",
           "6'5 Egg",
-          "The point wall rewards trim"
+          "Point wall, made for trim"
         ],
         [
           4.5,
           9,
           "6'0 Surfer Rosa",
           "7'6 Magic",
-          "The Rosa's window, and the range where Swami's genuinely extends your ceiling past Central SD"
+          "The Rosa's window -- and the stretch where Swami's extends your ceiling past anything in Central SD"
         ],
         [
           9,
@@ -1002,7 +1002,7 @@
         "high"
       ],
       "tide_weight": 0.3,
-      "tide_note": "Surfable at all stages of the tide",
+      "tide_note": "Any tide, genuinely",
       "wind_offshore": [
         22,
         112
@@ -1033,14 +1033,14 @@
           4.5,
           "5'8 Fish",
           "6'0 Surfer Rosa",
-          "Sand-bottom peaks, no consequence -- the fish catches more"
+          "Sand-bottom peaks, no consequence -- the fish catches more of them"
         ],
         [
           4.5,
           7,
           "6'0 Surfer Rosa",
           "7'6 Magic",
-          "Once it has push"
+          "Once it's got some push behind it"
         ],
         [
           7,
