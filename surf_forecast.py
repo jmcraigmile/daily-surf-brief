@@ -717,13 +717,13 @@ def score_break(brk, cond):
     if cap is not None and total > cap:
         total = cap
 
-    # Chop dominance also CAPS the verdict at Maybe (77): no amount of
-    # everything-else-aligned makes a sea that's mostly 8-second windwave a
-    # green light -- the paddle and the texture come with the water, not the
-    # spot. Jake's words after the session that forced this: "it should have
-    # been less of a go and more of a maybe."
+    # Chop dominance also CAPS the verdict below Go (GO_FLOOR - 1, so it moves
+    # with any floor recalibration): no amount of everything-else-aligned makes
+    # a sea that's mostly 8-second windwave a green light -- the paddle and the
+    # texture come with the water, not the spot. Jake's words after the session
+    # that forced this: "it should have been less of a go and more of a maybe."
     if chop_pen > 0:
-        total = min(total, 77)
+        total = min(total, GO_FLOOR - 1)
 
     breakdown = {
         "swell_dir": round(dir_score, 1), "size": round(size_score, 1),
@@ -848,14 +848,34 @@ def pick_board(brk, face, ctx=None):
     return _crowd_gate(brk, primary, backup, note)
 
 
+# Verdict bands. THREE tiers is a deliberate choice (Jake, 2026-08-30, Option A),
+# replacing four (Go / Worth it / Marginal / Skip) -- at 5:45am you want zero
+# interpretation, and the three map to the only three decisions actually made:
+# rearrange the morning / go if convenient / don't bother. Water-quality
+# "Don't paddle" stays a separate fourth state: it is a veto, not a grade.
+#
+# The FLOORS are TUNABLE CALIBRATION DEFAULTS, re-set 2026-08-30 after measuring
+# what they fire on. The original Go >= 78 fired on 66.7% of simulated mornings
+# and lit ~3.7 of 13 breaks at once -- that is "surfable", which in San Diego is
+# most days, and a four-way tie is a menu rather than a call. Go >= 88 fires on
+# ~30.8% of mornings (~2/week) and typically names ~0.9 breaks, which is what
+# "must go" has to mean to be worth a badge. SKIP raised 55 -> 62 for the same
+# reason at the other end: at 55 only 1.9% of mornings had no rideable option,
+# so Skip was barely pruning the ranked list.
+#
+# Measured over an even sweep of the condition space, NOT a real year -- real
+# weather clusters (flat summer spells, winter NW runs), so the true firing rate
+# will drift. RECALIBRATE FROM ../01-San-Diego-Breaks/Break-Log.md: if Go fires
+# and the session is mediocre, GO_FLOOR is still too low.
+GO_FLOOR = 88
+MAYBE_FLOOR = 62
+
+
 def verdict_label(score):
-    """Three-tier traffic light (Jake's call, 2026-08-30, Option A): green Go,
-    yellow Maybe, red Skip. Replaced the old four tiers (Go / Worth it /
-    Marginal / Skip) -- at 5:45am you want zero interpretation. Water-quality
-    "Don't paddle" stays a separate fourth state: it's a veto, not a grade."""
-    if score >= 78:
+    """Score -> (label, css class). See GO_FLOOR / MAYBE_FLOOR above."""
+    if score >= GO_FLOOR:
         return "Go", "go"
-    if score >= 55:
+    if score >= MAYBE_FLOOR:
         return "Maybe", "maybe"
     return "Skip", "skip"
 

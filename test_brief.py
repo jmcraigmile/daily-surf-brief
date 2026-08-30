@@ -757,13 +757,67 @@ def test_crowd_gate_spares_cardiff():
 
 
 def test_verdict_labels():
-    """Three-tier traffic light (Option A, 2026-08-30): Go / Maybe / Skip."""
-    cases = [(100, "Go", "go"), (78, "Go", "go"),
-             (77, "Maybe", "maybe"), (55, "Maybe", "maybe"),
-             (54, "Skip", "skip"), (0, "Skip", "skip")]
-    for score, label, cls in cases:
+    """Three-tier traffic light (Option A, 2026-08-30): Go / Maybe / Skip.
+
+    Reads the floors from the module rather than hardcoding them -- they are
+    tunable calibration defaults meant to move as Break-Log fills up, and a
+    test that has to be edited alongside every tuning pass just trains you to
+    edit it without thinking. What is pinned is the SHAPE: three tiers, no
+    gaps, no overlaps, monotonic, correct at every boundary.
+    """
+    go, mid = sf.GO_FLOOR, sf.MAYBE_FLOOR
+    check(0 < mid < go <= 100, f"nonsensical bands: Go>={go}, Maybe>={mid}")
+    cases = [(100, "Go"), (go, "Go"), (go - 1, "Maybe"),
+             (mid, "Maybe"), (mid - 1, "Skip"), (0, "Skip")]
+    for score, label in cases:
         got = sf.verdict_label(score)
-        check(got == (label, cls), f"verdict_label({score}) = {got}, want ({label}, {cls})")
+        check(got[0] == label, f"verdict_label({score}) = {got}, want {label}")
+        check(got[1] == label.lower(), f"verdict_label({score}) class {got[1]!r}")
+    # Monotonic: a better score never grades worse.
+    rank = {"Skip": 0, "Maybe": 1, "Go": 2}
+    prev = -1
+    for s in range(0, 101):
+        r = rank[sf.verdict_label(s)[0]]
+        check(r >= prev, f"verdict_label went backwards at {s}")
+        prev = r
+
+
+def test_go_stays_rare_enough_to_mean_must_go():
+    """The floors exist to make "Go" a CALL, not a menu.
+
+    Regression for the 2026-08-30 recalibration: at Go >= 78 two mornings in
+    three had a Go break and ~3.7 of 13 lit at once, which is "surfable", not
+    "must go". This samples the condition space and fails if the floors drift
+    back to meaninglessness in either direction -- too loose and the badge stops
+    discriminating, too tight and it never fires and gets ignored.
+
+    Deliberately wide bounds: this pins that someone THOUGHT about it, not any
+    particular calibration. Real Break-Log data should move the floors inside
+    these, and if it legitimately pushes past them, widen them and say why.
+    """
+    active = sf.active_breaks(CFG)
+    best, lit = [], []
+    for hs in (1.5, 3.0, 5.0):
+        for per in (8, 12, 17):
+            for sdir in (200, 250, 285):
+                for wspd, wdir in ((3, 90), (12, 270)):
+                    for th, td in ((1.0, "rising"), (4.0, "falling")):
+                        c = cond(swell_hs=hs, swell_period=per, swell_dir=sdir,
+                                 wind_speed=wspd, wind_dir=wdir, tide_h=th, tide_dir=td)
+                        ss = [sf.score_break(b, c)[0] for b in active]
+                        best.append(max(ss))
+                        lit.append(sum(1 for s in ss if sf.verdict_label(s)[0] == "Go"))
+    n = len(best)
+    go_mornings = 100.0 * sum(1 for s in best if s >= sf.GO_FLOOR) / n
+    avg_lit = sum(lit) / n
+    check(8.0 <= go_mornings <= 55.0,
+          f"'Go' fires on {go_mornings:.0f}% of mornings -- "
+          f"{'too rare to be useful' if go_mornings < 8 else 'too common to mean must-go'}")
+    check(avg_lit <= 2.5,
+          f"'Go' lights {avg_lit:.1f} breaks at once -- that is a menu, not a call")
+    # Skip has to prune something, or the ranked list is 13 plausible options.
+    skips = sum(1 for s in best if s < sf.MAYBE_FLOOR)
+    check(skips < n, "even the best break is always Skip -- MAYBE_FLOOR is too high")
 
 
 CHOPPY_SEA = {"source": "buoy", "long_hs": 3.16, "long_period": 15.4,
@@ -786,8 +840,15 @@ def test_chop_penalty():
     s_clean, bd_clean, _, _, _, _ = sf.score_break(pbd, {**base, "sea": CLEAN_SEA})
     check(bd_chop["chop"] < 0, "chop-dominant sea got no penalty")
     check(-14.0 <= bd_chop["chop"] <= -5.0, f"chop penalty {bd_chop['chop']} outside -5..-14")
+    # That session scores ~80: a real wave under 5ft of 7.7s windchop, rideable
+    # but a brutal paddle. It must not read "Go". NOTE the guarantee is now
+    # carried by GO_FLOOR (88), not by the size of the penalty -- when the floor
+    # was 78 this failed, and the honest fix was the floor, not deepening a
+    # constant anchored on a real session to compensate. If GO_FLOOR ever drops
+    # near 80 this fails again, correctly, and the answer is still not to
+    # inflate the penalty.
     check(sf.verdict_label(s_chop)[0] != "Go",
-          "the 2026-08-30 session still grades Go under chop dominance")
+          f"the 2026-08-30 chop session grades Go at {s_chop} (GO_FLOOR={sf.GO_FLOOR})")
     check(bd_clean["chop"] == 0, f"clean sea penalised {bd_clean['chop']}")
     check(s_chop < s_clean, "chop day scored >= clean day")
     check(any("chop" in n for n in notes_chop), "chop penalty has no note")
@@ -810,6 +871,31 @@ def test_chop_gates_swaps():
                   f"{b['name']}: swap didn't fire on a clean split")
             check(sf.pick_board(b, mid, chop_ctx) == sf.pick_board(b, mid),
                   f"{b['name']}: swap fired on a chop-dominant sea")
+
+
+def test_day_verdict_matches_pill():
+    """The headline sentence and the top break's pill must always agree.
+
+    Regression for 2026-08-30: the verdict floors moved in surf_forecast.py
+    while day_verdict() carried its own hardcoded copy, so a score between the
+    old and new Go floors headlined "is the call" over a Maybe pill. The fix
+    made day_verdict read the break's label from the JSON; this pins it, for
+    each tier, at scores chosen right at the current floor boundaries."""
+    for score, phrase in [(sf.GO_FLOOR, "is the call"),
+                          (sf.GO_FLOOR - 1, "A maybe day"),
+                          (sf.MAYBE_FLOOR - 1, "Nothing worth the drive")]:
+        d = synthetic_data(buoy=None)
+        label, cls = sf.verdict_label(score)
+        for w in d["windows"]:
+            for b in w["breaks"]:
+                if not b["water"]["blocked"]:
+                    b["score"] = min(score, b["score"])
+            top = next(b for b in w["breaks"] if not b["water"]["blocked"])
+            top["score"], top["label"], top["cls"] = score, label, cls
+        html = render.render(d)
+        got = html.split('class="dayline">')[1].split("</p>")[0]
+        check(phrase in got,
+              f"day_verdict at score {score} ({label}): {phrase!r} not in {got[:80]!r}")
 
 
 # ---------------------------------------------------------------------- main

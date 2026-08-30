@@ -167,24 +167,29 @@ def num(v, unit="", dash="--"):
 def day_verdict(data):
     """One honest sentence about the day."""
     # Best window by top SURFABLE break -- a blocked spot is never the day's call.
+    # The tier comes from the break's own label, NOT from re-derived thresholds.
+    # The verdict floors are tunable constants in surf_forecast.py; a second
+    # copy here already drifted once (2026-08-30: floors moved to 88/62 while
+    # this function still said 78/55, so an 80 headlined "is the call" over a
+    # Maybe pill). The JSON is the single source of truth.
     cands = []
     for i, w in enumerate(data["windows"]):
         ok = [b for b in w["breaks"] if not (b.get("water") or {}).get("blocked")]
         if ok:
-            cands.append((ok[0]["score"], -i, ok[0]["name"], w["label"]))
+            cands.append((ok[0]["score"], -i, ok[0]["name"], w["label"], ok[0]["label"]))
     if not cands:
         return ("Every break is blocked on water quality today. "
                 "<strong>Don't paddle out anywhere.</strong>")
-    score, _, name, win = max(cands)
+    score, _, name, win, tier = max(cands)
 
     blocked = (data.get("water_day") or {}).get("blocked") or []
     suffix = (f" {', '.join(esc(b) for b in blocked)} "
               f"{'is' if len(blocked) == 1 else 'are'} out on water quality."
               if blocked else "")
-    if score >= 78:
+    if tier == "Go":
         return (f"<strong>{esc(name)}</strong> is the call &mdash; best window is "
                 f"{esc(win).lower()}.{suffix}")
-    if score >= 55:
+    if tier == "Maybe":
         return (f"A maybe day. <strong>{esc(name)}</strong> is the best of it on the "
                 f"{esc(win).lower()} &mdash; read the notes before you commit.{suffix}")
     return f"Nothing worth the drive today. Best-scoring spot doesn't clear the bar.{suffix}"

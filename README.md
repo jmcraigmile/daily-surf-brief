@@ -247,9 +247,32 @@ apart, so a misleading mean period is visible rather than silent.
 up to 4 for crowd, then capped by the break's own surf-forecast star rating so a 2/5
 spot can't outrank a 4/5 one on a mechanical tie.
 
-**Verdicts are a three-tier traffic light** (Option A, 2026-08-30): 🟢 **Go** ≥78 ·
-🟡 **Maybe** 55–77 · 🔴 **Skip** below. Water-quality **Don't paddle** stays a separate
-fourth state — a veto, not a grade.
+**Verdicts are a three-tier traffic light** (Option A, 2026-08-30): 🟢 **Go** ≥88 ·
+🟡 **Maybe** 62–87 · 🔴 **Skip** below. Water-quality **Don't paddle** stays a separate
+fourth state — a veto, not a grade. Three tiers because they are the only three
+decisions actually made: rearrange the morning / go if convenient / don't bother.
+
+**The floors were re-set the same day, and the reasoning matters more than the
+numbers** (`GO_FLOOR` / `MAYBE_FLOOR` in `surf_forecast.py`). They opened at 78/55,
+which sounded reasonable and measured badly: across a sweep of the condition space
+Go fired on **66.7% of mornings** and lit **~3.7 of 13 breaks at once**. That is
+"surfable" — which in San Diego is most days — and four simultaneous Go badges is a
+menu, not a call. At **88** it fires on ~30.8% of mornings (~2/week) and typically
+names ~0.9 breaks. `MAYBE_FLOOR` went 55 → 62 for the mirror reason: at 55 only 1.9%
+of mornings had no rideable option, so Skip was barely pruning the ranked list.
+
+⚠️ Measured over an **even sweep**, not a real year. Real weather clusters, so the
+true firing rate will drift. **Recalibrate from `Break-Log.md`: if Go fires and the
+session is mediocre, `GO_FLOOR` is still too low.** `test_go_stays_rare_enough_to_mean_must_go`
+guards the intent with deliberately wide bounds — it fails if Go becomes a menu again
+*or* becomes so rare you'd ignore it.
+
+> This also settled a live conflict worth remembering. The PB Drive chop session
+> scores 80; under Go ≥78 it read **Go**, which broke the guarantee the chop penalty
+> was built to provide. The tempting fix was deepening the penalty to ~−12.4 (still
+> inside its allowed band). That would have been **tuning a physical constant
+> anchored on a real session to compensate for a threshold set too low.** The
+> threshold was the bug.
 
 **Chop dominance** (Break-Log 2026-08-30, PB Drive): when the sea split shows the
 short-period component carrying ≥40% of the energy at ≤9s, the day takes a graded
@@ -306,6 +329,37 @@ that file explains each exclusion.
 in the swell partition and ~0 in wind wave here — see *Two calibrations that look wrong but
 aren't* above. Wind-wave height is not a usable texture proxy in this pipeline; adding it
 to a swap would look like an improvement and silently disable the gate.
+
+The glider has a swap too, at **Cardiff only** (added 2026-08-30): the ladder capped it
+at 2ft, and Josh Hall — Skip Frye's protégé, and the category's clearest voice — names
+the Cardiff reefs by name as glider water. It now runs to **4ft face** when the sea is
+clean. It reuses the chop gate rather than inventing one, which is the point: chop is
+*precisely* the glider's documented weakness (it chatters like speed wobbles), so the
+extension inherited a Break-Log-calibrated texture gate for free. **4ft is our number,
+not Hall's** — he gave no band. Unvalidated; log the sessions. See
+[`../02-Gear/Glider-Deep-Dive.md`](../02-Gear/Glider-Deep-Dive.md).
+
+### The crowd gate
+
+Some boards are ruled out by the **people** in the water, not the wave. `_board_crowd_limits`
+in `breaks.json` maps a board to the highest break `crowd` rating it may be called at, in
+**both** the primary and backup slot — recommending a board as the fallback at a mobbed
+peak has the identical problem. `_crowd_gate()` applies it after the ladder and swaps.
+
+Currently one entry: **`11'0 Chris Craft` → 3**. An 11ft glider on a 10ft leash swings a
+~20ft radius when a closeout tears it loose, and it out-paddles the entire lineup, so a
+packed peak is the one place the shape is a genuine liability — a point Frye and Hall both
+make in their own words. It stands at Cardiff (crowd 3) and is gated at La Jolla Shores
+and Swami's (crowd 4).
+
+**A gated board is demoted, never blocked.** If nothing safer sits on the ladder the board
+is still called, with the warning attached — the wave is fine, only the board choice is
+wrong, and turning a rideable morning into a refusal over an etiquette rule would be a bad
+failure. Pinned by `test_crowd_gate_on_oversized_boards`.
+
+Note this gate is **not** in the same evidential class as the mini-Simmons swap thresholds.
+Those are unvalidated personal heuristics; this needed no calibration — the limit is a
+judgment the sources state directly, reading a `crowd` field already researched per break.
 
 A `null` primary means **don't paddle out** — Black's above 7ft face, **Swami's above
 9ft**, Sunset Cliffs above 10ft. That's not an oversight: the folder says plainly the
