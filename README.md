@@ -82,7 +82,12 @@ to GitHub Pages. `.github/workflows/publish.yml` is the whole thing:
   line in the page header is the staleness signal. Check it before trusting a
   pre-dawn read.
 
-The repo root is this folder. Phone access: open the Pages URL, Add to Home Screen.
+The repo root is this folder. **Live at [glassoff.surf](https://glassoff.surf)**
+(custom domain added 2026-08-30: Cloudflare-registered, DNS-only records pointing
+at GitHub Pages, which serves the SSL cert — the DNS-only choice is deliberate,
+Cloudflare's proxy would block GitHub's cert issuance). Phone access: open
+glassoff.surf, Add to Home Screen. The old
+jmcraigmile.github.io/daily-surf-brief URL redirects.
 
 ### Local alternatives (dev only, not the production path)
 
