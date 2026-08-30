@@ -91,7 +91,7 @@ th,td,.olface,.olday span,.suitline,.board-k,.cond .k,.board-b,.olspot .win{
 }
 .gf-logo{display:inline-block;line-height:0;color:var(--ink)}
 .gf-logo svg{height:22px;width:auto;display:block}
-.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 64px}
+.wrap{max-width:1080px;margin:0 auto;padding:calc(28px + env(safe-area-inset-top)) 20px calc(64px + env(safe-area-inset-bottom))}
 
 header.top{margin-bottom:26px}
 .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
@@ -111,13 +111,23 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .win-time{font-size:13px;color:var(--ink-3);margin-top:3px;font-variant-numeric:tabular-nums}
 
 .cond{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
-.cond div{padding:12px 14px;border-right:1px solid var(--line)}
-.cond div:last-child{border-right:0}
+.cond>div{padding:12px 14px;border-right:1px solid var(--line)}
+.cond>div:last-child{border-right:0}
 .cond .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
 .cond .v{font-size:16px;font-weight:680;margin-top:3px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .cond .s{font-size:12px;color:var(--ink-3);margin-top:1px}
 .cond .split{margin-top:5px;padding-top:5px;border-top:1px dotted var(--line-2);font-size:11.5px;line-height:1.4}
 .cond .split b{color:var(--ink-2);font-weight:650}
+@media(max-width:479px){
+  .cond{grid-template-columns:1fr}
+  .cond>div{border-right:0;border-bottom:1px solid var(--line);padding:10px 14px;
+    display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap}
+  .cond>div:last-child{border-bottom:0}
+  .cond .k{flex:0 0 52px}
+  .cond .v{margin-top:0}
+  .cond .s{margin-top:0;flex-basis:100%;padding-left:64px}
+  .cond .split{flex-basis:100%;margin-left:64px}
+}
 
 .picks{padding:14px 14px 6px;display:flex;flex-direction:column;gap:11px}
 .brk{border:1px solid var(--line);border-radius:var(--radius-card);padding:13px 14px;background:var(--panel)}
@@ -174,8 +184,9 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .suitline{margin-top:10px;font-size:14px;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .suitline b{color:var(--ink);font-weight:680}
 .suit-k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650;margin-right:2px}
-.suit-v{color:var(--accent);font-weight:700}
-.outlink{margin-top:10px;font-size:13px}
+.suit-v{color:var(--flash);font-weight:700;white-space:nowrap}
+.outlink{margin-top:6px;font-size:13px}
+.outlink a,.olback a{display:inline-block;padding:10px 0}
 .outlink a,.olback a{color:var(--accent);text-decoration:none;font-weight:650}
 .outlink a:hover,.olback a:hover{text-decoration:underline}
 .olrows{display:flex;flex-direction:column;gap:10px;margin-top:20px}
@@ -206,7 +217,7 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .flag{color:var(--warn);background:var(--warn-bg);border-radius:7px;padding:7px 9px;font-size:12.5px;line-height:1.45;margin-top:9px}
 
 .rest{border-top:1px solid var(--line);padding:12px 16px 16px}
-.rest summary{cursor:pointer;font-size:12.5px;color:var(--ink-3);font-weight:600;list-style:none}
+.rest summary{cursor:pointer;font-size:13px;color:var(--ink-3);font-weight:600;list-style:none;padding:12px 2px;margin:-6px 0}
 .rest summary::-webkit-details-marker{display:none}
 .blockhd{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--bad);
          font-weight:700;margin:6px 2px 1px}
@@ -253,22 +264,25 @@ def day_verdict(data):
     for i, w in enumerate(data["windows"]):
         ok = [b for b in w["breaks"] if not (b.get("water") or {}).get("blocked")]
         if ok:
-            cands.append((ok[0]["score"], -i, ok[0]["name"], w["label"], ok[0]["label"]))
+            cands.append((ok[0]["score"], -i, ok[0]["name"], w["label"], ok[0]["label"],
+                          ok[0].get("board_primary")))
     if not cands:
         return ("Every break is blocked on water quality today. "
                 "<strong>Don't paddle out anywhere.</strong>")
-    score, _, name, win, tier = max(cands)
+    score, _, name, win, tier, board = max(cands)
 
     blocked = (data.get("water_day") or {}).get("blocked") or []
     suffix = (f" {', '.join(esc(b) for b in blocked)} "
               f"{'is' if len(blocked) == 1 else 'are'} out on water quality."
               if blocked else "")
+    grab = f" Grab the <strong>{esc(board)}</strong>." if board else ""
     if tier == "Go":
         return (f"<strong>{esc(name)}</strong> is the call &mdash; best window is "
-                f"{esc(win).lower()}.{suffix}")
+                f"{esc(win).lower()}.{grab}{suffix}")
     if tier == "Maybe":
         return (f"A maybe day. <strong>{esc(name)}</strong> is the best of it on the "
-                f"{esc(win).lower()} &mdash; read the notes before you commit.{suffix}")
+                f"{esc(win).lower()}{' with the <strong>' + esc(board) + '</strong>' if board else ''} "
+                f"&mdash; read the notes before you commit.{suffix}")
     return f"Nothing worth the drive today. Best-scoring spot doesn't clear the bar.{suffix}"
 
 
@@ -390,7 +404,7 @@ def render_window(w):
       <div class="s">{num(w['air_temp'], '&deg;F')} air</div></div>
   </div>
   <div class="picks">{picks}</div>
-  <details class="rest"><summary>The other {len(rest)} breaks</summary>
+  <details class="rest"><summary>{len(rest)} more breaks</summary>
     <div class="tw"><table><thead><tr><th>Break</th><th>Call</th><th>Board</th><th class="sc">Min</th><th class="sc">Score</th></tr></thead>
     <tbody>{rows}</tbody></table></div>
   </details>
@@ -471,7 +485,9 @@ def render(data):
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#eaf0ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1a2030" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-title" content="greenflash">
@@ -555,7 +571,9 @@ def render_outlook(data):
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#eaf0ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1a2030" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-title" content="greenflash">
