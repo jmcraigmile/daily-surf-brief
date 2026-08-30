@@ -352,7 +352,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
 th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:650;padding:5px 6px;border-bottom:1px solid var(--line)}
 td{padding:6px;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:top}
 td.n{color:var(--ink);font-weight:620}
-td.sc{font-variant-numeric:tabular-nums;text-align:right;width:38px}
+td.sc{font-variant-numeric:tabular-nums;text-align:left;width:44px}
 .tw{overflow-x:auto}
 
 .strip{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-card);padding:16px 18px;box-shadow:var(--shadow)}
@@ -527,10 +527,9 @@ def render_window(w):
                   + "".join(render_break(b, 9) for b in blocked))
     rest = [b for b in ok if b not in chosen]
     rows = "".join(
-        f"<tr><td class='n'>{esc(b['name'])}</td><td>{esc(b['label'])}</td>"
+        f"<tr><td class='sc'>{b['score']}</td><td class='n'>{esc(b['name'])}</td>"
         f"<td>{esc(b['board_primary'] or '--')}</td>"
-        f"<td class='sc'>{b.get('drive_minutes') or '--'}</td>"
-        f"<td class='sc'>{b['score']}</td></tr>"
+        f"<td>{esc(b['label'])}</td></tr>"
         for b in rest
     )
     wn, ws = w["wind_speed_n"], w["wind_speed_s"]
@@ -555,7 +554,7 @@ def render_window(w):
   </div>
   <div class="picks">{picks}</div>
   <details class="rest"><summary>{len(rest)} more breaks</summary>
-    <div class="tw"><table><thead><tr><th>Break</th><th>Call</th><th>Board</th><th class="sc">Min</th><th class="sc">Score</th></tr></thead>
+    <div class="tw"><table><thead><tr><th class="sc">Score</th><th>Break</th><th>Board</th><th>Call</th></tr></thead>
     <tbody>{rows}</tbody></table></div>
   </details>
 </section>"""
