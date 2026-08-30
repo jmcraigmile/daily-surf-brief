@@ -569,8 +569,8 @@ def synthetic_break(name, blocked=False):
            "blocked": False, "note": "", "chronic": "normal"})
     return {
         "name": name, "score": 70, "surf_score": 70,
-        "label": "Don't paddle" if blocked else "Worth it",
-        "cls": "blocked" if blocked else "good",
+        "label": "Don't paddle" if blocked else "Maybe",
+        "cls": "blocked" if blocked else "maybe",
         "breakdown": {"swell_dir": 20, "size": 25, "period": 6, "tide": 12,
                       "wind": 10, "crowd": -2},
         "notes": ["a note"], "face_ft": 3.5, "local_hs": 3.0,
@@ -700,6 +700,116 @@ def test_render_suit_line():
     html2 = render.render(d2)
     check("temp unavailable" in html2, "missing-temp fallback not shown")
     check("None" not in html2, "None leaked from missing water temp")
+
+
+def test_crowd_gate_on_oversized_boards():
+    """Some boards are ruled out by the PEOPLE in the water, not the wave.
+    See 02-Gear/Glider-Deep-Dive.md section 4e. Pins three things: the gate
+    fires, it DEMOTES rather than blocks, and it leaves the calibrated
+    small-wave spots alone."""
+    limits = sf.crowd_limits()
+    check(limits, "_board_crowd_limits missing from breaks.json")
+    for board, lim in limits.items():
+        check(board in OWNED_BOARDS, f"crowd-limited board {board!r} is not in the quiver")
+        check(isinstance(lim, int) and 0 <= lim <= 5, f"{board}: bad crowd limit {lim}")
+
+    hits = misses = 0
+    for b in sf.active_breaks(CFG):
+        crowd = b["crowd"]
+        for face in (0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 6.0, 8.0):
+            p, bk, note = sf.pick_board(b, face)
+            # The gate must never leave a limited board in EITHER slot.
+            for slot, board in (("primary", p), ("backup", bk)):
+                if board is not None and crowd > limits.get(board, 99):
+                    check(False, f"{b['name']} (crowd {crowd}) still calls {board} as {slot}")
+            # It must never turn a rideable wave into a refusal.
+            base = None
+            for rung in b["board_ladder"]:
+                if rung[0] <= face < rung[1]:
+                    base = rung[2]
+                    break
+            if base is not None:
+                check(p is not None,
+                      f"{b['name']} at {face}ft: crowd gate blocked instead of demoting")
+                if crowd > limits.get(base, 99):
+                    hits += 1
+                    check("crowd" in note, f"{b['name']}: gated {base} with no reason in the note")
+                else:
+                    misses += 1
+    check(hits, "crowd gate never fired -- it is inert")
+    check(misses, "crowd gate fired everywhere -- it is not discriminating")
+
+
+def test_crowd_gate_spares_cardiff():
+    """Cardiff (crowd 3) is the one break Josh Hall names by name as glider
+    water. If a limit change ever silences it there, that is a regression and
+    not a tightening."""
+    cardiff = next(b for b in BREAKS if b["name"] == "Cardiff Reef")
+    check(cardiff["crowd"] == 3, "Cardiff's crowd rating moved; re-check the glider gate")
+    check(sf.pick_board(cardiff, 1.0)[0] == "11'0 Chris Craft",
+          "the glider should survive the crowd gate at Cardiff")
+    for name in ("La Jolla Shores", "Swami's"):
+        b = next(x for x in BREAKS if x["name"] == name)
+        check(b["crowd"] >= 4, f"{name}: crowd dropped below the gate; re-check this test")
+        for face in (0.5, 1.0, 1.5, 2.0):
+            p, bk, _ = sf.pick_board(b, face)
+            check("11'0 Chris Craft" not in (p, bk), f"{name} still calls the glider at {face}ft")
+
+
+def test_verdict_labels():
+    """Three-tier traffic light (Option A, 2026-08-30): Go / Maybe / Skip."""
+    cases = [(100, "Go", "go"), (78, "Go", "go"),
+             (77, "Maybe", "maybe"), (55, "Maybe", "maybe"),
+             (54, "Skip", "skip"), (0, "Skip", "skip")]
+    for score, label, cls in cases:
+        got = sf.verdict_label(score)
+        check(got == (label, cls), f"verdict_label({score}) = {got}, want ({label}, {cls})")
+
+
+CHOPPY_SEA = {"source": "buoy", "long_hs": 3.16, "long_period": 15.4,
+              "long_dir": 209, "short_hs": 3.48, "short_period": 7.7,
+              "hs_total": 4.7, "tm_total": 10.7, "confidence": "high",
+              "note": None}
+CLEAN_SEA = {"source": "buoy", "long_hs": 4.2, "long_period": 14.0,
+             "long_dir": 280, "short_hs": 1.0, "short_period": 8.0,
+             "hs_total": 4.3, "tm_total": 13.5, "confidence": "high",
+             "note": None}
+
+
+def test_chop_penalty():
+    """The 2026-08-30 PB Drive session, pinned: a chop-dominant split must cost
+    points and say why; a clean split must cost nothing. Blended-only seas
+    (source none) are not trusted to make the call."""
+    pbd = next(b for b in BREAKS if b["name"] == "PB Drive")
+    base = cond(swell_hs=4.7, swell_period=10.7, swell_dir=229, wind_speed=4)
+    s_chop, bd_chop, notes_chop, _, _, _ = sf.score_break(pbd, {**base, "sea": CHOPPY_SEA})
+    s_clean, bd_clean, _, _, _, _ = sf.score_break(pbd, {**base, "sea": CLEAN_SEA})
+    check(bd_chop["chop"] < 0, "chop-dominant sea got no penalty")
+    check(-14.0 <= bd_chop["chop"] <= -5.0, f"chop penalty {bd_chop['chop']} outside -5..-14")
+    check(sf.verdict_label(s_chop)[0] != "Go",
+          "the 2026-08-30 session still grades Go under chop dominance")
+    check(bd_clean["chop"] == 0, f"clean sea penalised {bd_clean['chop']}")
+    check(s_chop < s_clean, "chop day scored >= clean day")
+    check(any("chop" in n for n in notes_chop), "chop penalty has no note")
+    s_none, bd_none, _, _, _, _ = sf.score_break(pbd, {**base, "sea": dict(CHOPPY_SEA, source="none")})
+    check(bd_none["chop"] == 0, "untrusted blended sea triggered the chop penalty")
+
+
+def test_chop_gates_swaps():
+    """A chop-dominant sea stands the Simmons swaps down even when the blended
+    period and wind pass their gates -- the 2026-08-30 failure, pinned."""
+    for b in BREAKS:
+        for sw in b.get("board_swaps", []):
+            lo, hi = sw["face"]
+            mid = (lo + hi) / 2
+            clean_ctx = cond(wind_speed=sw.get("max_wind", 8),
+                             swell_period=max(sw.get("min_period", 10), 10.7),
+                             sea=CLEAN_SEA)
+            chop_ctx = dict(clean_ctx, sea=CHOPPY_SEA)
+            check(sf.pick_board(b, mid, clean_ctx)[0] == sw["primary"],
+                  f"{b['name']}: swap didn't fire on a clean split")
+            check(sf.pick_board(b, mid, chop_ctx) == sf.pick_board(b, mid),
+                  f"{b['name']}: swap fired on a chop-dominant sea")
 
 
 # ---------------------------------------------------------------------- main

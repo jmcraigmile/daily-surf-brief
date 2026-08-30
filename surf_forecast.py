@@ -67,6 +67,40 @@ def wetsuit_call(temp_f):
     return WETSUIT_LADDER[-1][1]
 
 
+# Chop dominance: when the short-period component carries this share of the
+# sea's energy or more AND its period is at or under the cutoff, the sea is a
+# conveyor belt -- a wave every few seconds, no lulls, textured faces. Priced
+# in scoring (chop penalty) and gates the board swaps. TUNABLE CALIBRATION
+# DEFAULTS, anchored to the first Break-Log datapoint (2026-08-30 PB Drive:
+# 3.0ft @ 16.7s under 5.2ft @ 7.7s -- brutal paddle, brief said 81 with a
+# perfect period score). Recalibrate from future sessions.
+CHOP_SHORT_PERIOD_S = 9.0
+CHOP_DOMINANT_SHARE = 0.40
+
+
+def chop_read(sea):
+    """(short-energy share 0-1, short period) from a sea split, or None.
+
+    Only trusts a real decomposition -- source "none" is the blended fallback
+    and says nothing about lull structure.
+    """
+    if not sea or sea.get("source") not in ("buoy", "model"):
+        return None
+    sh, lh = sea.get("short_hs") or 0.0, sea.get("long_hs") or 0.0
+    sp = sea.get("short_period")
+    e = sh * sh + lh * lh
+    if e <= 0 or not sp:
+        return None
+    return sh * sh / e, sp
+
+
+def chop_dominant(sea):
+    """True when short-period chop owns the sea. See CHOP_* constants."""
+    r = chop_read(sea)
+    return (r is not None and r[0] >= CHOP_DOMINANT_SHARE
+            and r[1] <= CHOP_SHORT_PERIOD_S)
+
+
 def fetch(url, timeout=25):
     req = urllib.request.Request(url, headers={"User-Agent": "sd-surf-brief/1.0"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -659,7 +693,22 @@ def score_break(brk, cond):
         notes.append("Weekend -- packed, and the vibe goes cutthroat. Save it for midweek")
     crowd_pen = max(0, (crowd - 3)) * 2.0
 
-    total = dir_score + size_score + per_score + tide_score + wind_score - crowd_pen
+    # --- chop dominance (0 to -10): the paddle tax. A short-period sea that
+    # carries most of the energy is a wave every few seconds with no lulls,
+    # and textured faces on top. The blended period can't see it (it scored
+    # 8/8 on exactly this sea, Break-Log 2026-08-30) -- the split can.
+    chop_pen = 0.0
+    r = chop_read(cond.get("sea"))
+    if r is not None:
+        share, sp2 = r
+        if share >= CHOP_DOMINANT_SHARE and sp2 <= CHOP_SHORT_PERIOD_S:
+            chop_pen = min(14.0, 5.0 + (share - CHOP_DOMINANT_SHARE) / 0.30 * 9.0)
+            sea = cond.get("sea")
+            notes.append(f"{sea.get('short_hs', 0):.1f}ft of {sp2:.0f}s chop carrying "
+                         f"{int(share * 100)}% of the energy -- relentless paddle, "
+                         f"textured faces, no lulls")
+
+    total = dir_score + size_score + per_score + tide_score + wind_score - crowd_pen - chop_pen
 
     # The folder's own surf-forecast star rating is a ceiling. La Jolla Shores is
     # rated 2/5, "lowest of the three", "the overflow spot" -- it should never
@@ -668,16 +717,88 @@ def score_break(brk, cond):
     if cap is not None and total > cap:
         total = cap
 
+    # Chop dominance also CAPS the verdict at Maybe (77): no amount of
+    # everything-else-aligned makes a sea that's mostly 8-second windwave a
+    # green light -- the paddle and the texture come with the water, not the
+    # spot. Jake's words after the session that forced this: "it should have
+    # been less of a go and more of a maybe."
+    if chop_pen > 0:
+        total = min(total, 77)
+
     breakdown = {
         "swell_dir": round(dir_score, 1), "size": round(size_score, 1),
         "period": round(per_score, 1), "tide": round(tide_score, 1),
         "wind": round(wind_score, 1), "crowd": -round(crowd_pen, 1),
+        "chop": -round(chop_pen, 1),
     }
     return round(min(100, max(0, total))), breakdown, notes, face, local_hs, crowd
 
 
+_CROWD_LIMITS = None
+
+
+def crowd_limits():
+    """Cached read of _board_crowd_limits from breaks.json.
+
+    Read lazily rather than passed in so pick_board keeps its (brk, face, ctx)
+    signature. Missing or malformed table means no gating -- this rule should
+    never be the reason the brief fails to produce a board.
+    """
+    global _CROWD_LIMITS
+    if _CROWD_LIMITS is None:
+        try:
+            with open(os.path.join(HERE, "breaks.json")) as f:
+                _CROWD_LIMITS = json.load(f).get("_board_crowd_limits") or {}
+        except (OSError, ValueError, KeyError):
+            _CROWD_LIMITS = {}
+    return _CROWD_LIMITS
+
+
+def _crowd_gate(brk, primary, backup, note):
+    """Drop boards that are a liability in a crowded lineup.
+
+    Some boards are ruled out by the PEOPLE in the water rather than by the
+    wave. An 11-foot glider on a 10-foot leash swings a ~20 ft radius when a
+    closeout tears it loose, and it catches waves so much earlier than
+    everything else that riding one in a packed lineup is a wave-hogging
+    problem before it is a safety problem. Skip Frye and Josh Hall both name
+    this limit themselves -- Hall's rule is "catch two or three waves, and
+    then move on, so you never abuse a single lineup." See
+    ../02-Gear/Glider-Deep-Dive.md section 4e.
+
+    Unlike the mini-Simmons swap gates, this needs no calibration: the
+    threshold is a judgment the sources state directly, and `crowd` is already
+    researched per break. Gating applies to the BACKUP too -- recommending a
+    board as the fallback at a mobbed peak has the same problem.
+
+    A gated board is demoted, never blocked: if nothing safer is available the
+    board still gets called with the warning attached, because the wave is
+    fine and only the choice of board is in question.
+    """
+    limits = crowd_limits()
+    crowd = brk.get("crowd")
+    if primary is None or crowd is None or not limits:
+        return primary, backup, note
+
+    def gated(b):
+        return b is not None and crowd > limits.get(b, 99)
+
+    if not gated(primary):
+        if gated(backup):
+            return primary, None, (
+                f"{note} [{backup} dropped as backup: too crowded here for it.]")
+        return primary, backup, note
+
+    why = (f"[{primary} gated on crowd -- {crowd}/5 at this break. Great wave "
+           f"for it, wrong lineup: it out-paddles everyone and it is 20ft of "
+           f"swinging board on a closeout.]")
+    if not gated(backup):
+        return backup, None, f"{why} {note}"
+    return primary, None, f"{note} {why} Nothing safer on the ladder -- go early or go elsewhere."
+
+
 def pick_board(brk, face, ctx=None):
-    """Ladder pick by face height, then any condition-gated swap.
+    """Ladder pick by face height, condition-gated swap, then the crowd gate.
 
     The ladder answers "how big is it". Swaps answer "what shape is it in" --
     some boards are gated by surface texture and takeoff shape rather than by
@@ -704,7 +825,7 @@ def pick_board(brk, face, ctx=None):
 
     # A swap never overrides a "don't paddle out" rung (null primary).
     if primary is None or not ctx:
-        return primary, backup, note
+        return _crowd_gate(brk, primary, backup, note)
 
     for sw in brk.get("board_swaps", []):
         lo, hi = sw["face"]
@@ -716,17 +837,26 @@ def pick_board(brk, face, ctx=None):
         per = ctx.get("swell_period")
         if per is not None and per < sw.get("min_period", 0):
             continue
-        return sw["primary"], sw.get("backup"), sw["note"]
-    return primary, backup, note
+        # Chop-dominant sea -> the swap stands down. The blended period can
+        # pass the min_period gate while the water is a 7-second conveyor belt
+        # of windwave -- exactly the texture the planing hull hates (Break-Log
+        # 2026-08-30: the gate passed on a 10.7s blend hiding 5ft of 7.7s chop).
+        if chop_dominant(ctx.get("sea")):
+            continue
+        primary, backup, note = sw["primary"], sw.get("backup"), sw["note"]
+        break
+    return _crowd_gate(brk, primary, backup, note)
 
 
 def verdict_label(score):
-    if score >= 82:
+    """Three-tier traffic light (Jake's call, 2026-08-30, Option A): green Go,
+    yellow Maybe, red Skip. Replaced the old four tiers (Go / Worth it /
+    Marginal / Skip) -- at 5:45am you want zero interpretation. Water-quality
+    "Don't paddle" stays a separate fourth state: it's a veto, not a grade."""
+    if score >= 78:
         return "Go", "go"
-    if score >= 67:
-        return "Worth it", "good"
-    if score >= 50:
-        return "Marginal", "marginal"
+    if score >= 55:
+        return "Maybe", "maybe"
     return "Skip", "skip"
 
 

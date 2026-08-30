@@ -83,11 +83,25 @@ to GitHub Pages. `.github/workflows/publish.yml` is the whole thing:
   pre-dawn read.
 
 The repo root is this folder. **Live at [greenlight.surf](https://greenlight.surf)**
-(custom domain added 2026-08-30: Cloudflare-registered, DNS-only records pointing
-at GitHub Pages, which serves the SSL cert — the DNS-only choice is deliberate,
-Cloudflare's proxy would block GitHub's cert issuance). Phone access: open
-greenlight.surf, Add to Home Screen. The old
-jmcraigmile.github.io/daily-surf-brief URL redirects.
+(custom domain added 2026-08-30, renamed from glassoff.surf 2026-08-29:
+Cloudflare-registered, DNS-only records pointing at GitHub Pages, which serves the
+SSL cert — the DNS-only choice is deliberate, Cloudflare's proxy would block
+GitHub's cert issuance). Phone access: open greenlight.surf, Add to Home Screen.
+The old jmcraigmile.github.io/daily-surf-brief URL redirects.
+
+**The rename needs three manual steps outside this repo**, and the page stays
+broken until all three are done:
+
+1. Register/confirm `greenlight.surf` in Cloudflare and recreate the DNS records —
+   the four apex `A` records to GitHub Pages' IPs plus the `www` `CNAME` to
+   `jmcraigmile.github.io`, all **DNS-only (grey cloud)**, never proxied.
+2. In the repo's Settings → Pages, change the custom domain to `greenlight.surf`,
+   then wait for the new cert to issue before ticking "Enforce HTTPS".
+3. Re-add the phone home-screen shortcut — the old icon points at the previous
+   host and won't follow a redirect.
+
+Keep `glassoff.surf` registered and redirecting while any old bookmark or
+home-screen icon might still be in use.
 
 ### Local alternatives (dev only, not the production path)
 
@@ -233,7 +247,18 @@ apart, so a misleading mean period is visible rather than silent.
 up to 4 for crowd, then capped by the break's own surf-forecast star rating so a 2/5
 spot can't outrank a 4/5 one on a mechanical tie.
 
-**Go** ≥82 · **Worth it** ≥67 · **Marginal** ≥50 · **Skip** below.
+**Verdicts are a three-tier traffic light** (Option A, 2026-08-30): 🟢 **Go** ≥78 ·
+🟡 **Maybe** 55–77 · 🔴 **Skip** below. Water-quality **Don't paddle** stays a separate
+fourth state — a veto, not a grade.
+
+**Chop dominance** (Break-Log 2026-08-30, PB Drive): when the sea split shows the
+short-period component carrying ≥40% of the energy at ≤9s, the day takes a graded
+penalty (−5 to −14) *and* is capped at Maybe — a sea that is mostly 8-second windwave
+is a conveyor-belt paddle with textured faces no matter what else aligns. The same
+condition stands the mini-Simmons swaps down (the blended period can pass the swap
+gate while hiding exactly the texture the planing hull hates). Thresholds are
+tunable calibration defaults in `CHOP_*` constants, anchored to that first logged
+session.
 
 Local knowledge the model physically cannot see, applied from the folder's research:
 
@@ -404,7 +429,7 @@ windows[2]                                one per time window
   tide_h, tide_dir, tide_state
   breaks[10]                              sorted: blocked last, then score desc
     name, score, surf_score, label, cls
-    breakdown                             {swell_dir, size, period, tide, wind, crowd}
+    breakdown                             {swell_dir, size, period, tide, wind, crowd, chop}
     notes[], face_ft, local_hs
     board_primary, board_backup           null ⇒ don't paddle out
     board_note, verdict, hazards, tide_note

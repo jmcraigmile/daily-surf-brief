@@ -1,7 +1,11 @@
 {
   "_comment": "Scoring rules extracted from 01-San-Diego-Breaks/Central-SD.md and South-County.md (researched 2026-08-27). Degree windows are DERIVED from the compass directions in those write-ups, not from a degree-publishing source -- the folder is explicit that no public source publishes degree windows for these spots except Black's. Treat them as approximations of the prose.",
   "_face_note": "size_ideal / size_max are FACE feet, matching how the write-ups talk about size.",
-  "_board_swaps_note": "board_ladder rungs are keyed on face height alone. Optional board_swaps override the rung when CONDITIONS, not size, decide the board: {face:[lo,hi], max_wind (mph), min_period (s), primary, backup, note}. First match wins; a swap never overrides a null 'don't paddle out' rung. Added 2026-08-29 for the mini-Simmons, whose limit is takeoff shape and surface texture rather than wave height -- see 02-Gear/Mini-Simmons-Deep-Dive.md. Board names here must match the nine in 02-Gear/Owned-and-Wishlist.md, same as the ladder. || CALIBRATION WARNING (added 2026-08-30 after external audit): the gate values (face <=5-5.5 ft, max_wind 8 mph, min_period 9-10 s) are PERSONAL HEURISTICS, not design facts -- no source validates those breakpoints. They are plausible and directionally sound, but they should be recalibrated from real session logs, and the better eventual design is a soft suitability read (face texture, entry steepness, power, wind, tide, rider confidence) rather than hard cutoffs. See 02-Gear/Mini-Simmons-Deep-Dive.md.",
+  "_board_swaps_note": "board_ladder rungs are keyed on face height alone. Optional board_swaps override the rung when CONDITIONS, not size, decide the board: {face:[lo,hi], max_wind (mph), min_period (s), primary, backup, note}. First match wins; a swap never overrides a null 'don't paddle out' rung. Added 2026-08-29 for the mini-Simmons, whose limit is takeoff shape and surface texture rather than wave height -- see 02-Gear/Mini-Simmons-Deep-Dive.md. Board names here must match the nine in 02-Gear/Owned-and-Wishlist.md, same as the ladder. || CALIBRATION WARNING (added 2026-08-30 after external audit): the gate values (face <=5-5.5 ft, max_wind 8 mph, min_period 9-10 s) are PERSONAL HEURISTICS, not design facts -- no source validates those breakpoints. They are plausible and directionally sound, but they should be recalibrated from real session logs, and the better eventual design is a soft suitability read (face texture, entry steepness, power, wind, tide, rider confidence) rather than hard cutoffs. See 02-Gear/Mini-Simmons-Deep-Dive.md. || CHOP GATE (2026-08-30): a swap also stands down when the sea split is chop-dominant (short component >=40% of energy at <=9s, CHOP_* constants in surf_forecast.py) -- the blended period passed the min_period gate on 2026-08-30 while the water was 5ft of 7.7s windwave. First Break-Log calibration datapoint applied.",
+  "_board_crowd_limits": {
+    "11'0 Chris Craft": 3
+  },
+  "_board_crowd_note": "Max break `crowd` rating at which a board may be called, primary OR backup. Some boards are ruled out by the PEOPLE in the water, not the wave. Added 2026-08-30 from 02-Gear/Glider-Deep-Dive.md section 4e: an 11ft glider on a 10ft leash swings a ~20ft radius when a closeout tears it loose, and it out-paddles the whole lineup, so a mobbed peak is the one place the shape is a genuine liability. Skip Frye and Josh Hall both name this limit in their own words; Hall's rule is 'catch two or three waves, and then move on, so you never abuse a single lineup.' NOTE this gate is NOT in the same evidential class as the mini-Simmons board_swaps thresholds -- those are unvalidated personal heuristics, this is a judgment the sources state directly and it reads a `crowd` field that was already researched per break. At limit 3 the glider survives at Cardiff Reef (crowd 3, the one spot Hall names by name as glider water) and is gated at La Jolla Shores and Swami's (crowd 4). A gated board is DEMOTED to the backup, never blocked outright -- the wave is fine, only the board choice is wrong.",
   "breaks": [
     {
       "name": "Black's Beach",
@@ -891,7 +895,20 @@
         "outlet_proximity": "at",
         "outlet": "San Elijo Lagoon mouth"
       },
-      "drive_miles": 22.5
+      "drive_miles": 22.5,
+      "board_swaps": [
+        {
+          "face": [
+            2.0,
+            4.0
+          ],
+          "max_wind": 8,
+          "min_period": 10,
+          "primary": "11'0 Chris Craft",
+          "backup": "9'4 Pink Panther",
+          "note": "Hall names the Cardiff reefs as glider water and the ladder capped it at 2ft -- extended 2026-08-30. Waist-to-shoulder on a clean long-period face is exactly the wave the shape wants: room to run, rolling takeoff, sections to connect. Gated hard on cleanliness because chop, not size, is what beats a glider (it chatters like speed wobbles). Stops at 4ft deliberately: above that Cardiff's south peak starts putting its shoulders into it on a low tide, and push plus a late drop is the shape's real disqualifier. NUMBER IS UNVALIDATED -- Hall said Cardiff is glider water, he did not say 4ft. Log the sessions."
+        }
+      ]
     },
     {
       "name": "Swami's",

@@ -46,7 +46,9 @@ body{
 
 header.top{margin-bottom:26px}
 .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
-.eyebrow .gen{text-transform:none;letter-spacing:.02em;font-weight:500;font-variant-numeric:tabular-nums}
+.eyebrow .brand{color:var(--accent);letter-spacing:.1em}
+.eyebrow.gen,.eyebrow .gen{text-transform:none;letter-spacing:.02em;font-weight:500;font-variant-numeric:tabular-nums}
+.eyebrow.gen{margin-top:3px;font-size:11.5px}
 h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spacing:-.022em;font-weight:700}
 .dayline{font-size:17px;color:var(--ink-2);max-width:62ch;margin:0}
 .dayline strong{color:var(--ink);font-weight:650}
@@ -75,8 +77,7 @@ h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:8px 0 10px;letter-spac
 .brk-name{font-size:17px;font-weight:700;letter-spacing:-.012em}
 .pill{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:99px;white-space:nowrap}
 .pill.go{color:var(--go);background:var(--go-bg)}
-.pill.good{color:var(--good);background:var(--good-bg)}
-.pill.marginal{color:var(--marg);background:var(--marg-bg)}
+.pill.maybe{color:var(--marg);background:var(--marg-bg)}
 .pill.skip{color:var(--skip);background:var(--skip-bg)}
 .pill.blocked{color:#fff;background:var(--bad);letter-spacing:.06em}
 
@@ -180,16 +181,12 @@ def day_verdict(data):
     suffix = (f" {', '.join(esc(b) for b in blocked)} "
               f"{'is' if len(blocked) == 1 else 'are'} out on water quality."
               if blocked else "")
-    if score >= 82:
+    if score >= 78:
         return (f"<strong>{esc(name)}</strong> is the call &mdash; best window is "
                 f"{esc(win).lower()}.{suffix}")
-    if score >= 67:
-        return (f"Nothing special, but surfable. <strong>{esc(name)}</strong> is the "
-                f"best of it on the {esc(win).lower()}.{suffix}")
-    if score >= 50:
-        return (f"Marginal across the board. <strong>{esc(name)}</strong> scores highest "
-                f"on the {esc(win).lower()} &mdash; a go only if you just want to get "
-                f"wet.{suffix}")
+    if score >= 55:
+        return (f"A maybe day. <strong>{esc(name)}</strong> is the best of it on the "
+                f"{esc(win).lower()} &mdash; read the notes before you commit.{suffix}")
     return f"Nothing worth the drive today. Best-scoring spot doesn't clear the bar.{suffix}"
 
 
@@ -395,15 +392,16 @@ def render(data):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f4f7f9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1418" media="(prefers-color-scheme: dark)">
-<meta name="apple-mobile-web-app-title" content="Surf Brief">
-<title>SD Surf Brief</title>
+<meta name="apple-mobile-web-app-title" content="greenlight">
+<meta name="description" content="Which break, which board. A daily San Diego surf brief, including the days you shouldn't.">
+<title>greenlight.surf</title>
 <style>{CSS}</style>
 </head>
 <body>
 <div class="wrap">
 <header class="top">
-  <div class="eyebrow">San Diego &middot; daily surf brief &middot;
-    <span class="gen">generated {esc(data['generated'])}</span></div>
+  <div class="eyebrow"><b class="brand">greenlight</b> &middot; which break, which board</div>
+  <div class="eyebrow gen">San Diego &middot; generated {esc(data['generated'])}</div>
   <h1>{d.strftime('%A, %B %-d')}</h1>
   <p class="dayline">{day_verdict(data)}</p>
   {suit_line(data)}
