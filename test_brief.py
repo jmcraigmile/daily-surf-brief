@@ -1091,6 +1091,70 @@ def test_pick_selection():
     check("Blocked on water quality" in html, "blocked section must survive sit-out")
 
 
+def test_single_window_brief_renders():
+    """The 3pm publish ships ONE window (evening). Everything that assumed two
+    has to survive that: the page renders, the day verdict quotes the window
+    that's actually shown, and the phone tab bar stays out of the way -- its JS
+    bails at <2 windows, so a lone 'Dawn / Dusk' switcher must never appear.
+
+    Added 2026-08-31 with the three-a-day schedule."""
+    d = synthetic_data(buoy=None)
+    d["windows"] = [dict(d["windows"][1])]          # evening only
+    check(len(d["windows"]) == 1, "fixture should hold exactly one window")
+
+    html = render.render(d)
+    check("None" not in html, "None leaked into a single-window page")
+    check("Evening glass" in html, "the surviving window must render")
+    check("Dawn patrol" not in html,
+          "a filtered-out window must not appear anywhere on the page")
+
+    # The headline sentence must not name a window the page no longer shows.
+    verdict = html.split('class="dayline">')[1].split("</p>")[0]
+    check("Dawn" not in verdict, "day verdict quotes a window that was filtered out")
+
+    # The tab bar is inert (CSS hides it until JS adds body.tabbed, and the JS
+    # returns early below two windows) -- but it must not be *pre-activated*.
+    check("body.tabbed" not in html.split("<body")[1].split(">")[0],
+          "tabbed class must not be baked into <body>")
+
+
+def test_build_accepts_only_window_filter():
+    """The filter is a build() argument, not a post-hoc trim -- so the verdict
+    and the water summary are derived from the windows that ship. Signature and
+    validation only; the fetch itself needs network."""
+    import inspect
+    sig = inspect.signature(sf.build)
+    check("only_windows" in sig.parameters, "build() lost its only_windows parameter")
+    check(sig.parameters["only_windows"].default is None,
+          "only_windows must default to None -- both windows is the normal case")
+
+
+def test_publish_schedule_is_three_a_day():
+    """The schedule lives in one place and is easy to break silently. Pin it.
+
+    Six crons: three local times x two DST offsets. The hour bands in the build
+    step must classify the off-offset twin the same way as its sibling."""
+    path = os.path.join(HERE, ".github", "workflows", "publish.yml")
+    with open(path) as f:
+        yml = f.read()
+
+    for cron in ['"0 13 * * *"', '"0 14 * * *"',    # 6am PDT / PST
+                 '"0 22 * * *"', '"0 23 * * *"',    # 3pm PDT / PST
+                 '"0 4 * * *"', '"0 5 * * *"']:     # 9pm PDT / PST
+        check(cron in yml, f"missing cron {cron} -- the 3x/day schedule is incomplete")
+    check(yml.count("- cron:") == 6, "expected exactly six crons (3 local times x 2 offsets)")
+
+    # The old two-a-day crons must be gone, or the brief publishes five times.
+    for stale in ['"45 11 * * *"', '"45 12 * * *"', '"0 3 * * *"']:
+        check(stale not in yml, f"stale cron {stale} still scheduled")
+
+    # Role logic: afternoon runs today-evening-only, late runs tomorrow.
+    check("--only-window evening" in yml,
+          "the afternoon run must drop the dawn patrol")
+    check("-ge 18" in yml, "the tomorrow cutoff must be 6pm, not noon")
+    check("10#$HOUR" in yml, "local hour must be forced to base 10 (08/09 are not octal)")
+
+
 # ---------------------------------------------------------------------- main
 
 if __name__ == "__main__":

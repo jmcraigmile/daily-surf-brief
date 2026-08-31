@@ -890,7 +890,17 @@ def active_breaks(cfg):
     return [b for b in cfg["breaks"] if not b.get("hidden")]
 
 
-def build(day=None):
+def build(day=None, only_windows=None):
+    """Build one day's brief.
+
+    `only_windows` restricts the output to the named window keys ("morning",
+    "evening"). Added 2026-08-31 for the 3pm publish: by mid-afternoon the dawn
+    window has already happened, and showing a passed session next to the live
+    one invites reading a stale call as a live one. The filter runs BEFORE
+    scoring, so the day verdict and the water summary are both derived from the
+    windows that actually ship -- a filter applied afterwards would leave the
+    headline sentence quoting a window the page no longer shows.
+    """
     day = day or date.today().strftime("%Y-%m-%d")
     with open(os.path.join(HERE, "breaks.json")) as f:
         cfg = json.load(f)
@@ -918,6 +928,13 @@ def build(day=None):
         {"key": "evening", "label": "Evening glass", "range": (ev_start, ev_end),
          "time_txt": f"{fmt_hour(ev_start)} to sunset {fmt_hour(ev_end)}"},
     ]
+
+    if only_windows:
+        keep = set(only_windows)
+        unknown = keep - {w["key"] for w in windows}
+        if unknown:
+            raise ValueError(f"unknown window key(s): {sorted(unknown)}")
+        windows = [w for w in windows if w["key"] in keep]
 
     results = []
     for w in windows:
@@ -1117,8 +1134,14 @@ if __name__ == "__main__":
     ap.add_argument("--json")
     ap.add_argument("--outlook", type=int, metavar="DAYS",
                     help="build a compact N-day outlook instead of a daily brief")
+    ap.add_argument("--only-window", action="append", metavar="KEY",
+                    choices=["morning", "evening"],
+                    help="restrict the brief to one window (repeatable). The 3pm "
+                         "publish passes --only-window evening: the dawn patrol "
+                         "has already happened by then.")
     args = ap.parse_args()
-    data = build_outlook(days=args.outlook) if args.outlook else build(args.date)
+    data = (build_outlook(days=args.outlook) if args.outlook
+            else build(args.date, only_windows=args.only_window))
     out = json.dumps(data, indent=2)
     if args.json:
         with open(args.json, "w") as f:

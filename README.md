@@ -3,16 +3,17 @@
 Scores the written-up San Diego breaks (12 on file, all in the daily rotation,
 ordered south to north — Oceanside Pier was removed outright 2026-08-30, too far at
 49 min; its write-up survives in `01-San-Diego-Breaks/`) against live swell, tide,
-wind and bacterial risk, twice a day, and names a board from Jake's actual quiver.
+wind and bacterial risk, three times a day, and names a board from Jake's actual quiver.
 
 **Two windows:** dawn patrol from actual sunrise to 9:00am, and the hour before
-sunset (both recalculated daily, so they track the season).
+sunset (both recalculated daily, so they track the season). The 3pm publish ships
+**only the evening window** — by then the dawn patrol has already happened.
 
-> **Ported from Claude Cowork 2026-08-27; scheduling re-wired 2026-08-29.**
-> Production is now GitHub Actions + GitHub Pages
+> **Ported from Claude Cowork 2026-08-27; scheduling re-wired 2026-08-29, moved to
+> three runs a day 2026-08-31.** Production is GitHub Actions + GitHub Pages
 > ([jmcraigmile/daily-surf-brief](https://github.com/jmcraigmile/daily-surf-brief)):
-> two scheduled runs a day publish to one stable URL for phone access. The
-> evening run builds **tomorrow's** brief, the morning run builds today's. See
+> 6am, 3pm and 9pm Pacific publish to one stable URL for phone access. **This runs
+> on GitHub's servers — it does not need any machine of Jake's to be on.** See
 > [Scheduling and publishing](#scheduling-and-publishing).
 
 ---
@@ -50,7 +51,7 @@ python3 water.py                                                # water signals 
 | `boards.json` | The quiver, curated for the public quiver page. Names must match `breaks.json` ladders and the test suite. Volumes carry the audit's honest labels. |
 | `breaks.html` / `quiver.html` (published) | **Detail pages**: per-spot research (verdict prose, data ledger, hazards, board ladder) and per-board cards. The landing page stays data-and-selection; prose lives here. |
 | `outlook.html` (published) | **5-day outlook**: one row per day -- face height, the day's best break, Go/Maybe/Skip. Built by `--outlook 5` + `render.py --outlook`; non-fatal in CI (a failure writes a fallback page, never blocks the daily brief). Beyond tomorrow the buoy split is out of trust range and the water veto reflects current conditions -- the page says so. |
-| `.github/workflows/publish.yml` | The scheduler + publisher: four UTC crons (two per window, covering DST), tests → fetch → render → deploy to Pages. |
+| `.github/workflows/publish.yml` | The scheduler + publisher: six UTC crons (6am/3pm/9pm Pacific × two DST offsets), tests → fetch → render → deploy to Pages. Runs on GitHub's servers, not a local machine. |
 
 `__pycache__/` is generated — gitignore it.
 
@@ -70,17 +71,39 @@ as good as that file, and nothing enforces the link automatically.
 
 ## Scheduling and publishing
 
-**Production (2026-08-29):** GitHub Actions on the
+**Production (2026-08-29; three-a-day since 2026-08-31):** GitHub Actions on the
 [daily-surf-brief](https://github.com/jmcraigmile/daily-surf-brief) repo, publishing
 to GitHub Pages. `.github/workflows/publish.yml` is the whole thing:
 
-- **Four UTC crons** — ~4:45am Pacific ("day of") and ~8:00pm Pacific ("night
-  before"), each scheduled at both PDT and PST offsets so DST never shifts the
-  local time. The duplicate run is a harmless rebuild.
-- **The evening run builds tomorrow** (`--date`), the morning run builds today —
-  so the one URL always shows the next session that matters.
+**It runs on GitHub's hosted runners, so the laptop can be shut, asleep, or in
+Baja.** Nothing about the schedule depends on a local machine — that's the whole
+reason it moved off launchd in the first place. (The one thing a hosted runner
+*can't* do is know that GitHub disables scheduled workflows on a repo with no
+activity for 60 days. A commit — or a manual `workflow_dispatch` — resets that clock.)
+
+- **Six UTC crons — three local times × two DST offsets** so the local time holds
+  year-round. The off-offset twin is a harmless rebuild an hour early or late, and
+  the hour bands below classify it identically to its sibling.
+
+  | Local | Role | PDT | PST |
+  |---|---|---|---|
+  | **6am** | today, both windows | 13 UTC | 14 UTC |
+  | **3pm** | today, **evening window only** | 22 UTC | 23 UTC |
+  | **9pm** | tomorrow, both windows | 04 UTC | 05 UTC |
+
+- **Role is derived from the local hour, not from which cron fired** (`<12` day-of,
+  `12–17` afternoon, `≥18` night-before) — that's what makes the DST twins safe.
+  Note the `10#$HOUR` in the workflow: `date +%H` gives `08`/`09`, which older
+  shells read as invalid octal.
+- **The 3pm run passes `--only-window evening`.** By mid-afternoon the dawn patrol
+  is over, and a passed call sitting beside a live one is the kind of thing that
+  gets misread at a glance. The filter is applied *inside* `build()`, before
+  scoring, so the day verdict and water summary describe the window that actually
+  ships — filtering afterwards would leave the headline quoting a window the page
+  no longer shows.
 - **`test_brief.py` gates every publish**, plus a grep for leaked `None` on the
-  rendered page.
+  rendered page. `test_publish_schedule_is_three_a_day` pins the crons and the
+  hour bands; `test_single_window_brief_renders` pins the 3pm shape.
 - **Failure is loud, not clever.** If Open-Meteo or NOAA is down after one retry,
   the run fails, GitHub emails, and yesterday's page stays up — the generated-at
   line in the page header is the staleness signal. Check it before trusting a

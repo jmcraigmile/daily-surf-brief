@@ -1,23 +1,37 @@
 # Builds and publishes the daily surf brief to GitHub Pages.
 #
-# Two windows, each scheduled at both possible UTC offsets so the local time
-# holds across DST (the extra run is harmless -- it just rebuilds):
-#   - ~4:45am Pacific ("day of"):      11:45 UTC (PDT) and 12:45 UTC (PST)
-#   - ~8:00pm Pacific ("night before"): 03:00 UTC (PDT) and 04:00 UTC (PST)
-# An evening run builds TOMORROW's brief; a morning run builds today's.
+# THIS RUNS ON GITHUB'S SERVERS, NOT ON A LAPTOP. Nothing here depends on any
+# machine of Jake's being awake, online, or switched on.
+#
+# Three publishes a day (2026-08-31, was two), each scheduled at BOTH possible
+# UTC offsets so the local time holds across DST. The off-offset run is
+# harmless -- it just rebuilds an hour early or late, and the hour-of-day logic
+# below still classifies it correctly:
+#
+#   local   role                        PDT cron    PST cron
+#   6am     today, both windows         13 UTC      14 UTC
+#   3pm     today, EVENING WINDOW ONLY  22 UTC      23 UTC
+#   9pm     tomorrow, both windows      04 UTC      05 UTC
+#
+# The 3pm run drops the dawn patrol on purpose: by mid-afternoon that session
+# has already happened, and a passed call sitting next to a live one is exactly
+# the sort of thing that gets misread at a glance. What's left is the single
+# live question -- is the sunset session worth it.
 #
 # Failure behaviour is deliberate: if Open-Meteo or NOAA is down after retries,
-# the run fails loudly (GitHub emails on workflow failure) and yesterday's page
-# stays up -- its generated-at line in the header is the staleness signal.
+# the run fails loudly (GitHub emails on workflow failure) and the last good
+# page stays up -- its generated-at line in the header is the staleness signal.
 
 name: publish-brief
 
 on:
   schedule:
-    - cron: "45 11 * * *"
-    - cron: "45 12 * * *"
-    - cron: "0 3 * * *"
-    - cron: "0 4 * * *"
+    - cron: "0 13 * * *"   # 6am PDT
+    - cron: "0 14 * * *"   # 6am PST
+    - cron: "0 22 * * *"   # 3pm PDT
+    - cron: "0 23 * * *"   # 3pm PST
+    - cron: "0 4 * * *"    # 9pm PDT (previous local day)
+    - cron: "0 5 * * *"    # 9pm PST (previous local day)
   workflow_dispatch:
 
 concurrency:
@@ -44,16 +58,29 @@ jobs:
 
       - name: Fetch, score, render
         run: |
+          # Three roles, keyed on local hour. The bands are wide enough that
+          # the off-DST-offset run (±1h) still lands in the right one.
+          #   <12   -> today, both windows        (the 6am run, and its 5/7am twin)
+          #   12-17 -> today, evening window only (the 3pm run, and its 2/4pm twin)
+          #   >=18  -> tomorrow, both windows     (the 9pm run, and its 8/10pm twin)
           HOUR=$(TZ=America/Los_Angeles date +%H)
-          if [ "$HOUR" -ge 12 ]; then
+          HOUR=$((10#$HOUR))          # strip the leading zero: 08 is not octal here
+          ONLY=""
+          if [ "$HOUR" -ge 18 ]; then
             TARGET=$(TZ=America/Los_Angeles date -d tomorrow +%F)
+            ROLE="night-before"
+          elif [ "$HOUR" -ge 12 ]; then
+            TARGET=$(TZ=America/Los_Angeles date +%F)
+            ONLY="--only-window evening"
+            ROLE="afternoon (evening window only)"
           else
             TARGET=$(TZ=America/Los_Angeles date +%F)
+            ROLE="day-of"
           fi
-          echo "building brief for $TARGET (local hour $HOUR)"
-          python3 surf_forecast.py --date "$TARGET" --json brief.json \
+          echo "building brief for $TARGET -- $ROLE (local hour $HOUR)"
+          python3 surf_forecast.py --date "$TARGET" $ONLY --json brief.json \
             || { echo "first attempt failed, retrying in 60s"; sleep 60; \
-                 python3 surf_forecast.py --date "$TARGET" --json brief.json; }
+                 python3 surf_forecast.py --date "$TARGET" $ONLY --json brief.json; }
           mkdir -p site
           python3 render.py brief.json site/index.html
           python3 render.py --breaks breaks.json site/breaks.html
