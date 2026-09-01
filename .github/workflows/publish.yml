@@ -9,14 +9,34 @@
 # below still classifies it correctly:
 #
 #   local   role                        PDT cron    PST cron
-#   6am     today, both windows         13 UTC      14 UTC
-#   3pm     today, EVENING WINDOW ONLY  22 UTC      23 UTC
-#   9pm     tomorrow, both windows      04 UTC      05 UTC
+#   6am     today, both windows         13:07 UTC   14:07 UTC
+#   3pm     today, EVENING WINDOW ONLY  22:17 UTC   23:17 UTC
+#   9pm     tomorrow, both windows      04:27 UTC   05:27 UTC
 #
 # The 3pm run drops the dawn patrol on purpose: by mid-afternoon that session
 # has already happened, and a passed call sitting next to a live one is exactly
 # the sort of thing that gets misread at a glance. What's left is the single
 # live question -- is the sunset session worth it.
+#
+# ---------------------------------------------------------------------------
+# WHY THE ODD MINUTES (:07 / :17 / :27), measured 2026-08-31
+#
+# GitHub runs scheduled workflows on a BEST-EFFORT basis and queues them behind
+# everyone else's. Measured across this repo's first seven scheduled runs, every
+# single one was late -- median 5h54m, range 3h43m to 6h24m, and one slot was
+# skipped outright. The top of the hour is the most contended minute on that
+# queue, and the two least-delayed runs in that sample were the ones at :45.
+#
+# So: never schedule at :00 here. These crons sit at odd minutes, staggered, to
+# stay out of the stampede. This is a mitigation, not a fix -- if the lag stays
+# at hours rather than minutes, the real answer is an external punctual trigger
+# (a Cloudflare Worker cron calling the workflow_dispatch API) rather than
+# GitHub's own scheduler. Check the delay before assuming this worked.
+#
+# The saving grace is that ROLE IS KEYED ON THE ACTUAL LOCAL HOUR at run time,
+# not on which cron fired -- so a run that lands hours late still produces a
+# brief appropriate to when it actually ran. Late, never wrong.
+# ---------------------------------------------------------------------------
 #
 # Failure behaviour is deliberate: if Open-Meteo or NOAA is down after retries,
 # the run fails loudly (GitHub emails on workflow failure) and the last good
@@ -26,12 +46,17 @@ name: publish-brief
 
 on:
   schedule:
-    - cron: "0 13 * * *"   # 6am PDT
-    - cron: "0 14 * * *"   # 6am PST
-    - cron: "0 22 * * *"   # 3pm PDT
-    - cron: "0 23 * * *"   # 3pm PST
-    - cron: "0 4 * * *"    # 9pm PDT (previous local day)
-    - cron: "0 5 * * *"    # 9pm PST (previous local day)
+    - cron: "7 13 * * *"    # 6:07am PDT
+    - cron: "7 14 * * *"    # 6:07am PST
+    - cron: "17 22 * * *"   # 3:17pm PDT
+    - cron: "17 23 * * *"   # 3:17pm PST
+    - cron: "27 4 * * *"    # 9:27pm PDT (previous local day)
+    - cron: "27 5 * * *"    # 9:27pm PST (previous local day)
+  # A push to main republishes immediately. Without this, a change sat unbuilt
+  # until the next cron -- which, given the queue delay above, meant hours of
+  # staring at a page that predated the commit and wondering what broke.
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:

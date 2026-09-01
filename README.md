@@ -87,9 +87,14 @@ activity for 60 days. A commit — or a manual `workflow_dispatch` — resets th
 
   | Local | Role | PDT | PST |
   |---|---|---|---|
-  | **6am** | today, both windows | 13 UTC | 14 UTC |
-  | **3pm** | today, **evening window only** | 22 UTC | 23 UTC |
-  | **9pm** | tomorrow, both windows | 04 UTC | 05 UTC |
+  | **6:07am** | today, both windows | 13:07 UTC | 14:07 UTC |
+  | **3:17pm** | today, **evening window only** | 22:17 UTC | 23:17 UTC |
+  | **9:27pm** | tomorrow, both windows | 04:27 UTC | 05:27 UTC |
+
+- **A push to `main` republishes immediately** (added 2026-08-31). Before that the
+  workflow was schedule-and-dispatch only, so a pushed change sat unbuilt until the
+  next cron — which, given the delay below, meant hours of looking at a page that
+  predated the commit.
 
 - **Role is derived from the local hour, not from which cron fired** (`<12` day-of,
   `12–17` afternoon, `≥18` night-before) — that's what makes the DST twins safe.
@@ -108,6 +113,47 @@ activity for 60 days. A commit — or a manual `workflow_dispatch` — resets th
   the run fails, GitHub emails, and yesterday's page stays up — the generated-at
   line in the page header is the staleness signal. Check it before trusting a
   pre-dawn read.
+
+### ⚠️ GitHub's cron is hours late, and it is not our bug
+
+**Measured 2026-08-31 across every scheduled run in the repo's history — seven runs,
+seven late.** Median **5h54m**, range **3h43m–6h24m**, and one slot skipped entirely.
+Not one fired within an hour of its nominal time.
+
+| Run | Fired (UTC) | Nominal cron | Late by |
+|---|---|---|---|
+| 9 | 08:54 | 03:00 | 5h54 |
+| 10 | 09:39 | 04:00 | 5h39 |
+| 11 | 15:28 | 11:45 | 3h43 |
+| 12 | 16:57 | 12:45 | 4h13 |
+| 33 | 09:18 | 03:00 | 6h19 |
+| 34 | 10:21 | 04:00 | 6h21 |
+| 35 | 18:08 | 11:45 | 6h24 |
+
+GitHub documents scheduled workflows as **best-effort**: they queue behind everyone
+else's and can be delayed or dropped under load. Nothing in this repo causes it and
+nothing in this repo can fully fix it.
+
+**Mitigation in place (2026-08-31):** crons moved off `:00` — the most contended minute
+on that queue — to `:07 / :17 / :27`. Note the two least-delayed runs in the sample
+above were the `:45` ones, which is the whole basis for the change. **Treat this as
+unproven until a few days of runs confirm it.** Check real fire times with:
+
+```bash
+gh run list --workflow publish.yml --limit 20 --json createdAt,event,conclusion
+```
+
+**If the lag stays measured in hours, the mitigation failed and the real fix is an
+external punctual trigger** — a Cloudflare Worker cron (Cloudflare is already in the
+stack for greenflash.surf DNS) calling GitHub's `workflow_dispatch` API on a schedule
+it actually honours. Considered and deliberately deferred on 2026-08-31 in favour of
+trying the cheap change first.
+
+**What saves this from being worse:** the run's role is keyed on the **actual local
+hour at run time**, not on which cron fired. A run that lands six hours late still
+produces a brief appropriate to the moment it ran — the 6am cron arriving at noon
+takes the afternoon branch and ships the evening window. **Late, but never internally
+wrong.** Preserve that property in any change to the schedule.
 
 The repo root is this folder. **Live at [greenflash.surf](https://greenflash.surf)**
 (custom domain added 2026-08-30, renamed from glassoff.surf 2026-08-29:

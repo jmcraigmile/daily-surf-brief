@@ -1138,15 +1138,27 @@ def test_publish_schedule_is_three_a_day():
     with open(path) as f:
         yml = f.read()
 
-    for cron in ['"0 13 * * *"', '"0 14 * * *"',    # 6am PDT / PST
-                 '"0 22 * * *"', '"0 23 * * *"',    # 3pm PDT / PST
-                 '"0 4 * * *"', '"0 5 * * *"']:     # 9pm PDT / PST
+    for cron in ['"7 13 * * *"', '"7 14 * * *"',      # 6:07am PDT / PST
+                 '"17 22 * * *"', '"17 23 * * *"',    # 3:17pm PDT / PST
+                 '"27 4 * * *"', '"27 5 * * *"']:     # 9:27pm PDT / PST
         check(cron in yml, f"missing cron {cron} -- the 3x/day schedule is incomplete")
     check(yml.count("- cron:") == 6, "expected exactly six crons (3 local times x 2 offsets)")
 
     # The old two-a-day crons must be gone, or the brief publishes five times.
     for stale in ['"45 11 * * *"', '"45 12 * * *"', '"0 3 * * *"']:
         check(stale not in yml, f"stale cron {stale} still scheduled")
+
+    # Never schedule at the top of the hour. Measured 2026-08-31: GitHub's cron
+    # queue ran this repo late on 7 of 7 scheduled runs (median 5h54m), and :00
+    # is its most contended minute. The two least-delayed runs were at :45.
+    import re
+    for minute in re.findall(r'- cron: "(\d+) ', yml):
+        check(minute != "0",
+              "a cron sits at :00 -- the most congested minute on GitHub's queue")
+
+    # A push must republish. Without it a pushed change waits hours for a cron.
+    check(re.search(r"^\s*push:\s*$", yml, re.M),
+          "push trigger missing -- pushed changes won't rebuild the page")
 
     # Role logic: afternoon runs today-evening-only, late runs tomorrow.
     check("--only-window evening" in yml,
