@@ -908,7 +908,9 @@
           "backup": "9'4 Pink Panther",
           "note": "Hall names the Cardiff reefs as glider water and the ladder capped it at 2ft -- extended 2026-08-30. Waist-to-shoulder on a clean long-period face is exactly the wave the shape wants: room to run, rolling takeoff, sections to connect. Gated hard on cleanliness because chop, not size, is what beats a glider (it chatters like speed wobbles). Stops at 4ft deliberately: above that Cardiff's south peak starts putting its shoulders into it on a low tide, and push plus a late drop is the shape's real disqualifier. NUMBER IS UNVALIDATED -- Hall said Cardiff is glider water, he did not say 4ft. Log the sessions."
         }
-      ]
+      ],
+      "hidden": true,
+      "hidden_note": "Benched 2026-08-30, Jake's call -- North County out of the daily rotation for now. Data and write-up kept; flip \"hidden\" to restore."
     },
     {
       "name": "Swami's",
@@ -990,7 +992,9 @@
         "river_mouth": false,
         "outlet_proximity": "none"
       },
-      "drive_miles": 24.4
+      "drive_miles": 24.4,
+      "hidden": true,
+      "hidden_note": "Benched 2026-08-30, Jake's call -- North County out of the daily rotation for now. Data and write-up kept; flip \"hidden\" to restore."
     }
   ],
   "_water_note": "Water-risk profiles derived from the hazard sections of 01-San-Diego-Breaks/. The brief CANNOT read live County advisories. California publishes a machine-readable postings/closures dataset, but checked 2026-08-30 it was ~6 months stale and missing the then-active Imperial Beach and Coronado closures -- historical archive only, never a live gate. sdbeachinfo.com / 619-338-2073 remains authoritative. outlet_proximity (at|nearby|none) replaced invented rain_factor multipliers 2026-08-30, grounded in the County's own naming of storm drains, creeks, rivers and lagoon outlets.",
