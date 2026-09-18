@@ -17,6 +17,7 @@ Usage: python3 surf_forecast.py [--date YYYY-MM-DD] [--json out.json]
 """
 
 import json
+import re
 import math
 import sys
 import urllib.request
@@ -797,6 +798,67 @@ def _crowd_gate(brk, primary, backup, note):
     return primary, None, f"{note} {why} Nothing safer on the ladder -- go early or go elsewhere."
 
 
+_PADDLE_GATE = None
+
+
+def paddle_gate_cfg():
+    """Cached read of _paddle_gate from breaks.json. Missing config means no gating."""
+    global _PADDLE_GATE
+    if _PADDLE_GATE is None:
+        try:
+            with open(os.path.join(HERE, "breaks.json")) as f:
+                _PADDLE_GATE = json.load(f).get("_paddle_gate") or {}
+        except (OSError, ValueError, KeyError):
+            _PADDLE_GATE = {}
+    return _PADDLE_GATE
+
+
+def board_length_ft(name):
+    """Feet from a board name like "7'6 Magic" -> 7.5. None if unparseable.
+
+    Board names in breaks.json all lead with feet'inches. Parsing them is ugly
+    but the alternative is duplicating every board's length into the config,
+    which would be a second place to keep in sync and get wrong.
+    """
+    if not name:
+        return None
+    m = re.match(r"\s*(\d+)'\s*(\d+)?", name)
+    if not m:
+        return None
+    return int(m.group(1)) + (int(m.group(2) or 0) / 12.0)
+
+
+def _paddle_gate(brk, primary, backup, note):
+    """At a long-paddle break, prefer the longer board. Demotes, never blocks.
+
+    Jake, 2026-09-17, on PB Point and Sunset Cliffs: he "almost always grabs a
+    longer board since they have long paddles," and the driver is the paddle
+    OUT and the paddle BACK after long rides -- not wave-catching. So at these
+    breaks the commute selects the board before the wave does.
+
+    This is a PREFERENCE, so it demotes: if the ladder's primary is under the
+    floor and the backup is longer, they swap. If nothing longer is on the
+    rung, the primary stands with the reason attached -- the wave is fine and
+    only the choice is in question. Contrast _channel_gate, which is a hard
+    safety limit and refuses outright.
+
+    Deliberately NOT applied to a null primary: a "don't paddle out" rung is
+    not a board-length problem.
+    """
+    floor = paddle_gate_cfg().get("min_primary_length_ft")
+    if primary is None or floor is None or brk.get("paddle") != "long":
+        return primary, backup, note
+    plen = board_length_ft(primary)
+    if plen is None or plen >= floor:
+        return primary, backup, note
+    blen = board_length_ft(backup)
+    why = (f"[{primary} is short for a long-paddle break -- it's the paddle out "
+           f"and the paddle back after long rides, not just catching waves.]")
+    if blen is not None and blen > plen:
+        return backup, primary, f"{why} {note}"
+    return primary, backup, f"{note} {why} Nothing longer on the ladder here."
+
+
 _CHANNEL_GATE = None
 
 
@@ -878,7 +940,7 @@ def pick_board(brk, face, ctx=None):
 
     # A swap never overrides a "don't paddle out" rung (null primary).
     if primary is None or not ctx:
-        return _crowd_gate(brk, primary, backup, note)
+        return _paddle_gate(brk, *_crowd_gate(brk, primary, backup, note))
 
     for sw in brk.get("board_swaps", []):
         lo, hi = sw["face"]
@@ -898,7 +960,10 @@ def pick_board(brk, face, ctx=None):
             continue
         primary, backup, note = sw["primary"], sw.get("backup"), sw["note"]
         break
-    return _crowd_gate(brk, primary, backup, note)
+    # Order: crowd gate first (it can substitute a board), then the paddle
+    # preference on whatever survived. Both are advisory; the channel gate
+    # already returned early above if the answer was don't paddle at all.
+    return _paddle_gate(brk, *_crowd_gate(brk, primary, backup, note))
 
 
 # Verdict bands. THREE tiers is a deliberate choice (Jake, 2026-08-30, Option A),

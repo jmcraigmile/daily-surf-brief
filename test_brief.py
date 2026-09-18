@@ -1179,6 +1179,91 @@ def test_publish_schedule_is_three_a_day():
     check("10#$HOUR" in yml, "local hour must be forced to base 10 (08/09 are not octal)")
 
 
+def test_paddle_dimension():
+    """Long-paddle breaks prefer the longer board. Demotes, never blocks.
+
+    Jake, 2026-09-17: at PB Point and Sunset Cliffs he "almost always grabs a
+    longer board since they have long paddles" -- the paddle out and the paddle
+    back after long rides, not wave-catching. This was missing from the repo
+    entirely, and the Sunset Cliffs ladder contradicted it across its whole
+    usable range (the 6'0 Rosa was primary 0-7ft).
+    """
+    pcfg = CFG.get("_paddle_gate") or {}
+    floor = pcfg.get("min_primary_length_ft")
+    check(floor is not None, "_paddle_gate config missing")
+
+    for b in BREAKS:
+        check(b.get("paddle") in ("long", "short"),
+              f"{b['name']}: paddle must be 'long' or 'short', got {b.get('paddle')!r}")
+
+    named = {b["name"] for b in BREAKS if b.get("paddle") == "long"}
+    check(named == {"Sunset Cliffs", "PB Point"},
+          f"paddle=long should be exactly the two breaks Jake named, got {sorted(named)}")
+
+    # The name parser underpins the whole gate. Pin it, including the tricky ones.
+    for name, want in (("7'6 Magic", 7.5), ("6'0 Surfer Rosa", 6.0),
+                       ("11'0 Chris Craft", 11.0), ("5'4 Mini-Simmons", 5 + 4 / 12)):
+        got = sf.board_length_ft(name)
+        check(got is not None and abs(got - want) < 1e-6,
+              f"board_length_ft({name!r}) = {got}, wanted {want}")
+    check(sf.board_length_ft(None) is None, "board_length_ft(None) should be None")
+    check(sf.board_length_ft("Mystery Board") is None, "unparseable name should be None")
+
+    # Every owned board name must parse, or the gate silently stops working.
+    for name in OWNED_BOARDS:
+        check(sf.board_length_ft(name) is not None,
+              f"owned board {name!r} does not parse -- paddle gate would skip it")
+
+    # The real ladders must already comply: no long-paddle break may lead with
+    # a board under the floor when it has something longer available.
+    for b in BREAKS:
+        if b.get("paddle") != "long":
+            continue
+        for face in (1.0, 3.0, 5.0, 6.0):
+            p, bk, note = sf.pick_board(b, face)
+            if p is None:
+                continue
+            plen = sf.board_length_ft(p)
+            if plen is not None and plen < floor:
+                check("long-paddle" in note,
+                      f"{b['name']} at {face}ft leads with {p} and gives no paddle reason")
+
+    # And it must actually fire. Synthetic break, short primary, longer backup.
+    synth = {"name": "Synthetic Long Paddle", "paddle": "long", "crowd": 1,
+             "board_ladder": [[0, 99, "5'8 Fish", "7'6 Magic", "base note"]]}
+    p, bk, note = sf.pick_board(synth, 3.0)
+    check(p == "7'6 Magic" and bk == "5'8 Fish",
+          f"paddle gate did not promote the longer board: primary={p}, backup={bk}")
+    check("long-paddle" in note, "promotion gave no reason")
+
+    # With nothing longer on the rung it must DEMOTE-not-block: board stands.
+    synth2 = dict(synth, board_ladder=[[0, 99, "5'8 Fish", None, "base note"]])
+    p2, _, note2 = sf.pick_board(synth2, 3.0)
+    check(p2 == "5'8 Fish", "paddle gate blocked instead of demoting")
+    check("Nothing longer" in note2, "should say nothing longer is available")
+
+    # A short-paddle break must be untouched.
+    synth3 = dict(synth, paddle="short")
+    check(sf.pick_board(synth3, 3.0)[0] == "5'8 Fish",
+          "paddle gate fired at a short-paddle break")
+
+    # A refusal is not a board-length problem.
+    synth4 = dict(synth, board_ladder=[[0, 99, None, None, "don't paddle"]])
+    check(sf.pick_board(synth4, 3.0)[0] is None, "paddle gate resurrected a null primary")
+
+
+def test_cliffs_leads_with_a_longer_board():
+    """Regression: the Sunset Cliffs ladder called the 6'0 Rosa primary from
+    0-7ft, at a break Jake says he takes longer boards to. Corrected 2026-09-17."""
+    cliffs = next(b for b in BREAKS if b["name"] == "Sunset Cliffs")
+    for face in (1.0, 3.0, 5.0, 6.0, 8.0, 9.5):
+        p, bk, _ = sf.pick_board(cliffs, face)
+        if p is None:
+            continue
+        check(sf.board_length_ft(p) >= 7.0,
+              f"Sunset Cliffs at {face}ft leads with {p} -- too short for that paddle")
+
+
 def test_channel_gate():
     """Above head-high, only Sunset Cliffs and PB Point. Hard block, not a penalty.
 

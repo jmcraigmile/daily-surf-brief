@@ -54,23 +54,23 @@
         [
           0,
           4,
+          "7'6 Magic",
           "6'0 Surfer Rosa",
-          "5'8 Fish",
-          "Under the reefs' wake-up size -- they 'only really start to work when it's overhead.' Garbage is the summer exception"
+          "Longer board by default -- the Cliffs are a long paddle and a rope descent, and these reefs 'only really start to work when it's overhead' anyway. The Rosa is the backup for a punchy small day, not the default it used to be (corrected 2026-09-17)."
         ],
         [
           4,
           7,
-          "6'0 Surfer Rosa",
           "7'6 Magic",
-          "Sub or Ab. Rock bottom, rope descents, cliff exits -- boards get dinged here, bring the right one anyway"
+          "6'0 Surfer Rosa",
+          "Sub or Ab. Rock bottom, rope descents, cliff exits -- boards get dinged here, bring the right one anyway. The Frye single paddles the commute and holds the long rights."
         ],
         [
           7,
           10,
           "7'6 Magic",
           "6'0 Surfer Rosa",
-          "Clean and well-overhead at Garbage or New Break -- long rights made for trim, and the Frye holds a line through those 300m walls. Run the 7.5\""
+          "Clean and well-overhead at Garbage or New Break -- long rights made for trim, and the Frye holds a line through those 300m walls. Run the 7.5\"."
         ],
         [
           10,
@@ -90,7 +90,8 @@
       },
       "drive_minutes": 16,
       "drive_miles": 7.3,
-      "channel": true
+      "channel": true,
+      "paddle": "long"
     },
     {
       "name": "OB Pier",
@@ -172,7 +173,8 @@
       },
       "drive_minutes": 12,
       "drive_miles": 6.4,
-      "channel": false
+      "channel": false,
+      "paddle": "short"
     },
     {
       "name": "OB Jetty",
@@ -242,7 +244,8 @@
       },
       "drive_minutes": 13,
       "drive_miles": 6.2,
-      "channel": false
+      "channel": false,
+      "paddle": "short"
     },
     {
       "name": "Mission Beach",
@@ -325,7 +328,8 @@
       },
       "drive_minutes": 13,
       "drive_miles": 6.5,
-      "channel": false
+      "channel": false,
+      "paddle": "short"
     },
     {
       "name": "PB Drive",
@@ -414,7 +418,8 @@
       },
       "drive_minutes": 15,
       "drive_miles": 7.9,
-      "channel": false
+      "channel": false,
+      "paddle": "short"
     },
     {
       "name": "Crystal Pier",
@@ -489,7 +494,8 @@
       },
       "drive_minutes": 16,
       "drive_miles": 8.8,
-      "channel": false
+      "channel": false,
+      "paddle": "short"
     },
     {
       "name": "PB Point",
@@ -559,7 +565,8 @@
       },
       "drive_minutes": 19,
       "drive_miles": 9.9,
-      "channel": true
+      "channel": true,
+      "paddle": "long"
     },
     {
       "name": "La Jolla Shores",
@@ -649,7 +656,8 @@
       },
       "drive_minutes": 17,
       "drive_miles": 11.1,
-      "channel": false
+      "channel": false,
+      "paddle": "short"
     },
     {
       "name": "Scripps Pier",
@@ -738,7 +746,8 @@
       },
       "drive_minutes": 19,
       "drive_miles": 11.7,
-      "channel": false
+      "channel": false,
+      "paddle": "short"
     },
     {
       "name": "Black's Beach",
@@ -821,7 +830,8 @@
       },
       "drive_minutes": 22,
       "drive_miles": 14.1,
-      "channel": false
+      "channel": false,
+      "paddle": "short"
     },
     {
       "name": "Cardiff Reef",
@@ -921,7 +931,8 @@
       ],
       "hidden": true,
       "hidden_note": "Benched 2026-08-30, Jake's call -- North County out of the daily rotation for now. Data and write-up kept; flip \"hidden\" to restore.",
-      "channel": false
+      "channel": false,
+      "paddle": "short"
     },
     {
       "name": "Swami's",
@@ -1006,7 +1017,8 @@
       "drive_miles": 24.4,
       "hidden": true,
       "hidden_note": "Benched 2026-08-30, Jake's call -- North County out of the daily rotation for now. Data and write-up kept; flip \"hidden\" to restore.",
-      "channel": false
+      "channel": false,
+      "paddle": "short"
     }
   ],
   "_water_note": "Water-risk profiles derived from the hazard sections of 01-San-Diego-Breaks/. The brief CANNOT read live County advisories. California publishes a machine-readable postings/closures dataset, but checked 2026-08-30 it was ~6 months stale and missing the then-active Imperial Beach and Coronado closures -- historical archive only, never a live gate. sdbeachinfo.com / 619-338-2073 remains authoritative. outlet_proximity (at|nearby|none) replaced invented rain_factor multipliers 2026-08-30, grounded in the County's own naming of storm drains, creeks, rivers and lagoon outlets.",
@@ -1015,5 +1027,9 @@
   "_channel_gate": {
     "threshold_face_ft": 6.0,
     "_note": "HARD GATE, approved by Jake 2026-09-17. His stated ceiling is shoulder / head high / head high + 2 ft, and -- his words -- 'only at breaks with channels.' Above the threshold face height, a break with channel=false is a DON'T PADDLE, not a lower score and not a board warning. Only Sunset Cliffs and PB Point carry channel=true. This is a rider constraint, not a wave-quality judgement: the wave may be excellent and the answer is still no, because the way out and the way back in are the problem. Unlike the crowd gate (which demotes a board) this blocks the spot. See ../02-Gear/README.md and ../CLAUDE.md."
+  },
+  "_paddle_gate": {
+    "min_primary_length_ft": 7.0,
+    "_note": "Added 2026-09-17 from a rider fact that was missing from this repo entirely. Jake, on PB Point and Sunset Cliffs: he 'almost always grabs a longer board since they have long paddles,' and the reason is the paddle OUT and the paddle BACK after long rides -- not wave-catching. So at a break with paddle=long, board length is selected by the COMMUTE before the wave is considered, and a primary shorter than min_primary_length_ft is demoted if the ladder offers something longer. DEMOTES, never blocks: this is a preference, unlike _channel_gate which is a hard safety limit. paddle=long is set ONLY where Jake named the break. Black's Beach is a notoriously long paddle and is NOT marked long, because he did not say so -- see the open question in ../02-Gear/README.md rather than guessing."
   }
 }

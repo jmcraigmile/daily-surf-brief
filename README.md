@@ -424,6 +424,36 @@ extension inherited a Break-Log-calibrated texture gate for free. **4ft is our n
 not Hall's** — he gave no band. Unvalidated; log the sessions. See
 [`../02-Gear/Glider-Deep-Dive.md`](../02-Gear/Glider-Deep-Dive.md).
 
+### The paddle dimension — the commute picks the board
+
+**Added 2026-09-17**, from a rider fact that was missing from this repo entirely. Jake, on
+PB Point and Sunset Cliffs: he *"almost always grabs a longer board since they have long
+paddles"* — and the driver is **the paddle out and the paddle back after long rides**, not
+wave-catching. At those breaks **length is selected by the commute before the wave is
+considered.**
+
+`paddle` is `"long"` or `"short"` per break. At a `long` break, a ladder primary shorter than
+`_paddle_gate.min_primary_length_ft` (**7.0 ft**) is **demoted** if the rung offers something
+longer; if nothing longer is there, the board stands with the reason attached. It **demotes,
+never blocks** — this is a preference, unlike the channel gate below, which is a hard limit.
+Applied last, after the crowd gate, on whatever board survived it. A null primary is skipped: a
+"don't paddle out" rung is not a board-length problem.
+
+`board_length_ft()` parses feet from the board name (`"7'6 Magic"` → 7.5). Ugly, but the
+alternative is duplicating every board's length into the config, which is a second place to get
+out of sync. A test asserts **every owned board name parses**, because an unparseable name would
+silently skip the gate rather than fail.
+
+⚠️ **`paddle: "long"` is set only where Jake named the break.** **Black's Beach is a
+notoriously long paddle and is deliberately NOT marked long**, because he didn't say so. That is
+an open question in `../02-Gear/README.md`, not a gap to fill by guessing.
+
+**The bug this exposed:** Sunset Cliffs called the **6'0 Surfer Rosa primary from 0–7 ft** — the
+shortest, least-foam board in range, at a long-paddle rope-descent reef. The ladder now leads
+with the **7'6 Magic** across 0–10 ft with the Rosa as the punchy-day backup.
+`test_cliffs_leads_with_a_longer_board` is the regression guard. PB Point (Panther, Magic) and
+the three beachbreaks (fish, Simmons, Rosa) were already correct and are unchanged.
+
 ### The channel gate — a hard block, and the only one the rider set
 
 **Added 2026-09-17, approved by Jake directly.** His words: *"shoulder, head high, head high
