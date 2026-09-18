@@ -77,7 +77,7 @@
           99,
           null,
           null,
-          "NOTHING. Genuinely big at the outer reefs is not a day you own a board for. Wait for the step-up."
+          "NOTHING. Genuinely big at the outer reefs is not a day you own a board for. There is no step-up coming -- that gap was closed by decision, not by a board (CLAUDE.md, 2026-09-17). This is simply above Jake's ceiling."
         ]
       ],
       "gap_above": 10,
@@ -89,7 +89,8 @@
         "outlet_proximity": "none"
       },
       "drive_minutes": 16,
-      "drive_miles": 7.3
+      "drive_miles": 7.3,
+      "channel": true
     },
     {
       "name": "OB Pier",
@@ -170,7 +171,8 @@
         "outlet": "San Diego River mouth just north"
       },
       "drive_minutes": 12,
-      "drive_miles": 6.4
+      "drive_miles": 6.4,
+      "channel": false
     },
     {
       "name": "OB Jetty",
@@ -239,7 +241,8 @@
         "outlet": "San Diego River mouth"
       },
       "drive_minutes": 13,
-      "drive_miles": 6.2
+      "drive_miles": 6.2,
+      "channel": false
     },
     {
       "name": "Mission Beach",
@@ -321,7 +324,8 @@
         "outlet": "Rose and Tecolote Creeks into Mission Bay"
       },
       "drive_minutes": 13,
-      "drive_miles": 6.5
+      "drive_miles": 6.5,
+      "channel": false
     },
     {
       "name": "PB Drive",
@@ -409,7 +413,8 @@
         "outlet_proximity": "none"
       },
       "drive_minutes": 15,
-      "drive_miles": 7.9
+      "drive_miles": 7.9,
+      "channel": false
     },
     {
       "name": "Crystal Pier",
@@ -483,7 +488,8 @@
         "outlet_proximity": "none"
       },
       "drive_minutes": 16,
-      "drive_miles": 8.8
+      "drive_miles": 8.8,
+      "channel": false
     },
     {
       "name": "PB Point",
@@ -552,7 +558,8 @@
         "outlet_proximity": "none"
       },
       "drive_minutes": 19,
-      "drive_miles": 9.9
+      "drive_miles": 9.9,
+      "channel": true
     },
     {
       "name": "La Jolla Shores",
@@ -641,7 +648,8 @@
         "outlet_proximity": "none"
       },
       "drive_minutes": 17,
-      "drive_miles": 11.1
+      "drive_miles": 11.1,
+      "channel": false
     },
     {
       "name": "Scripps Pier",
@@ -729,7 +737,8 @@
         "outlet": "permitted outfalls near the pier"
       },
       "drive_minutes": 19,
-      "drive_miles": 11.7
+      "drive_miles": 11.7,
+      "channel": false
     },
     {
       "name": "Black's Beach",
@@ -811,7 +820,8 @@
         "outlet_proximity": "none"
       },
       "drive_minutes": 22,
-      "drive_miles": 14.1
+      "drive_miles": 14.1,
+      "channel": false
     },
     {
       "name": "Cardiff Reef",
@@ -910,7 +920,8 @@
         }
       ],
       "hidden": true,
-      "hidden_note": "Benched 2026-08-30, Jake's call -- North County out of the daily rotation for now. Data and write-up kept; flip \"hidden\" to restore."
+      "hidden_note": "Benched 2026-08-30, Jake's call -- North County out of the daily rotation for now. Data and write-up kept; flip \"hidden\" to restore.",
+      "channel": false
     },
     {
       "name": "Swami's",
@@ -994,10 +1005,15 @@
       },
       "drive_miles": 24.4,
       "hidden": true,
-      "hidden_note": "Benched 2026-08-30, Jake's call -- North County out of the daily rotation for now. Data and write-up kept; flip \"hidden\" to restore."
+      "hidden_note": "Benched 2026-08-30, Jake's call -- North County out of the daily rotation for now. Data and write-up kept; flip \"hidden\" to restore.",
+      "channel": false
     }
   ],
   "_water_note": "Water-risk profiles derived from the hazard sections of 01-San-Diego-Breaks/. The brief CANNOT read live County advisories. California publishes a machine-readable postings/closures dataset, but checked 2026-08-30 it was ~6 months stale and missing the then-active Imperial Beach and Coronado closures -- historical archive only, never a live gate. sdbeachinfo.com / 619-338-2073 remains authoritative. outlet_proximity (at|nearby|none) replaced invented rain_factor multipliers 2026-08-30, grounded in the County's own naming of storm drains, creeks, rivers and lagoon outlets.",
   "_drive_note": "drive_minutes / drive_miles are OSRM free-flow driving times from Jake's home neighbourhood (Mission Hills). Deliberately neighbourhood-level, not an address: THIS REPO IS PUBLIC. Free-flow is a fair approximation for the dawn window; the evening window sees real traffic, so treat the North County numbers as a floor. Breaks over DRIVE_FLAG_MINUTES (45) get a 'worth the drive?' marker -- scoring is NOT affected, per Jake's call 2026-08-30. Recomputed 2026-08-30 when Jake gave his location; the earlier numbers assumed Pacific Beach and were wrong for the PB and OB spots especially.",
-  "_north_county_note": "Cardiff Reef, Swami's and Oceanside Pier added 2026-08-30 to close measured gaps (wind, high tide, size, crowd) rather than by reputation -- see 01-San-Diego-Breaks/North-County.md. Imperial Beach, the Tijuana Sloughs, Coronado and Windansea are deliberate exclusions, documented in the same file."
+  "_north_county_note": "Cardiff Reef, Swami's and Oceanside Pier added 2026-08-30 to close measured gaps (wind, high tide, size, crowd) rather than by reputation -- see 01-San-Diego-Breaks/North-County.md. Imperial Beach, the Tijuana Sloughs, Coronado and Windansea are deliberate exclusions, documented in the same file.",
+  "_channel_gate": {
+    "threshold_face_ft": 6.0,
+    "_note": "HARD GATE, approved by Jake 2026-09-17. His stated ceiling is shoulder / head high / head high + 2 ft, and -- his words -- 'only at breaks with channels.' Above the threshold face height, a break with channel=false is a DON'T PADDLE, not a lower score and not a board warning. Only Sunset Cliffs and PB Point carry channel=true. This is a rider constraint, not a wave-quality judgement: the wave may be excellent and the answer is still no, because the way out and the way back in are the problem. Unlike the crowd gate (which demotes a board) this blocks the spot. See ../02-Gear/README.md and ../CLAUDE.md."
+  }
 }

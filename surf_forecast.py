@@ -797,6 +797,54 @@ def _crowd_gate(brk, primary, backup, note):
     return primary, None, f"{note} {why} Nothing safer on the ladder -- go early or go elsewhere."
 
 
+_CHANNEL_GATE = None
+
+
+def channel_gate_cfg():
+    """Cached read of _channel_gate from breaks.json.
+
+    Missing or malformed config means NO gating. That is the safe default for
+    every other table here, but note it is the *unsafe* default for this one:
+    this gate exists to stop a recommendation, so a silent config failure makes
+    the brief more permissive rather than less. test_channel_gate asserts the
+    config is present so the failure is loud in CI instead of quiet in the page.
+    """
+    global _CHANNEL_GATE
+    if _CHANNEL_GATE is None:
+        try:
+            with open(os.path.join(HERE, "breaks.json")) as f:
+                _CHANNEL_GATE = json.load(f).get("_channel_gate") or {}
+        except (OSError, ValueError, KeyError):
+            _CHANNEL_GATE = {}
+    return _CHANNEL_GATE
+
+
+def channel_blocked(brk, face):
+    """Above his ceiling, a break without a channel is a no. Returns a reason or None.
+
+    Jake's stated limit, 2026-09-17: "shoulder, head high, head high + 2ft,
+    that's my max size and only at breaks with channels." Two spots in the
+    rotation qualify -- Sunset Cliffs and PB Point.
+
+    This is a RIDER constraint, not a wave-quality one, which is why it is a
+    hard block rather than a penalty: the wave can be the best of the week and
+    the answer is still no, because getting out and getting back in is the
+    problem, not the ride. Contrast the crowd gate, which only demotes a board.
+
+    Deliberately NOT inferred from `canyon`, `hazards` text, or reef-vs-beach:
+    channel presence is a per-break fact and lives in breaks.json as one.
+    """
+    thresh = channel_gate_cfg().get("threshold_face_ft")
+    if face is None or thresh is None or brk.get("channel") is not False:
+        return None
+    if face <= thresh:
+        return None
+    return (f"DON'T PADDLE -- {face:.1f}ft face and no channel here. Above "
+            f"head-high ({thresh:.0f}ft) the rule is channel breaks only: "
+            f"Sunset Cliffs or PB Point. Not a call on the wave -- a call on "
+            f"getting out and getting back in.")
+
+
 def pick_board(brk, face, ctx=None):
     """Ladder pick by face height, condition-gated swap, then the crowd gate.
 
@@ -814,6 +862,11 @@ def pick_board(brk, face, ctx=None):
     """
     if face is None:
         return None, None, "No size estimate"
+    # The channel gate outranks the ladder, the swaps and the crowd gate: if
+    # the answer is don't paddle, there is no board question to answer.
+    gated = channel_blocked(brk, face)
+    if gated:
+        return None, None, gated
     primary = backup = note = None
     for rung in brk["board_ladder"]:
         if rung[0] <= face < rung[1]:
@@ -998,6 +1051,16 @@ def build(day=None, only_windows=None):
             primary, backup, bnote = pick_board(brk, face, cond)
             label, cls = verdict_label(score)
 
+            # The channel gate is a rider veto and reads the same way to the
+            # user as the water veto: no board, "Don't paddle", reason shown.
+            # Applied BEFORE water so a severe water read still wins the
+            # headline -- both are no, and bad water is the more urgent no.
+            chan = channel_blocked(brk, face)
+            if chan:
+                label, cls = "Don't paddle", "blocked"
+                primary = backup = None
+                bnote = chan
+
             # Water quality is a veto, not a scoring component. A severe read
             # blocks the spot outright and suppresses the board call -- there is
             # no board that makes bad water a good idea.
@@ -1023,12 +1086,16 @@ def build(day=None, only_windows=None):
                 "gap": face is not None and (
                     face >= brk.get("gap_above", 999) or face >= 8),
                 "water": wq, "surf_score": score,
+                "channel_blocked": bool(chan),
                 "region": brk.get("region"),
                 "drive_minutes": brk.get("drive_minutes"),
                 "far": (brk.get("drive_minutes") or 0) > DRIVE_FLAG_MINUTES,
             })
         # Blocked spots sink to the bottom regardless of how good the surf is.
-        scored.sort(key=lambda x: (x["water"]["blocked"], -x["score"]))
+        # Channel-gated spots sink with them: a break that scores 94 and says
+        # "Don't paddle" cannot sit at the top of the list.
+        scored.sort(key=lambda x: (x["water"]["blocked"] or x["channel_blocked"],
+                                   -x["score"]))
 
         results.append({
             "key": w["key"], "label": w["label"], "time_txt": w["time_txt"],

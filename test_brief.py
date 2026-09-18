@@ -341,11 +341,20 @@ def test_twelve_breaks_south_to_north_with_regions_and_drive_times():
 def test_swamis_blocks_above_the_quiver_ceiling():
     """Swami's holds to triple-overhead; the quiver stops around head-and-a-half.
     Above 9ft face it must refuse rather than name a board."""
-    check(sf.pick_board(SWAMIS, 8.5)[0] is not None, "Swami's should still call a board at 8.5ft")
+    # Updated 2026-09-17: Swami's has no channel, so above head-high the
+    # channel gate refuses FIRST and the ladder ceiling never gets consulted.
+    # The refusal is the same; only the stated reason changes. Below the gate
+    # the ladder must still do its own job.
+    check(sf.pick_board(SWAMIS, 5.5)[0] is not None,
+          "Swami's should still call a board at 5.5ft, under the channel gate")
+    p, bk, note = sf.pick_board(SWAMIS, 8.5)
+    check(p is None and bk is None, f"channel gate should refuse Swami's at 8.5ft, got {p}")
+    check("channel" in note.lower(), "8.5ft refusal should cite the channel gate")
     for face in (9.0, 12.0, 18.0, 40.0):
         p, bk, note = sf.pick_board(SWAMIS, face)
         check(p is None and bk is None, f"Swami's named a board at {face}ft face: {p}")
-        check("step-up" in note or "CEILING" in note, "ceiling note missing the reason")
+        check("channel" in note.lower() or "step-up" in note or "CEILING" in note,
+              "refusal note missing the reason")
     # A conditions swap must never talk you past a refusal.
     ctx = {"wind_speed": 2, "swell_period": 18}
     check(sf.pick_board(SWAMIS, 12.0, ctx)[0] is None, "a swap overrode Swami's ceiling")
@@ -782,7 +791,10 @@ def test_crowd_gate_on_oversized_boards():
                 if rung[0] <= face < rung[1]:
                     base = rung[2]
                     break
-            if base is not None:
+            # Updated 2026-09-17: the channel gate is a hard block and it
+            # outranks this one, so "never turns a rideable wave into a
+            # refusal" can only be asserted where the channel gate is silent.
+            if base is not None and sf.channel_blocked(b, face) is None:
                 check(p is not None,
                       f"{b['name']} at {face}ft: crowd gate blocked instead of demoting")
                 if crowd > limits.get(base, 99):
@@ -1165,6 +1177,80 @@ def test_publish_schedule_is_three_a_day():
           "the afternoon run must drop the dawn patrol")
     check("-ge 18" in yml, "the tomorrow cutoff must be 6pm, not noon")
     check("10#$HOUR" in yml, "local hour must be forced to base 10 (08/09 are not octal)")
+
+
+def test_channel_gate():
+    """Above head-high, only Sunset Cliffs and PB Point. Hard block, not a penalty.
+
+    Jake, 2026-09-17: "shoulder, head high, head high + 2ft, that's my max size
+    and only at breaks with channels." This is a rider constraint, so a gated
+    break must refuse outright -- a great wave with no way out is still a no.
+    """
+    gcfg = CFG.get("_channel_gate") or {}
+    thresh = gcfg.get("threshold_face_ft")
+    check(thresh is not None,
+          "_channel_gate config missing -- the gate silently stops gating without it")
+    if thresh is None:
+        return
+
+    # Every break must declare channel presence explicitly. A missing key reads
+    # as "not false" and would quietly exempt the break from the gate.
+    for b in BREAKS:
+        check(isinstance(b.get("channel"), bool),
+              f"{b['name']}: channel must be an explicit true/false")
+
+    named = {b["name"] for b in BREAKS if b.get("channel")}
+    check(named == {"Sunset Cliffs", "PB Point"},
+          f"channel=true should be exactly Cliffs + PB Point, got {sorted(named)}")
+
+    for b in BREAKS:
+        # Just under the line, nothing changes.
+        check(sf.channel_blocked(b, thresh) is None,
+              f"{b['name']}: gate fired at the threshold itself ({thresh}ft)")
+        over = thresh + 2.0
+        blocked = sf.channel_blocked(b, over)
+        if b.get("channel"):
+            check(blocked is None,
+                  f"{b['name']} has a channel and must not be gated at {over}ft")
+            check(sf.pick_board(b, over)[0] is not None or
+                  b["board_ladder"][-1][2] is None,
+                  f"{b['name']}: channel break lost its board call at {over}ft")
+        else:
+            check(blocked is not None,
+                  f"{b['name']}: no channel, not gated at {over}ft face")
+            p, bk, note = sf.pick_board(b, over)
+            check(p is None and bk is None,
+                  f"{b['name']}: named a board ({p}) above the channel gate")
+            check("DON'T PADDLE" in note,
+                  f"{b['name']}: gated note must say don't paddle -- got {note!r}")
+
+    # A conditions swap must never talk you past the gate. This is the failure
+    # mode the mini-Simmons swaps created once already for the ladder ceiling.
+    ctx = {"wind_speed": 1, "swell_period": 18}
+    for b in BREAKS:
+        if b.get("channel"):
+            continue
+        check(sf.pick_board(b, thresh + 2.0, ctx)[0] is None,
+              f"{b['name']}: a swap overrode the channel gate")
+
+    # And the gate must not be inferrable from wave quality -- a gated break
+    # can score well and still refuse. Guards against someone "simplifying"
+    # this into a score penalty later.
+    nochan = next(b for b in BREAKS if not b.get("channel"))
+    check(sf.channel_blocked(nochan, 99.0) is not None,
+          "gate should hold at any size, not just near the threshold")
+
+
+def test_no_step_up_references_left():
+    """The step-up gap was closed by decision 2026-09-17, not by a board.
+
+    breaks.json used to tell him to "wait for the step-up" above the quiver
+    ceiling. Nothing is coming, so that copy is now misleading rather than
+    merely stale.
+    """
+    blob = json.dumps(CFG)
+    check("Wait for the step-up" not in blob,
+          "breaks.json still tells him to wait for a step-up that is not coming")
 
 
 # ---------------------------------------------------------------------- main

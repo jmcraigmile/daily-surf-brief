@@ -424,6 +424,40 @@ extension inherited a Break-Log-calibrated texture gate for free. **4ft is our n
 not Hall's** — he gave no band. Unvalidated; log the sessions. See
 [`../02-Gear/Glider-Deep-Dive.md`](../02-Gear/Glider-Deep-Dive.md).
 
+### The channel gate — a hard block, and the only one the rider set
+
+**Added 2026-09-17, approved by Jake directly.** His words: *"shoulder, head high, head high
++ 2ft, that's my max size and only at breaks with channels."*
+
+Above `_channel_gate.threshold_face_ft` (**6.0 ft face**, i.e. head-high), any break with
+`"channel": false` is a **DON'T PADDLE**. Two breaks in the rotation carry `"channel": true`
+— **Sunset Cliffs** and **PB Point** — and only they get a board call above the line.
+
+Three things make this different from every other rule here, and they are the reasons not to
+"simplify" it later:
+
+1. **It is a rider constraint, not a wave-quality judgement.** A gated break can score 94 and
+   still refuse. The wave is not the problem; getting out and getting back in is. So it must
+   never be reworked into a score penalty — a penalty can be outvoted, and this cannot.
+2. **It blocks rather than demotes.** The crowd gate below swaps a board for a safer one and
+   only refuses if nothing fits. This one skips the board question entirely: `channel_blocked()`
+   returns early in `pick_board()`, ahead of the ladder, the swaps and the crowd gate, and the
+   scoring loop sets the label to *Don't paddle* and sinks the break in the sort order so a
+   high-scoring refusal can't sit at the top of the page.
+3. **Channel presence is data, never inferred.** It is an explicit boolean per break, not
+   derived from `canyon`, reef-vs-beach, or the `hazards` text. `test_channel_gate` fails if any
+   break leaves it unset, because a missing key reads as "not false" and would silently exempt
+   that break.
+
+⚠️ **The one asymmetry to know:** a missing or malformed `_channel_gate` config disables the
+gate. That is the safe default for the other tables and the *unsafe* one here, since this gate
+exists to withhold a recommendation. The test asserts the config is present so the failure is
+loud in CI rather than quiet on the page.
+
+Related: `breaks.json` no longer tells him to *"wait for the step-up"* above the ceiling. That
+gap was closed by decision, not by a board — see `../CLAUDE.md` and
+`../02-Gear/Step-Up-Brief-Jacoway.md`. `test_no_step_up_references_left` keeps it out.
+
 ### The crowd gate
 
 Some boards are ruled out by the **people** in the water, not the wave. `_board_crowd_limits`
@@ -593,6 +627,11 @@ python3 test_brief.py         # the invariant suite — CI runs this before ever
 python3 surf_forecast.py --json /tmp/t.json && python3 render.py /tmp/t.json /tmp/t.html
 grep -c None /tmp/t.html      # must be 0 — None in the page means a null leaked
 ```
+
+**Two coupled files when the rider's limits change:** `_channel_gate.threshold_face_ft` and the
+per-break `channel` booleans in `breaks.json`, plus the expected set in `test_channel_gate`
+(currently pinned to Sunset Cliffs + PB Point, so adding a channel break is a deliberate
+two-file edit rather than a silent one).
 
 `test_brief.py` covers the checklist below with synthetic data (no network), so
 edits to `breaks.json` or the scoring are verified automatically on push. One
