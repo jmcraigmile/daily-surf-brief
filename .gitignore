@@ -8,3 +8,6 @@ brief.html
 *.local.html
 worker/.wrangler/
 worker/node_modules/
+.wrangler/
+worker/.wrangler/
+worker/node_modules/
