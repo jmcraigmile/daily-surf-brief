@@ -103,9 +103,8 @@ def chop_dominant(sea):
 
 
 def fetch(url, timeout=25):
-    req = urllib.request.Request(url, headers={"User-Agent": "sd-surf-brief/1.0"})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read().decode("utf-8", errors="replace")
+    # Retries 429 and transient 5xx with backoff -- see water.open_with_retry.
+    return water.open_with_retry(url, timeout)
 
 
 def fetch_json(url, timeout=25):

@@ -28,6 +28,10 @@ County rule alongside, so an inside-the-official-window call stays visible.
 """
 
 import json
+import socket
+import sys
+import time
+import urllib.error
 import urllib.request
 import urllib.parse
 from datetime import datetime, timedelta
@@ -65,10 +69,42 @@ RAIN_TIERS = [
 ]
 
 
-def _fetch_json(url, timeout=25):
+# Backoff between retries, seconds. Open-Meteo returned 429 on 2026-10-21 and
+# the workflow's single 60s retry got 429'd too, which cost a whole publish.
+# Three tries spread over ~3 minutes outlast a throttle window; a 4xx other
+# than 429 is a real error and is not retried.
+RETRY_WAITS = (20, 60, 120)
+RETRY_STATUSES = {429, 500, 502, 503, 504}
+
+
+def open_with_retry(url, timeout=25, waits=RETRY_WAITS, sleep=None):
+    """urlopen with backoff on throttling and transient server/network errors.
+    Honours Retry-After when the server sends one. Returns the response body
+    as text; raises the last error once the waits are exhausted."""
+    sleep = sleep or time.sleep  # resolved per call so tests can stub time.sleep
     req = urllib.request.Request(url, headers={"User-Agent": "sd-surf-brief/1.0"})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode("utf-8", errors="replace"))
+    for attempt, wait in enumerate(list(waits) + [None]):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read().decode("utf-8", errors="replace")
+        except urllib.error.HTTPError as e:
+            if e.code not in RETRY_STATUSES or wait is None:
+                raise
+            ra = e.headers.get("Retry-After") if e.headers else None
+            if ra and str(ra).isdigit():
+                wait = max(wait, min(int(ra), 300))
+            print(f"[fetch] HTTP {e.code} from {urllib.parse.urlsplit(url).netloc}; "
+                  f"retry {attempt + 1}/{len(waits)} in {wait}s", file=sys.stderr)
+        except (urllib.error.URLError, socket.timeout, TimeoutError) as e:
+            if wait is None:
+                raise
+            print(f"[fetch] {type(e).__name__} from {urllib.parse.urlsplit(url).netloc}; "
+                  f"retry {attempt + 1}/{len(waits)} in {wait}s", file=sys.stderr)
+        sleep(wait)
+
+
+def _fetch_json(url, timeout=25):
+    return json.loads(open_with_retry(url, timeout))
 
 
 def get_rain(lat=32.78, lon=-117.25, now=None):

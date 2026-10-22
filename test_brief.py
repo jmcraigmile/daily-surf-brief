@@ -1141,6 +1141,69 @@ def test_build_accepts_only_window_filter():
           "only_windows must default to None -- both windows is the normal case")
 
 
+def test_fetch_retries_throttling_with_backoff():
+    """2026-10-21: Open-Meteo answered 429, the workflow's one 60s retry was
+    429'd too, and the publish failed. Fetches now back off through three
+    waits, honour Retry-After, and give up on real 4xx errors immediately."""
+    import io
+    import urllib.error
+    import urllib.request
+    calls, slept = [], []
+    real = urllib.request.urlopen
+    real_sleep = water.time.sleep
+    water.time.sleep = slept.append  # the surf_forecast path has no sleep hook
+
+    class Resp(io.BytesIO):
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    def fake_urlopen(script):
+        it = iter(script)
+        def _open(req, timeout=None):
+            calls.append(req.full_url)
+            status = next(it)
+            if status == 200:
+                return Resp(b'{"ok": true}')
+            hdrs = {"Retry-After": "90"} if status == 429 else {}
+            raise urllib.error.HTTPError(req.full_url, status, "x", hdrs, io.BytesIO(b""))
+        return _open
+
+    try:
+        # two throttles then success: two sleeps; Retry-After (90) beats both backoff waits
+        urllib.request.urlopen = fake_urlopen([429, 429, 200])
+        out = water.open_with_retry("https://example.test/a", sleep=slept.append)
+        check(json.loads(out) == {"ok": True}, "retry did not return the eventual body")
+        check(len(calls) == 3, f"expected 3 attempts, got {len(calls)}")
+        check(slept == [90, 90], f"expected waits [90, 90] (Retry-After honoured), got {slept}")
+
+        # a real client error is not retried
+        calls.clear(); slept.clear()
+        urllib.request.urlopen = fake_urlopen([404])
+        try:
+            water.open_with_retry("https://example.test/b", sleep=slept.append)
+            check(False, "404 should raise")
+        except urllib.error.HTTPError as e:
+            check(e.code == 404 and len(calls) == 1 and slept == [], "404 must fail fast, no retry")
+
+        # exhausting the waits raises the last error after every wait is used
+        calls.clear(); slept.clear()
+        urllib.request.urlopen = fake_urlopen([503, 503, 503, 503])
+        try:
+            water.open_with_retry("https://example.test/c", sleep=slept.append)
+            check(False, "persistent 503 should raise")
+        except urllib.error.HTTPError as e:
+            check(e.code == 503 and len(calls) == 4 and slept == [20, 60, 120],
+                  f"expected 4 attempts over waits [20, 60, 120], got {len(calls)} / {slept}")
+        # and the surf_forecast front door goes through the same path
+        calls.clear(); slept.clear()
+        urllib.request.urlopen = fake_urlopen([429, 200])
+        check(sf.fetch_json("https://example.test/d") == {"ok": True} and slept == [90],
+              "surf_forecast.fetch_json must use the retrying opener")
+    finally:
+        urllib.request.urlopen = real
+        water.time.sleep = real_sleep
+
+
 def test_worker_crons_match_the_workflow():
     """The Cloudflare Worker (worker/) is the punctual clock; GitHub's own
     crons are the fallback. The Worker runs ONE cron trigger (Workers Free
