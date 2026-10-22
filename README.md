@@ -180,8 +180,10 @@ npx wrangler@4 deploy
 
 Verify with `gh run list --workflow publish.yml --limit 6 --json createdAt,event` — the
 dispatched runs show `event: workflow_dispatch` and land within a minute of :07/:17/:27.
-The PAT expires on whatever date it was minted with; a 401 in the Worker's live logs
-(`npx wrangler@4 tail`) means rotate it.
+First confirmed fire: 2026-10-22, `workflow_dispatch` created 22:17:31 UTC (3:17:31pm
+Pacific), 31 seconds after the cron minute; GitHub's own queue had run the same slot at
+5:58pm the day before. The PAT expires on whatever date it was minted with; a 401 in the
+Worker's live logs (`cd worker && npx wrangler@4 tail greenflash-trigger`) means rotate it.
 
 **What saves this from being worse:** the run's role is keyed on the **actual local
 hour at run time**, not on which cron fired. A run that lands six hours late still
