@@ -139,13 +139,13 @@
           0,
           3,
           "7'0 CI Waterhog",
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "Mediocre, crowded, close to home, zero stakes -- the Waterhog's entire reason to exist"
         ],
         [
           3,
           99,
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "6'0 Surfer Rosa",
           "Fish or Rosa on paper. Waterhog in practice, more days than not"
         ]
@@ -159,7 +159,7 @@
           "max_wind": 8,
           "min_period": 9,
           "primary": "5'4 Mini-Simmons",
-          "backup": "5'8 Fish",
+          "backup": "6'0 Gen 2 Keel",
           "note": "Low-stakes sand on a clean morning -- the right classroom for learning what the Simmons does past waist-high. The water, not the wave, is the catch here."
         }
       ],
@@ -222,7 +222,7 @@
         [
           0,
           2.5,
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           null,
           "Below its range -- the bank needs size to do its thing. Advanced-only spot; not a Waterhog day."
         ],
@@ -230,7 +230,7 @@
           2.5,
           99,
           "6'0 Surfer Rosa",
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "Steep takeoff into a fast wall -- thruster surfing, not trim. Only when the bank's good"
         ]
       ],
@@ -293,7 +293,7 @@
         [
           0,
           2.5,
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "5'4 Mini-Simmons",
           "The two things that fix this spot aren't boards: walk further than everyone else, and be in before 11am"
         ],
@@ -301,7 +301,7 @@
           2.5,
           99,
           "6'0 Surfer Rosa",
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "Rosa on a proper combo day, fish the rest of the time"
         ]
       ],
@@ -377,14 +377,14 @@
         [
           0,
           2.5,
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "5'4 Mini-Simmons",
           "The local book says 'fish or funboard,' and the local book is right"
         ],
         [
           2.5,
           5,
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "6'0 Surfer Rosa",
           "The local book for this stretch is 'fish or funboard, especially during those Autumn combo swells' -- the fish is that call"
         ],
@@ -392,7 +392,7 @@
           5,
           99,
           "6'0 Surfer Rosa",
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "The good days"
         ]
       ],
@@ -405,7 +405,7 @@
           "max_wind": 8,
           "min_period": 10,
           "primary": "5'4 Mini-Simmons",
-          "backup": "5'8 Fish",
+          "backup": "6'0 Gen 2 Keel",
           "note": "Clean, lined-up sandbar rights are a down-the-line planing wave -- the Simmons outruns the fish here when there's real period underneath. 10s minimum: this stretch wants swell, not slop."
         }
       ],
@@ -467,13 +467,13 @@
           0,
           2,
           "5'4 Mini-Simmons",
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "Works from under 3ft. Simmons country"
         ],
         [
           2,
           3.5,
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "5'4 Mini-Simmons",
           "Fish gets the nod -- catches more of the small stuff, and you skip the scrum at the one good peak"
         ],
@@ -481,7 +481,7 @@
           3.5,
           99,
           "6'0 Surfer Rosa",
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "Chest-high plus with push"
         ]
       ],
@@ -629,7 +629,7 @@
         [
           3.5,
           99,
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "9'4 Pink Panther",
           "North end toward Scripps carries noticeably more punch than the south"
         ]
@@ -643,7 +643,7 @@
           "max_wind": 8,
           "min_period": 9,
           "primary": "5'4 Mini-Simmons",
-          "backup": "5'8 Fish",
+          "backup": "6'0 Gen 2 Keel",
           "note": "Clean past waist-high is the Simmons' actual wheelhouse -- softest takeoff of the bunch, so it gets the widest band. Draw long lines and trim high; it doesn't do vertical and doesn't want to."
         }
       ],
@@ -705,13 +705,13 @@
           0,
           2.5,
           "6'5 Egg",
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "Egg water -- ~40-43L of float for a shadowed little day"
         ],
         [
           2.5,
           4,
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "6'5 Egg",
           "It reads '79% too small' for a reason -- reach for the fish before the Rosa most days"
         ],
@@ -732,7 +732,7 @@
           "max_wind": 8,
           "min_period": 9,
           "primary": "5'4 Mini-Simmons",
-          "backup": "5'8 Fish",
+          "backup": "6'0 Gen 2 Keel",
           "note": "Same shadow as the Shores, same soft rolling takeoff -- clean and lined up, this is Simmons water well past waist-high. Not a grovel, a glide."
         }
       ],
@@ -806,7 +806,7 @@
           0,
           3,
           "6'5 Egg",
-          "5'8 Fish",
+          "6'0 Gen 2 Keel",
           "Small day -- the canyon's asleep and it's just another beachbreak"
         ],
         [

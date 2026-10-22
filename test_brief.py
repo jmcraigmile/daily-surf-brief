@@ -24,7 +24,7 @@ BREAKS = CFG["breaks"]
 # The nine boards from 02-Gear/Owned-and-Wishlist.md, hardcoded because that
 # file lives outside this repo. If the quiver changes, update BOTH.
 OWNED_BOARDS = {
-    "5'4 Mini-Simmons", "5'8 Fish", "6'0 Surfer Rosa", "6'5 Egg",
+    "5'4 Mini-Simmons", "6'0 Gen 2 Keel", "6'0 Surfer Rosa", "6'5 Egg",
     "7'6 Magic", "9'4 Pink Panther", "11'0 Chris Craft",
     "7'0 CI Waterhog", "9'0 Ron Jon",
 }
@@ -633,7 +633,7 @@ def synthetic_break(name, blocked=False):
         "breakdown": {"swell_dir": 20, "size": 25, "period": 6, "tide": 12,
                       "wind": 10, "crowd": -2},
         "notes": ["a note"], "face_ft": 3.5, "local_hs": 3.0,
-        "board_primary": None if blocked else "5'8 Fish",
+        "board_primary": None if blocked else "6'0 Gen 2 Keel",
         "board_backup": None if blocked else "6'5 Egg",
         "board_note": "Do not paddle out here" if blocked else "fine",
         "verdict": "v", "hazards": "h", "crowd": 3, "localism": 1,
@@ -1044,7 +1044,7 @@ def test_landing_nav_and_tabs():
           "tab auto-select doesn't use noon-to-sunset rule")
     check("brk-verdict" not in html.split("</style>")[1], "verdict prose still on landing cards")
     check('href="breaks.html#' in html, "break cards don't link to breaks page")
-    check("quiver.html#fish" in html, "board call doesn't link to quiver")
+    check("quiver.html#keel" in html, "board call doesn't link to quiver")
 
 
 def test_tabbar_and_sun_theme():
@@ -1324,21 +1324,21 @@ def test_paddle_dimension():
 
     # And it must actually fire. Synthetic break, short primary, longer backup.
     synth = {"name": "Synthetic Long Paddle", "paddle": "long", "crowd": 1,
-             "board_ladder": [[0, 99, "5'8 Fish", "7'6 Magic", "base note"]]}
+             "board_ladder": [[0, 99, "6'0 Gen 2 Keel", "7'6 Magic", "base note"]]}
     p, bk, note = sf.pick_board(synth, 3.0)
-    check(p == "7'6 Magic" and bk == "5'8 Fish",
+    check(p == "7'6 Magic" and bk == "6'0 Gen 2 Keel",
           f"paddle gate did not promote the longer board: primary={p}, backup={bk}")
     check("long-paddle" in note, "promotion gave no reason")
 
     # With nothing longer on the rung it must DEMOTE-not-block: board stands.
-    synth2 = dict(synth, board_ladder=[[0, 99, "5'8 Fish", None, "base note"]])
+    synth2 = dict(synth, board_ladder=[[0, 99, "6'0 Gen 2 Keel", None, "base note"]])
     p2, _, note2 = sf.pick_board(synth2, 3.0)
-    check(p2 == "5'8 Fish", "paddle gate blocked instead of demoting")
+    check(p2 == "6'0 Gen 2 Keel", "paddle gate blocked instead of demoting")
     check("Nothing longer" in note2, "should say nothing longer is available")
 
     # A short-paddle break must be untouched.
     synth3 = dict(synth, paddle="short")
-    check(sf.pick_board(synth3, 3.0)[0] == "5'8 Fish",
+    check(sf.pick_board(synth3, 3.0)[0] == "6'0 Gen 2 Keel",
           "paddle gate fired at a short-paddle break")
 
     # A refusal is not a board-length problem.
