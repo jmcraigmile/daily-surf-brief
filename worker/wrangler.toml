@@ -3,19 +3,13 @@ main = "index.js"
 compatibility_date = "2026-10-01"
 workers_dev = false
 
-# Same six UTC minutes as .github/workflows/publish.yml -- one per DST offset.
-# index.js dispatches only when the Pacific hour is 6, 15 or 21, so each local
-# slot fires exactly once. test_brief.py checks these stay in sync with the
-# workflow's crons.
+# ONE cron trigger -- the Workers Free plan allows five per account. It fires
+# at :07, :17 and :27 every hour (72 times a day, trivially within free
+# limits) and index.js dispatches only at Pacific 6:07, 15:17 and 21:27.
+# Those are the same minutes as .github/workflows/publish.yml; test_brief.py
+# keeps them in sync. DST needs no handling: the Worker reads Pacific time.
 [triggers]
-crons = [
-  "7 13 * * *",   # 6:07am PDT
-  "7 14 * * *",   # 6:07am PST
-  "17 22 * * *",  # 3:17pm PDT
-  "17 23 * * *",  # 3:17pm PST
-  "27 4 * * *",   # 9:27pm PDT (previous local day)
-  "27 5 * * *",   # 9:27pm PST (previous local day)
-]
+crons = ["7,17,27 * * * *"]
 
 [observability]
 enabled = true

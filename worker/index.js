@@ -6,19 +6,22 @@
 // call past sunset. Cloudflare cron triggers fire on time. This Worker is
 // the clock; GitHub's six crons stay in publish.yml as a fallback.
 //
-// The six UTC crons below are the same minutes as publish.yml, one for each
-// DST offset. Only the one that lands on the intended Pacific hour actually
-// dispatches, so the workflow runs three times a day, not six.
+// One cron trigger (the free plan allows five per account) fires at :07,
+// :17 and :27 every hour. The Worker converts the fire time to Pacific and
+// dispatches only on the three (hour, minute) pairs below -- so DST is a
+// non-issue and each slot fires exactly once a day.
 
 const REPO = "jmcraigmile/daily-surf-brief";
 const WORKFLOW = "publish.yml";
-const PACIFIC_HOURS = new Set([6, 15, 21]); // day-of, evening-only, night-before
+// Pacific hour -> the minute that slot fires on. Same minutes as publish.yml.
+const SLOTS = { 6: 7, 15: 17, 21: 27 }; // day-of, evening-only, night-before
 
-function pacificHour(date) {
-  const h = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Los_Angeles", hour: "numeric", hour12: false,
-  }).format(date);
-  return Number(h) % 24; // Intl yields "24" at midnight in some runtimes
+function pacific(date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles", hour: "numeric", minute: "numeric", hour12: false,
+  }).formatToParts(date);
+  const get = (t) => Number(parts.find((p) => p.type === t).value);
+  return { hour: get("hour") % 24, minute: get("minute") }; // "24" at midnight in some runtimes
 }
 
 async function dispatch(env) {
@@ -42,14 +45,10 @@ async function dispatch(env) {
 
 export default {
   async scheduled(event, env, ctx) {
-    const now = new Date(event.scheduledTime);
-    const hour = pacificHour(now);
-    if (!PACIFIC_HOURS.has(hour)) {
-      console.log(`skip: cron "${event.cron}" is the off-DST twin (Pacific hour ${hour})`);
-      return;
-    }
+    const { hour, minute } = pacific(new Date(event.scheduledTime));
+    if (SLOTS[hour] !== minute) return; // 69 of 72 daily fires end here, silently
     const status = await dispatch(env);
-    console.log(`dispatch ${WORKFLOW} for Pacific hour ${hour}: HTTP ${status}`);
+    console.log(`dispatch ${WORKFLOW} at Pacific ${hour}:${String(minute).padStart(2, "0")}: HTTP ${status}`);
   },
 
   // The Worker has a URL; make it say something harmless instead of erroring.

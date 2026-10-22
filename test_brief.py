@@ -1143,19 +1143,32 @@ def test_build_accepts_only_window_filter():
 
 def test_worker_crons_match_the_workflow():
     """The Cloudflare Worker (worker/) is the punctual clock; GitHub's own
-    crons are the fallback. Both lists must be the same six UTC minutes, or
-    a DST twin gets dispatched at the wrong local hour and the Worker's
-    hour filter silently skips a slot."""
+    crons are the fallback. The Worker runs ONE cron trigger (Workers Free
+    allows five per account) at every minute the workflow uses, and its
+    SLOTS map must name the same Pacific hour -> minute pairs the workflow's
+    six UTC crons encode -- otherwise the two clocks drift apart."""
     import re
     here = os.path.dirname(os.path.abspath(__file__))
     yml = open(os.path.join(here, ".github", "workflows", "publish.yml")).read()
     toml = open(os.path.join(here, "worker", "wrangler.toml")).read()
-    wf = set(re.findall(r'- cron: "([^"]+)"', yml))
-    wk = set(re.findall(r'^\s*"([0-9*/ ]+)",?\s*#', toml, re.M))
-    check(len(wk) == 6, f"worker should declare six crons, found {sorted(wk)}")
-    check(wf == wk, f"worker/workflow cron drift: workflow-only {sorted(wf - wk)}, worker-only {sorted(wk - wf)}")
     js = open(os.path.join(here, "worker", "index.js")).read()
-    check("new Set([6, 15, 21])" in js, "worker must dispatch only at Pacific 6/15/21")
+
+    # workflow: minute + UTC hour per cron; the PDT twin (UTC-7) gives the Pacific hour
+    wf = re.findall(r'- cron: "(\d+) (\d+) \* \* \*"', yml)
+    # a real slot is a Pacific hour reached under BOTH offsets (its PDT and PST twin)
+    pdt = {(int(h) - 7) % 24: int(m) for m, h in wf}
+    pst = {(int(h) - 8) % 24: int(m) for m, h in wf}
+    wf_slots = {k: v for k, v in pdt.items() if pst.get(k) == v}
+    check(wf_slots == {6: 7, 15: 17, 21: 27}, f"workflow crons decode to {wf_slots}, expected 6:07/15:17/21:27")
+
+    crons = re.findall(r'crons\s*=\s*\[\s*"([^"]+)"', toml)
+    check(len(crons) == 1, f"worker must declare exactly one cron trigger (free-plan limit), found {crons}")
+    wk_minutes = set(int(x) for x in crons[0].split(" ")[0].split(","))
+    check(wk_minutes == set(wf_slots.values()), f"worker cron minutes {sorted(wk_minutes)} != workflow minutes {sorted(set(wf_slots.values()))}")
+    m = re.search(r"const SLOTS = \{([^}]*)\}", js)
+    check(bool(m), "worker SLOTS map missing")
+    js_slots = {int(k): int(v) for k, v in re.findall(r"(\d+):\s*(\d+)", m.group(1))}
+    check(js_slots == wf_slots, f"worker SLOTS {js_slots} != workflow {wf_slots}")
     check(not re.search(r"gh[pous]_[A-Za-z0-9]{20,}", toml + js), "a GitHub token is committed in worker/")
 
 

@@ -6,3 +6,5 @@ brief.json
 brief.html
 *.local.json
 *.local.html
+worker/.wrangler/
+worker/node_modules/

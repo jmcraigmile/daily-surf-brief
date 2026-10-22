@@ -162,10 +162,12 @@ cron landed ~6:30pm, which is a fine night-before time; the 6:07am cron landed ~
 
 **The fix is the Cloudflare Worker in `worker/`** — `greenflash-trigger`, a cron Worker
 that calls GitHub's `workflow_dispatch` API at the real minute. Cloudflare cron triggers
-fire on time. It declares the same six UTC crons as `publish.yml` (pinned by
-`test_worker_crons_match_the_workflow`) and dispatches only when the Pacific hour is
-6, 15 or 21, so each slot fires exactly once across DST. GitHub's own crons stay in
-`publish.yml` as a fallback; a late duplicate just rebuilds the same brief.
+fire on time. It runs **one** cron trigger (the Workers Free plan allows five per
+account) at :07, :17 and :27 every hour, reads the fire time in Pacific, and dispatches
+only at 6:07, 15:17 and 21:27 — the same minutes as `publish.yml`, pinned together by
+`test_worker_crons_match_the_workflow`. DST needs no handling because the Worker never
+thinks in UTC. GitHub's own crons stay in `publish.yml` as a fallback; a late duplicate
+just rebuilds the same brief.
 
 Setting it up or rotating the token (both steps are interactive, by design):
 
