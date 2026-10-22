@@ -1141,6 +1141,24 @@ def test_build_accepts_only_window_filter():
           "only_windows must default to None -- both windows is the normal case")
 
 
+def test_worker_crons_match_the_workflow():
+    """The Cloudflare Worker (worker/) is the punctual clock; GitHub's own
+    crons are the fallback. Both lists must be the same six UTC minutes, or
+    a DST twin gets dispatched at the wrong local hour and the Worker's
+    hour filter silently skips a slot."""
+    import re
+    here = os.path.dirname(os.path.abspath(__file__))
+    yml = open(os.path.join(here, ".github", "workflows", "publish.yml")).read()
+    toml = open(os.path.join(here, "worker", "wrangler.toml")).read()
+    wf = set(re.findall(r'- cron: "([^"]+)"', yml))
+    wk = set(re.findall(r'^\s*"([0-9*/ ]+)",?\s*#', toml, re.M))
+    check(len(wk) == 6, f"worker should declare six crons, found {sorted(wk)}")
+    check(wf == wk, f"worker/workflow cron drift: workflow-only {sorted(wf - wk)}, worker-only {sorted(wk - wf)}")
+    js = open(os.path.join(here, "worker", "index.js")).read()
+    check("new Set([6, 15, 21])" in js, "worker must dispatch only at Pacific 6/15/21")
+    check(not re.search(r"gh[pous]_[A-Za-z0-9]{20,}", toml + js), "a GitHub token is committed in worker/")
+
+
 def test_publish_schedule_is_three_a_day():
     """The schedule lives in one place and is easy to break silently. Pin it.
 

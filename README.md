@@ -155,11 +155,31 @@ unproven until a few days of runs confirm it.** Check real fire times with:
 gh run list --workflow publish.yml --limit 20 --json createdAt,event,conclusion
 ```
 
-**If the lag stays measured in hours, the mitigation failed and the real fix is an
-external punctual trigger** — a Cloudflare Worker cron (Cloudflare is already in the
-stack for greenflash.surf DNS) calling GitHub's `workflow_dispatch` API on a schedule
-it actually honours. Considered and deliberately deferred on 2026-08-31 in favour of
-trying the cheap change first.
+**The mitigation failed — measured again 2026-10-22, seven weeks on: runs still land
+2.5–5 hours late.** Concretely, the 3:17pm evening-only run was arriving ~5:40pm,
+*inside* a 6:07pm-sunset session. The 6am and 9pm slots only worked by luck (the 9:27pm
+cron landed ~6:30pm, which is a fine night-before time; the 6:07am cron landed ~3am).
+
+**The fix is the Cloudflare Worker in `worker/`** — `greenflash-trigger`, a cron Worker
+that calls GitHub's `workflow_dispatch` API at the real minute. Cloudflare cron triggers
+fire on time. It declares the same six UTC crons as `publish.yml` (pinned by
+`test_worker_crons_match_the_workflow`) and dispatches only when the Pacific hour is
+6, 15 or 21, so each slot fires exactly once across DST. GitHub's own crons stay in
+`publish.yml` as a fallback; a late duplicate just rebuilds the same brief.
+
+Setting it up or rotating the token (both steps are interactive, by design):
+
+```bash
+cd 05-Daily/worker
+npx wrangler@4 login                      # browser OAuth, Jake's Cloudflare account
+npx wrangler@4 secret put GITHUB_TOKEN    # paste a fine-grained PAT: repo jmcraigmile/daily-surf-brief, Actions: read+write
+npx wrangler@4 deploy
+```
+
+Verify with `gh run list --workflow publish.yml --limit 6 --json createdAt,event` — the
+dispatched runs show `event: workflow_dispatch` and land within a minute of :07/:17/:27.
+The PAT expires on whatever date it was minted with; a 401 in the Worker's live logs
+(`npx wrangler@4 tail`) means rotate it.
 
 **What saves this from being worse:** the run's role is keyed on the **actual local
 hour at run time**, not on which cron fired. A run that lands six hours late still

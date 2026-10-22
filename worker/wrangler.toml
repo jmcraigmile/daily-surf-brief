@@ -1,0 +1,25 @@
+name = "greenflash-trigger"
+main = "index.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+
+# Same six UTC minutes as .github/workflows/publish.yml -- one per DST offset.
+# index.js dispatches only when the Pacific hour is 6, 15 or 21, so each local
+# slot fires exactly once. test_brief.py checks these stay in sync with the
+# workflow's crons.
+[triggers]
+crons = [
+  "7 13 * * *",   # 6:07am PDT
+  "7 14 * * *",   # 6:07am PST
+  "17 22 * * *",  # 3:17pm PDT
+  "17 23 * * *",  # 3:17pm PST
+  "27 4 * * *",   # 9:27pm PDT (previous local day)
+  "27 5 * * *",   # 9:27pm PST (previous local day)
+]
+
+[observability]
+enabled = true
+
+# Secret (never in this file): GITHUB_TOKEN -- a fine-grained PAT scoped to
+# jmcraigmile/daily-surf-brief with Actions: read and write.
+#   cd 05-Daily/worker && npx wrangler@4 secret put GITHUB_TOKEN
