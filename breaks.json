@@ -747,7 +747,18 @@
       "drive_minutes": 19,
       "drive_miles": 11.7,
       "channel": false,
-      "paddle": "short"
+      "paddle": "short",
+      "field_reports": [
+        {
+          "date": "2026-09-29",
+          "window": "dawn",
+          "report": "Going off per surfers on the ground. Wind swell with a light offshore breeze; peaky and fast.",
+          "source": "Jake, relayed from dawn-patrol reports",
+          "model_said": "Score 60 (Skip). Swell read WSW ~19deg outside the 270-320 window (0.5 dir pts); canyon shadow ~-47% on the 15s energy modelled as a south swell; tide flagged wrong (mid, rising).",
+          "conditions_then": "Buoy 46258: 3.0ft@15.4s SW under 4.6ft@9.1s windwave; total 4.7ft@9.5s; wind 4-5mph SE/ESE (offshore); tide ~3.9ft rising toward 10:52 high",
+          "todo": "Possible model miss: locally generated wind swell + offshore can work here despite an off-window direction; canyon shadow may be overstated when short-period windwave dominates. Watch for repeats before retuning scoring."
+        }
+      ]
     },
     {
       "name": "Black's Beach",
